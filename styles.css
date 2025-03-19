@@ -22,7 +22,8 @@
 html {
     height: 100%;
     background: radial-gradient(ellipse at bottom, #2a1b62 0%, #190328 50%, #0d0118 100%);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible; /* Allow vertical overflow */
 }
 
 body {
@@ -33,7 +34,113 @@ body {
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    overflow-y: auto;
+    overflow-y: scroll !important; /* Force scroll to always be present */
+    position: relative;
+}
+
+/* Custom scrollbar styling */
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 5, 25, 0.1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, rgba(157, 78, 221, 0.4), rgba(123, 44, 191, 0.4));
+    border-radius: 10px;
+    border: 2px solid rgba(15, 5, 25, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, rgba(157, 78, 221, 0.6), rgba(123, 44, 191, 0.6));
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 78, 221, 0.4) rgba(15, 5, 25, 0.1);
+}
+
+/* Adjusting the purple text color to be lighter for the result display */
+.generated-image-info .prompt-title, 
+.result-container h2,
+.result-info-container h2,
+.result-prompt-title {
+    color: #c49efa !important; /* Lighter purple for titles */
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+/* Reduce opacity on the prompt display panel and improve text visibility */
+.prompt-panel, 
+.result-panel,
+.prompt-container,
+.result-container .info-panel,
+.result-prompt-container,
+.result-info-container {
+    background: rgba(30, 15, 50, 0.15) !important; /* Very transparent background */
+    border: 1px solid rgba(157, 78, 221, 0.1) !important;
+    backdrop-filter: none !important;
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
+}
+
+/* Make all purple titles in result area more visible */
+.prompt-title,
+.prompt-panel h2, 
+.result-panel h2, 
+.result-panel h3,
+.result-container h2,
+.result-container h3,
+.result-title,
+.result-prompt-title,
+.info-panel-title,
+[class*="Title"] {
+    color: #c49efa !important; /* Lighter purple */
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.9) !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Ensure all detail text is visible and correctly colored */
+.prompt-details,
+.prompt-text,
+.result-text,
+.result-parameters,
+.result-parameters li,
+.parameter-name,
+.parameter-value,
+.prompt-panel p,
+.result-panel p,
+.info-panel p,
+.prompt-container div,
+.enhanced-text {
+    color: #e0d9ff !important; /* Light lavender color */
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.9) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Fix for any missing bullet points and list items */
+.prompt-panel ul, 
+.result-panel ul,
+.result-parameters,
+.prompt-panel li,
+.result-panel li {
+    color: #e0d9ff !important;
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.9) !important;
+    list-style-type: disc !important;
+    margin-left: 20px !important;
+}
+
+/* Style the .sidebar with slightly more opacity to match user's preference */
+.sidebar {
+    background: rgba(12, 2, 27, 0.3); /* Increased from 0.1 to 0.3 for better visibility */
 }
 
 /* Stars layer */
@@ -362,7 +469,8 @@ body {
     width: 100%;
     min-height: 100vh;
     position: relative;
-    z-index: 10; /* Ensure above the background elements */
+    z-index: 10;
+    overflow-y: visible;
 }
 
 /* Sidebar Styles */
@@ -547,13 +655,14 @@ select option {
 .main-content {
     flex: 1;
     padding: 1.5rem;
-    overflow-y: auto;
+    overflow-y: visible;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
-    background: transparent; /* Let background show through */
-    z-index: 10; /* Above stars */
+    background: transparent;
+    z-index: 10;
 }
 
 .main-content > * {
@@ -808,4 +917,181 @@ select option {
     .sidebar-section, .content-area {
         padding: 1rem;
     }
+}
+
+/* Fix specifically for the dark purple Parameters heading and labels */
+.parameters-heading,
+.parameters-title,
+.parameter-label,
+h2,
+h3,
+h4,
+strong,
+b,
+.title-label,
+.prompt-label,
+.parameter-title,
+.parameter-heading,
+div[class*="Parameter"] > div:first-child,
+div[class*="parameters"] > div:first-child,
+[class*="label"],
+[class*="Label"] {
+    color: #c49efa !important; /* Lighter purple */
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.9) !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Make the image title and text under it more visible */
+.image-title,
+.result-title,
+.result-image-title,
+.image-subtitle,
+.image-description,
+.result-title-text,
+h1 {
+    color: #d9b6ff !important; /* Very light purple */
+    text-shadow: 0 0 15px rgba(0, 0, 0, 1) !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 1.5rem !important;
+}
+
+/* Handle any inline styles that might be overriding our CSS */
+[style*="color"] {
+    color: #c49efa !important;
+}
+
+/* Lighten the dark purple text in the sidebar */
+.sidebar-header,
+.section-title,
+.sidebar label,
+.sidebar .value-display,
+.sidebar-section h2,
+.sidebar-section h3,
+.sidebar-section h4,
+.sidebar input,
+.sidebar .dropdown-text,
+.sidebar span,
+.sidebar select,
+.sidebar option,
+.sidebar input[type="number"],
+.sidebar-header span,
+.sidebar button span,
+.sidebar a {
+    color: #c49efa !important; /* Lighter purple to match the rest of the interface */
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.9) !important;
+    opacity: 1 !important;
+}
+
+/* Make the number values more visible */
+.sidebar input[type="number"],
+.sidebar .value-display,
+.sidebar span:has(+ input),
+.sidebar span:contains("1024"),
+.sidebar span:contains("42") {
+    color: #d9b6ff !important; /* Brighter purple for numeric values */
+}
+
+/* Fix color of value displays in sidebar */
+.sidebar input[type="number"] {
+    color: #d9b6ff !important;
+    background: rgba(50, 10, 70, 0.25); /* Slightly more visible background */
+}
+
+/* Improve range slider color */
+input[type="range"]::-webkit-slider-thumb {
+    background: linear-gradient(90deg, #c49efa, #9d4edd);
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: linear-gradient(90deg, #c49efa, #9d4edd);
+}
+
+/* Make dropdown text and input field values white */
+.sidebar select,
+.sidebar option,
+.sidebar input[type="number"],
+.sidebar input[type="text"],
+select,
+option,
+input[type="number"],
+input[type="text"] {
+    color: var(--text-white) !important; /* White text */
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Fix dropdown options */
+select option {
+    color: var(--text-white) !important;
+}
+
+/* Adjust the sidebar selectors to avoid changing dropdown text color */
+.sidebar-header,
+.section-title,
+.sidebar label,
+.sidebar .value-display,
+.sidebar-section h2,
+.sidebar-section h3,
+.sidebar-section h4,
+.sidebar-header span,
+.sidebar button span,
+.sidebar a {
+    color: #c49efa !important; /* Keep these elements light purple */
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.9) !important;
+    opacity: 1 !important;
+}
+
+/* Override for dropdown display text */
+.sidebar select, 
+select option,
+.dropdown-display-text,
+.dropdown-text,
+.dropdown-value,
+.sidebar input::placeholder {
+    color: var(--text-white) !important;
+}
+
+/* Target specific sidebar sections to make them white */
+.sidebar span:contains("Canvas Width"),
+.sidebar span:contains("Canvas Height"),
+.sidebar span:contains("Seed"),
+.sidebar span:contains("Image Model"),
+.sidebar span:contains("Art Style"),
+.sidebar span:contains("Remove Watermark"),
+.sidebar span:contains("Keep Private"),
+.sidebar span:contains("Enhance Prompt"),
+.sidebar-section:contains("Canvas Settings") .section-title,
+.sidebar-section:contains("Seed Settings") .section-title,
+.sidebar-section:contains("Model & Style") .section-title,
+.sidebar-section:contains("Settings") .section-title,
+.sidebar label[for="width"],
+.sidebar label[for="height"],
+.sidebar label[for="seed"],
+.sidebar label[for="model"],
+.sidebar label[for="style"],
+.sidebar label[for="watermark"],
+.sidebar label[for="private"],
+.sidebar label[for="enhance"],
+.enhance-description,
+.sidebar .style-description {
+    color: var(--text-white) !important;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Use more direct selectors for these specific elements */
+.sidebar .section-title,
+.style-description,
+.enhance-description {
+    color: var(--text-white) !important;
+}
+
+/* Target the enhancement description more specifically */
+.enhance-description,
+.sidebar-section:last-child .style-description,
+.sidebar div:contains("transform your prompt") {
+    color: var(--text-white) !important;
+    opacity: 0.8 !important;
 }
