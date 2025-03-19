@@ -893,8 +893,175 @@ function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
 
 // FINAL ATTEMPT - IMAGE-BASED STARS
 function createStarsV4() {
-    // All stars code removed
+    // Get the twinkling container
+    const twinklingContainer = document.querySelector('.twinkling');
+    if (!twinklingContainer) {
+        console.error('Twinkling container not found');
+        return;
+    }
+
+    // Clear any existing stars
+    twinklingContainer.querySelectorAll('.star, .shooting-star, .shooting-star-lower').forEach(star => star.remove());
+
+    // Create regular twinkling stars
+    const numberOfStars = 500; // Increased from 300 for more visible twinkling effect
+    for (let i = 0; i < numberOfStars; i++) {
+        createTwinklingStar(twinklingContainer);
+    }
+
+    // Create occasional shooting stars
+    createShootingStars(twinklingContainer);
+    
+    // Create occasional lower shooting stars
+    createLowerShootingStars(twinklingContainer);
+
+    console.log('✨ Dynamic stars created successfully');
+}
+
+// Create a single twinkling star with random properties
+function createTwinklingStar(container) {
+    const star = document.createElement('div');
+    
+    // Randomly choose star size class with weighted distribution
+    // Giving more weight to medium and larger stars to increase visibility
+    const rand = Math.random();
+    let randomType;
+    
+    if (rand < 0.3) {
+        // 30% chance for smallest stars (reduced from 50%)
+        randomType = 'star-1';
+    } else if (rand < 0.7) {
+        // 40% chance for medium stars (increased from 30%)
+        randomType = 'star-2';
+    } else if (rand < 0.9) {
+        // 20% chance for larger stars (increased from 15%)
+        randomType = 'star-3';
+    } else {
+        // 10% chance for the largest stars (increased from 5%)
+        randomType = 'star-4';
+    }
+    
+    star.classList.add('star', randomType);
+    
+    // Random position
+    const x = Math.random() * 100; // percentage of viewport width
+    const y = Math.random() * 100; // percentage of viewport height
+    star.style.left = `${x}%`;
+    star.style.top = `${y}%`;
+    
+    // Random delay for animation with wider range
+    const delay = Math.random() * 9; // 0-9 seconds for more variation
+    star.style.animationDelay = `${delay}s`;
+    
+    // Slightly random animation duration for more natural effect
+    const durationVariation = Math.random() * 2 - 1; // -1 to +1 seconds
+    
+    // Apply duration variation to all stars to create more random twinkling
+    let baseDuration;
+    switch(randomType) {
+        case 'star-1': baseDuration = 3; break;
+        case 'star-2': baseDuration = 5; break;
+        case 'star-3': baseDuration = 7; break;
+        case 'star-4': baseDuration = 9; break;
+        default: baseDuration = 5;
+    }
+    
+    // Apply variation with limits
+    const newDuration = Math.max(2, Math.min(12, baseDuration + durationVariation));
+    star.style.animationDuration = `${newDuration}s`;
+    
+    container.appendChild(star);
+    return star;
+}
+
+// Create shooting stars that appear periodically
+function createShootingStars(container) {
+    // Create initial shooting stars
+    createShootingStar(container);
+    
+    // Periodically create new shooting stars
+    setInterval(() => {
+        createShootingStar(container);
+    }, 8000); // New shooting star every 8 seconds
+}
+
+// Create a single shooting star with random properties
+function createShootingStar(container) {
+    const star = document.createElement('div');
+    star.classList.add('shooting-star');
+    
+    // Random position at top portion of the screen
+    const x = Math.random() * 70 + 10; // 10-80% of viewport width
+    const y = Math.random() * 30 + 5; // 5-35% of viewport height
+    star.style.left = `${x}%`;
+    star.style.top = `${y}%`;
+    
+    // Random delay before the animation starts
+    const delay = Math.random() * 3; // 0-3 seconds
+    star.style.animationDelay = `${delay}s`;
+    
+    // Random size for the shooting star
+    const size = Math.random() * 1 + 0.5; // 0.5-1.5px
+    star.style.height = `${size}px`;
+    
+    // Add to container
+    container.appendChild(star);
+    
+    // Remove after animation finishes to prevent DOM cluttering
+    setTimeout(() => {
+        if (star && star.parentNode) {
+            star.remove();
+        }
+    }, 15000); // 10s animation + 5s buffer
+    
+    return star;
+}
+
+// Create lower shooting stars that appear periodically
+function createLowerShootingStars(container) {
+    // Create initial lower shooting star
+    createLowerShootingStar(container);
+    
+    // Periodically create new lower shooting stars
+    setInterval(() => {
+        createLowerShootingStar(container);
+    }, 12000); // New lower shooting star every 12 seconds (different timing than upper stars)
+}
+
+// Create a single lower shooting star with random properties
+function createLowerShootingStar(container) {
+    const star = document.createElement('div');
+    star.classList.add('shooting-star-lower');
+    
+    // Random position at lower portion of the screen
+    const x = Math.random() * 60 + 20; // 20-80% of viewport width
+    const y = Math.random() * 20 + 50; // 50-70% of viewport height (lower portion)
+    star.style.left = `${x}%`;
+    star.style.top = `${y}%`;
+    
+    // Random delay before the animation starts
+    const delay = Math.random() * 4; // 0-4 seconds
+    star.style.animationDelay = `${delay}s`;
+    
+    // Random size for the shooting star
+    const size = Math.random() * 1.2 + 0.8; // 0.8-2.0px (slightly larger)
+    star.style.height = `${size}px`;
+    
+    // Add to container
+    container.appendChild(star);
+    
+    // Remove after animation finishes to prevent DOM cluttering
+    setTimeout(() => {
+        if (star && star.parentNode) {
+            star.remove();
+        }
+    }, 20000); // 15s animation + 5s buffer
+    
+    return star;
 }
 
 // Initialize the app when the DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp); 
+document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+    createStarsV4(); // Create stars when the app loads
+}); 

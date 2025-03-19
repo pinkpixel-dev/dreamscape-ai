@@ -2,8 +2,8 @@
 :root {
     --primary-color: #9d4edd;
     --primary-dark: #7b2cbf;
-    --background-dark: #170319;
-    --background-darker: #112d4e;
+    --background-dark: #19031b;  
+    --background-darker: #0c021b; 
     --text-light: #c8cdf1;
     --text-white: #ffffff;
     --accent-color: #5a2d88;
@@ -18,32 +18,387 @@
     box-sizing: border-box;
 }
 
+/* Stars Background - Based on CodePen example */
+html {
+    height: 100%;
+    background: radial-gradient(ellipse at bottom, #2a1b62 0%, #190328 50%, #0d0118 100%);
+    overflow: hidden;
+}
+
 body {
     font-family: 'Quicksand', sans-serif;
-    background: linear-gradient(120deg, var(--background-dark), var(--background-darker));
     color: var(--text-light);
     min-height: 100vh;
     line-height: 1.6;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
 }
 
+/* Stars layer */
+.stars {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background: transparent url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png) repeat;
+    background-size: 1000px 1000px;
+    opacity: 0.6;
+    mix-blend-mode: screen;
+    z-index: 0;
+}
+
+/* Enhanced twinkling solution */
+.twinkling {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: transparent;
+    overflow: hidden;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+}
+
+/* Create twinkling stars with different animations */
+.star {
+    position: absolute;
+    background-color: white;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0 3px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* Star variants with different sizes and animations */
+.star-1 {
+    width: 1px;
+    height: 1px;
+    animation: twinkle-1 3s infinite ease-in-out;
+}
+
+.star-2 {
+    width: 2px;
+    height: 2px;
+    animation: twinkle-2 5s infinite ease-in-out;
+}
+
+.star-3 {
+    width: 3px;
+    height: 3px;
+    animation: twinkle-3 7s infinite ease-in-out;
+}
+
+/* Add a larger star size for more dramatic twinkling */
+.star-4 {
+    width: 4px;
+    height: 4px;
+    animation: twinkle-4 9s infinite ease-in-out;
+    box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes twinkle-1 {
+    0%, 100% { opacity: 0; }
+    40% { opacity: 0.3; }
+    60% { opacity: 0.7; }
+    80% { opacity: 0.4; }
+}
+
+@keyframes twinkle-2 {
+    0%, 100% { opacity: 0.05; }
+    30% { opacity: 0.3; }
+    50% { opacity: 0.9; }
+    70% { opacity: 0.5; }
+    85% { opacity: 0.15; }
+}
+
+@keyframes twinkle-3 {
+    0%, 100% { opacity: 0.1; }
+    20% { opacity: 0.3; }
+    40% { opacity: 0.2; }
+    60% { opacity: 1; }
+    80% { opacity: 0.4; }
+}
+
+/* More dramatic animation for larger stars */
+@keyframes twinkle-4 {
+    0%, 100% { opacity: 0; }
+    20% { opacity: 0.5; }
+    30% { opacity: 0.2; }
+    40% { opacity: 0.9; }
+    60% { opacity: 0.3; }
+    80% { opacity: 0.7; }
+}
+
+/* Keep existing twinkling stars as additional layers but adjust their position */
+.twinkling:before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 3px;
+    background: white;
+    box-shadow: 
+        20px 30px 2px 1px rgba(255, 255, 255, 0.4),
+        90px 80px 2px 1px rgba(255, 255, 255, 0.5),
+        150px 20px 2px 0px rgba(255, 255, 255, 0.3),
+        200px 130px 2px 1px rgba(255, 255, 255, 0.6),
+        260px 40px 1px 0px rgba(255, 255, 255, 0.3),
+        300px 180px 2px 0px rgba(255, 255, 255, 0.4),
+        350px 50px 1px 1px rgba(255, 255, 255, 0.5),
+        400px 200px 1px 0px rgba(255, 255, 255, 0.3),
+        450px 70px 2px 0px rgba(255, 255, 255, 0.6),
+        500px 250px 1px 1px rgba(255, 255, 255, 0.4),
+        560px 90px 2px 0px rgba(255, 255, 255, 0.3),
+        600px 230px 1px 0px rgba(255, 255, 255, 0.5),
+        650px 110px 2px 1px rgba(255, 255, 255, 0.4),
+        700px 280px 2px 0px rgba(255, 255, 255, 0.3),
+        750px 130px 1px 0px rgba(255, 255, 255, 0.6),
+        800px 300px 2px 1px rgba(255, 255, 255, 0.4),
+        850px 150px 1px 0px rgba(255, 255, 255, 0.5),
+        900px 320px 2px 1px rgba(255, 255, 255, 0.3),
+        950px 170px 1px 0px rgba(255, 255, 255, 0.4),
+        1000px 340px 1px 1px rgba(255, 255, 255, 0.6),
+        1050px 190px 2px 0px rgba(255, 255, 255, 0.3),
+        1100px 220px 1px 1px rgba(255, 255, 255, 0.4),
+        1150px 350px 2px 0px rgba(255, 255, 255, 0.5),
+        1200px 80px 1px 0px rgba(255, 255, 255, 0.3),
+        1250px 370px 2px 1px rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    animation: twinkling-stars-1 5s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+.twinkling:after {
+    content: '';
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    width: 2px;
+    height: 2px;
+    background: white;
+    box-shadow: 
+        50px 50px 2px 1px rgba(255, 255, 255, 0.5),
+        100px 160px 1px 0px rgba(255, 255, 255, 0.6),
+        170px 90px 2px 1px rgba(255, 255, 255, 0.3),
+        220px 220px 1px 0px rgba(255, 255, 255, 0.4),
+        280px 120px 2px 1px rgba(255, 255, 255, 0.5),
+        320px 280px 1px 0px rgba(255, 255, 255, 0.3),
+        370px 140px 2px 1px rgba(255, 255, 255, 0.6),
+        420px 310px 1px 0px rgba(255, 255, 255, 0.4),
+        470px 160px 2px 1px rgba(255, 255, 255, 0.5),
+        520px 340px 1px 0px rgba(255, 255, 255, 0.3),
+        570px 180px 2px 1px rgba(255, 255, 255, 0.6),
+        620px 270px 1px 0px rgba(255, 255, 255, 0.4),
+        670px 200px 2px 1px rgba(255, 255, 255, 0.5),
+        720px 370px 1px 0px rgba(255, 255, 255, 0.3),
+        770px 220px 2px 1px rgba(255, 255, 255, 0.6),
+        820px 110px 1px 0px rgba(255, 255, 255, 0.4),
+        870px 240px 2px 1px rgba(255, 255, 255, 0.5),
+        920px 400px 1px 0px rgba(255, 255, 255, 0.3),
+        970px 260px 2px 1px rgba(255, 255, 255, 0.6),
+        1020px 150px 1px 0px rgba(255, 255, 255, 0.4),
+        1070px 280px 2px 1px rgba(255, 255, 255, 0.5),
+        1120px 430px 1px 0px rgba(255, 255, 255, 0.3),
+        1170px 300px 2px 1px rgba(255, 255, 255, 0.6),
+        1220px 190px 1px 0px rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    animation: twinkling-stars-2 6s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes twinkling-stars-1 {
+    0% {
+        opacity: 0.1;
+    }
+    33% {
+        opacity: 0.4;
+    }
+    66% {
+        opacity: 0.2;
+    }
+    100% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes twinkling-stars-2 {
+    0% {
+        opacity: 0.2;
+    }
+    25% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 0.1;
+    }
+    75% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+/* Shooting star effect - thinner with lower opacity */
+.shooting-star {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%);
+    animation: shooting 10s linear infinite;
+    opacity: 0;
+    z-index: 1;
+    transform-origin: 0 0;
+    box-shadow: 0 0 5px 1px rgba(255, 255, 255, 0.4);
+}
+
+/* Lower shooting star with different trajectory - thinner with lower opacity */
+.shooting-star-lower {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%);
+    animation: shooting-lower 15s linear infinite;
+    opacity: 0;
+    z-index: 1;
+    transform-origin: 0 0;
+    box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes shooting {
+    0% {
+        transform: translateX(0) translateY(0) rotate(215deg);
+        opacity: 0;
+        width: 0;
+    }
+    0.1% {
+        opacity: 0.6;
+        width: 50px;
+    }
+    5% {
+        width: 150px;
+        opacity: 0.6;
+    }
+    10% {
+        transform: translateX(300px) translateY(300px) rotate(215deg);
+        opacity: 0;
+        width: 0;
+    }
+    100% {
+        transform: translateX(300px) translateY(300px) rotate(215deg);
+        opacity: 0;
+        width: 0;
+    }
+}
+
+/* Animation for lower shooting star with different angle */
+@keyframes shooting-lower {
+    0% {
+        transform: translateX(0) translateY(0) rotate(195deg);
+        opacity: 0;
+        width: 0;
+    }
+    0.1% {
+        opacity: 0.6;
+        width: 60px;
+    }
+    5% {
+        width: 180px;
+        opacity: 0.6;
+    }
+    10% {
+        transform: translateX(350px) translateY(200px) rotate(195deg);
+        opacity: 0;
+        width: 0;
+    }
+    100% {
+        transform: translateX(350px) translateY(200px) rotate(195deg);
+        opacity: 0;
+        width: 0;
+    }
+}
+
+.clouds {
+    width: 10000px;
+    height: 100%;
+    position: fixed;
+    background: transparent url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/clouds_repeat.png) repeat;
+    background-size: 4000px 4000px;
+    z-index: 2;
+    opacity: 0.4;
+    
+    animation: move-background 150s linear infinite;
+}
+
+@keyframes move-background {
+    from {
+        transform: translate3d(0px, 0px, 0px);
+    }
+    to { 
+        transform: translate3d(-4000px, 0px, 0px);
+    }
+}
+
+.moon-container {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: 3;
+}
+
+.moon-img {
+    height: 40vh;
+    width: 40vh;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    opacity: 0.9;
+}
+
+/* Ensure app content is above background */
 .app-container {
     display: flex;
     width: 100%;
     min-height: 100vh;
+    position: relative;
+    z-index: 10; /* Ensure above the background elements */
 }
 
 /* Sidebar Styles */
 .sidebar {
     width: 320px;
-    background: linear-gradient(115deg, #112d4e, #170319);
-    border-right: 1px solid var(--border-color);
+    background: rgba(12, 2, 27, 0.3); /* Make nearly transparent, just a hint of color */
+    border-right: 1px solid rgba(157, 78, 221, 0.05); /* Very subtle border like content area */
     padding: 1.5rem;
     overflow-y: auto;
     height: 100vh;
     position: sticky;
     top: 0;
     flex-shrink: 0;
+    z-index: 11;
+    backdrop-filter: none; /* Remove blur to match other containers */
+}
+
+/* Add text shadow to all sidebar text elements for readability */
+.sidebar, .sidebar-header, .section-title, .control-group label, .style-description, .enhance-description {
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
+}
+
+/* Make border elements subtle */
+.sidebar-header {
+    border-bottom: 1px solid rgba(157, 78, 221, 0.08);
+}
+
+.sidebar-section {
+    border-bottom: 1px solid rgba(157, 78, 221, 0.08);
+}
+
+/* Keep form controls slightly more visible for usability */
+select, input[type="number"] {
+    background: rgba(50, 10, 70, 0.15);
+    border: 1px solid rgba(157, 78, 221, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-header {
@@ -54,13 +409,21 @@ body {
     text-align: center;
     font-weight: 500;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.sidebar-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
 }
 
 .sidebar-section {
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .section-title {
@@ -133,7 +496,7 @@ input[type="number"] {
 select {
     width: 100%;
     padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(50, 10, 70, 0.8);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-white);
@@ -146,12 +509,29 @@ select {
     padding-right: 30px;
 }
 
+select:hover {
+    background: rgba(70, 20, 95, 0.9);
+    border-color: var(--primary-color);
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(157, 78, 221, 0.3);
+}
+
+/* Style dropdown options */
+select option {
+    background-color: rgba(30, 5, 40, 0.95);
+    color: var(--text-white);
+}
+
 .style-description {
     font-size: 0.8rem;
     margin-top: 0.5rem;
     color: var(--text-light);
     font-style: italic;
-    opacity: 0.8;
+    opacity: 1.0;
 }
 
 .enhance-description {
@@ -159,7 +539,7 @@ select {
     margin-top: 0.3rem;
     color: var(--text-light);
     font-style: italic;
-    opacity: 0.8;
+    opacity: 1.0;
     transition: opacity 0.3s ease;
 }
 
@@ -172,27 +552,29 @@ select {
     flex-direction: column;
     align-items: center;
     position: relative;
-    background: linear-gradient(120deg, var(--background-dark), var(--background-darker));
+    background: transparent; /* Let background show through */
+    z-index: 10; /* Above stars */
 }
 
 .main-content > * {
     width: 100%;
     max-width: 1100px;
     position: relative;
-    z-index: 2; /* Ensure all direct children are above the stars */
+    z-index: 10; /* Ensure all direct children are above the stars */
 }
 
 .title-container {
     text-align: center;
     margin-bottom: 2rem;
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(23, 3, 25, 0); /* Completely transparent background */
     border-radius: 20px;
-    border: 1px solid rgba(157, 78, 221, 0.1);
+    border: 1px solid rgba(157, 78, 221, 0.03); /* Extremely subtle border */
     position: relative;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Very subtle shadow */
     width: 100%;
-    z-index: 2; /* Ensure above stars */
+    z-index: 11;
+    backdrop-filter: none; /* Remove blur to see stars behind */
 }
 
 .title-wrapper {
@@ -235,27 +617,41 @@ select {
     font-family: 'Quicksand', sans-serif;
     font-size: 1.2rem;
     color: var(--text-light);
-    opacity: 0.9;
+    opacity: 1.0;
     font-weight: 300;
     letter-spacing: 0.5px;
     margin-top: 1rem;
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
+    font-weight: 400; /* Slightly bolder for better visibility */
 }
 
 .content-area {
-    background: var(--card-bg);
+    background: rgba(23, 3, 25, 0); /* Completely transparent */
+    opacity: 1.0; /* Keep text fully visible */
     padding: 2rem;
     border-radius: 20px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(157, 78, 221, 0.03); /* Extremely subtle border */
     margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); /* Barely visible shadow */
     position: relative;
-    z-index: 2; /* Ensure above stars */
+    z-index: 11;
+    backdrop-filter: none;
+}
+
+/* Add stronger text shadow to improve readability against transparent background */
+.content-area, .input-prompt, .subtitle-text {
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
+}
+
+#prompt-input, #create-button, .download-button {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Slightly stronger shadow for interactive elements */
 }
 
 .input-prompt {
     font-family: 'Quicksand', sans-serif;
     font-size: 1.2rem;
     color: var(--text-light);
+    opacity: 1.0;
     margin-bottom: 1.5rem;
     text-align: center;
     font-weight: 400;
@@ -278,6 +674,12 @@ select {
     font-size: 1rem;
     font-family: 'Quicksand', sans-serif;
     transition: all 0.3s ease;
+}
+
+/* Improve placeholder visibility */
+#prompt-input::placeholder {
+    color: rgba(200, 205, 241, 0.7);
+    opacity: 0.8;
 }
 
 #prompt-input:focus {
@@ -374,17 +776,6 @@ select {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-
-/* Enhanced UI Elements */
-.glow-effect {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 20px;
-    background: radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.2), transparent 70%);
-    pointer-events: none;
-    opacity: 0.5;
 }
 
 /* Mobile Responsiveness */
