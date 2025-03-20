@@ -1,0 +1,173 @@
+/* Cloudinary API Integration Styles */
+
+/* Progress overlay for uploads and transformations */
+.progress-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    border-radius: 8px;
+}
+
+.progress-container {
+    width: 80%;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar {
+    height: 20px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border-radius: 6px;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: var(--text-white);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 5px;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Image comparison styles */
+.image-comparison {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.original-image, .enhanced-image {
+    flex: 1;
+    min-width: 300px;
+}
+
+.image-holder {
+    position: relative;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.image-holder img {
+    max-width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+    object-fit: contain;
+    display: block;
+    background: transparent;
+}
+
+.image-holder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: -1;
+}
+
+.image-holder .placeholder {
+    color: var(--text-light);
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+}
+
+.image-info {
+    margin-top: 10px;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+/* Action buttons */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:disabled {
+    background: #555;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Transformations preview grid */
+.transformations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.transformation-item {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.transformation-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.transformation-item.selected {
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
+}
+
+.transformation-preview {
+    width: 100%;
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+}
+
+.transformation-name {
+    padding: 8px;
+    text-align: center;
+    color: var(--text-light);
+    background: rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+} 

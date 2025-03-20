@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Dreamscape AI - Artistic Effects</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/enhance.css">
+    <link rel="stylesheet" href="css/cloudinary.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <!-- Add Cloudinary SDK directly -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/url-polyfill/1.1.12/url-polyfill.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #9d4edd;
+            --primary-dark: #7b2cbf;
+            --background-dark: #19031b;  
+            --background-darker: #0c021b; 
+            --text-light: #c8cdf1;
+            --text-white: #ffffff;
+            --accent-color: #5a2d88;
+            --border-color: rgba(157, 78, 221, 0.2);
+            --card-bg: rgba(157, 78, 221, 0.05);
+            --sidebar-bg: rgba(30, 30, 30, 0.95);
+        }
+        
+        /* Ensure stars background is properly displayed */
+        .stars {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            background: transparent url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png") repeat;
+            background-size: 1000px 1000px;
+            opacity: 0.6;
+            mix-blend-mode: screen;
+            z-index: 0;
+        }
+
+        .twinkling {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: transparent;
+            overflow: hidden;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+        }
+
+        .clouds {
+            width: 10000px;
+            height: 100%;
+            position: fixed;
+            background: transparent url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/clouds_repeat.png") repeat;
+            background-size: 4000px 4000px;
+            z-index: 2;
+            opacity: 0.4;
+            animation: move-background 150s linear infinite;
+        }
+
+        .filter-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .filter-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-item:hover {
+            background: rgba(157, 78, 221, 0.2);
+            border-color: rgba(157, 78, 221, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .filter-item.selected {
+            background: rgba(157, 78, 221, 0.3);
+            border-color: rgba(157, 78, 221, 0.5);
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .filter-name {
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .filter-sample {
+            width: 100%;
+            height: 80px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        /* Critical fixes for placeholders and image containers */
+        .image-holder {
+            background-color: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 8px !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        
+        .image-holder img {
+            max-width: 100% !important;
+            max-height: 400px !important;
+            object-fit: contain !important;
+            background-color: transparent !important;
+            display: block !important;
+            margin: 0 auto !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        
+        .placeholder {
+            background-color: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            padding: 20px !important;
+            border-radius: 8px !important;
+            text-align: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        
+        /* Ensure image display containers maintain styles */
+        #original-image-display, #enhanced-image-display {
+            min-height: 300px !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            overflow: hidden !important;
+            background-color: rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        /* Result container styles */
+        .result-container, 
+        .image-comparison, 
+        .original-image, 
+        .enhanced-image {
+            background-color: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .filter-preview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="clouds"></div>
+    <div class="moon-container">
+        <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon">
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
+                <span>Creative Studio✨</span>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📋 Navigation</p>
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
+                <a href="artistic.html" class="nav-link active">🎨 Artistic Effects</a>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🎨 Effect Type</p>
+                <div class="control-group">
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="effect-type" value="artistic" checked>
+                            🖌️ Artistic Filters
+                        </label>
+                        <label>
+                            <input type="radio" name="effect-type" value="cartoon">
+                            🎭 Cartoonify
+                        </label>
+                        <label>
+                            <input type="radio" name="effect-type" value="painting">
+                            🎨 Painting Styles
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section" id="artistic-controls">
+                <p class="section-title">🖌️ Artistic Filters</p>
+                <div class="control-group">
+                    <label for="art-filter">Select Filter</label>
+                    <select id="art-filter">
+                        <option value="zorro">Zorro</option>
+                        <option value="primavera">Primavera</option>
+                        <option value="athena">Athena</option>
+                        <option value="ukulele">Ukulele</option>
+                        <option value="incognito">Incognito</option>
+                        <option value="peacock">Peacock</option>
+                        <option value="quartz">Quartz</option>
+                        <option value="red_rock">Red Rock</option>
+                        <option value="fes">Fes</option>
+                        <option value="audrey">Audrey</option>
+                        <option value="eucalyptus">Eucalyptus</option>
+                        <option value="frost">Frost</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="gradient-fade">
+                        <input type="checkbox" id="gradient-fade">
+                        🌈 Add Gradient Fade
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label for="pixelate">
+                        <input type="checkbox" id="pixelate">
+                        🧩 Pixelate Effect
+                    </label>
+                </div>
+                <div class="control-group slider-control" id="pixelate-control" style="display: none;">
+                    <label for="pixelate-strength">Pixelate Strength <span>20</span></label>
+                    <input type="range" id="pixelate-strength" min="5" max="50" value="20">
+                </div>
+            </div>
+            
+            <div class="sidebar-section" id="cartoon-controls" style="display: none;">
+                <p class="section-title">🎭 Cartoonify</p>
+                <div class="control-group slider-control">
+                    <label for="cartoon-strength">Effect Strength <span>50</span></label>
+                    <input type="range" id="cartoon-strength" min="1" max="100" value="50">
+                </div>
+                <div class="control-group slider-control">
+                    <label for="line-strength">Line Strength <span>50</span></label>
+                    <input type="range" id="line-strength" min="1" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <label for="color-reduction">Color Reduction</label>
+                    <select id="color-reduction">
+                        <option value="auto">Auto</option>
+                        <option value="4">4 Colors</option>
+                        <option value="8">8 Colors</option>
+                        <option value="16">16 Colors</option>
+                        <option value="32">32 Colors</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sidebar-section" id="painting-controls" style="display: none;">
+                <p class="section-title">🎨 Painting Styles</p>
+                <div class="control-group">
+                    <label for="painting-style">Select Style</label>
+                    <select id="painting-style">
+                        <option value="oil_paint">Oil Painting</option>
+                        <option value="al_dente">Al Dente</option>
+                        <option value="vignette">Vignette</option>
+                    </select>
+                </div>
+                <div class="control-group slider-control">
+                    <label for="effect-strength">Effect Strength <span>50</span></label>
+                    <input type="range" id="effect-strength" min="1" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <label for="tint-color">Add Color Tint</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="color" id="tint-color" value="#9d4edd">
+                        <input type="range" id="tint-strength" min="0" max="100" value="0" style="flex: 1;">
+                        <span id="tint-strength-value">0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🖼️ Output Size</p>
+                <div class="control-group">
+                    <label for="output-size-type">Sizing Method</label>
+                    <select id="output-size-type">
+                        <option value="original">Original Size</option>
+                        <option value="custom" selected>Custom Size</option>
+                        <option value="preset">Preset Dimensions</option>
+                    </select>
+                </div>
+                
+                <!-- Custom width and height sliders -->
+                <div id="custom-size-controls">
+                    <div class="control-group slider-control">
+                        <label for="width-control">Width <span>768</span>px</label>
+                        <input type="range" id="width-control" min="100" max="2000" value="768">
+                    </div>
+                    <div class="control-group slider-control">
+                        <label for="height-control">Height <span>768</span>px</label>
+                        <input type="range" id="height-control" min="100" max="2000" value="768">
+                    </div>
+                    <div class="control-group">
+                        <label for="maintain-aspect-ratio">
+                            <input type="checkbox" id="maintain-aspect-ratio" checked>
+                            🔒 Maintain Aspect Ratio
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Preset dimensions dropdown, hidden initially if custom is selected -->
+                <div id="preset-size-controls" style="display: none;">
+                    <div class="control-group">
+                        <label for="output-size">Preset Dimensions</label>
+                        <select id="output-size">
+                            <option value="512x512">512 x 512</option>
+                            <option value="768x768" selected>768 x 768</option>
+                            <option value="1024x1024">1024 x 1024</option>
+                            <option value="1280x720">1280 x 720 (HD)</option>
+                            <option value="1920x1080">1920 x 1080 (Full HD)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🛠️ Settings</p>
+                <div class="control-group">
+                    <label for="remove-watermark">
+                        <input type="checkbox" id="remove-watermark" checked>
+                        🎯 Remove Watermark
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label for="custom-seed">
+                        <input type="checkbox" id="custom-seed">
+                        🌱 Custom Seed
+                    </label>
+                </div>
+                <div class="control-group" id="seed-value-group" style="display: none;">
+                    <label for="seed-value">Seed Value</label>
+                    <input type="number" id="seed-value" min="1" max="999999" value="42">
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">ℹ️ About</p>
+                <div class="control-group enhance-description">
+                    <p>This tool transforms your images with artistic effects using Cloudinary's API. Choose from artistic filters, cartoonify effects, or painting styles.</p>
+                    <p>Your images are processed securely and are not stored on our servers.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="title-container">
+                <div class="title-wrapper">
+                    <h1>Artistic Effects 🎨</h1>
+                </div>
+                <p class="subtitle-text">Transform your images with creative artistic styles</p>
+            </div>
+            
+            <div class="content-area">
+                <div class="upload-area" id="upload-area">
+                    <div id="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <h3>Drag & Drop an Image</h3>
+                        <p>or click to browse</p>
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="result-container" id="result-container" style="display: none;">
+                    <div class="image-comparison">
+                        <div class="original-image">
+                            <h3>Original Image</h3>
+                            <div class="image-holder" id="original-image-display"></div>
+                        </div>
+                        <div class="enhanced-image">
+                            <h3>Artistic Image</h3>
+                            <div class="image-holder" id="enhanced-image-display"></div>
+                        </div>
+                    </div>
+                    <div class="filter-preview" id="filter-preview" style="display: none;">
+                        <!-- Filter previews will be dynamically generated here -->
+                    </div>
+                    <div class="action-buttons">
+                        <button id="apply-effect-button" class="action-button">🎨 Apply Effect</button>
+                        <button id="download-button" class="action-button" disabled>💾 Download Result</button>
+                        <button id="reset-button" class="action-button">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/cloudinary-api.js"></script>
+    <script>
+        // Basic JavaScript for star animation
+        function createStars() {
+            const container = document.querySelector('.twinkling');
+            // Clear any existing stars
+            container.innerHTML = '';
+            
+            // Create 500 stars
+            for (let i = 0; i < 500; i++) {
+                createTwinklingStar(container);
+            }
+            
+            // Start shooting stars
+            createShootingStars(container);
+        }
+
+        function createTwinklingStar(container) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Use a weighted distribution for star sizes
+            const random = Math.random();
+            if (random < 0.6) {
+                star.classList.add('star-1'); // 60% small stars
+            } else if (random < 0.8) {
+                star.classList.add('star-2'); // 20% medium stars
+            } else if (random < 0.95) {
+                star.classList.add('star-3'); // 15% large stars
+            } else {
+                star.classList.add('star-4'); // 5% extra large stars
+            }
+            
+            // Random position
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            
+            // Random animation delay
+            star.style.animationDelay = `${Math.random() * 5}s`;
+            
+            // Random animation duration between 3-8 seconds
+            star.style.animationDuration = `${3 + Math.random() * 5}s`;
+            
+            container.appendChild(star);
+            return star;
+        }
+
+        function createShootingStars(container) {
+            // Create a shooting star every 8 seconds
+            setInterval(() => {
+                createShootingStar(container);
+            }, 8000);
+            
+            // Create initial shooting star
+            createShootingStar(container);
+        }
+
+        function createShootingStar(container) {
+            const shootingStar = document.createElement('div');
+            shootingStar.className = 'shooting-star';
+            
+            // Random position at the top edge of the screen
+            const left = Math.random() * 100;
+            shootingStar.style.left = `${left}%`;
+            shootingStar.style.top = `${Math.random() * 30}%`;
+            
+            container.appendChild(shootingStar);
+            
+            // Remove the shooting star after the animation
+            setTimeout(() => {
+                shootingStar.remove();
+            }, 3000);
+        }
+        
+        // Effect type radio buttons
+        const effectTypes = document.querySelectorAll('input[name="effect-type"]');
+        const artisticControls = document.getElementById('artistic-controls');
+        const cartoonControls = document.getElementById('cartoon-controls');
+        const paintingControls = document.getElementById('painting-controls');
+        
+        effectTypes.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Hide all control sections
+                artisticControls.style.display = 'none';
+                cartoonControls.style.display = 'none';
+                paintingControls.style.display = 'none';
+                
+                // Show the selected section
+                if (this.value === 'artistic') {
+                    artisticControls.style.display = 'block';
+                } else if (this.value === 'cartoon') {
+                    cartoonControls.style.display = 'block';
+                } else if (this.value === 'painting') {
+                    paintingControls.style.display = 'block';
+                }
+                
+                // If we have an uploaded image, regenerate filter previews
+                if (uploadedImageInfo && this.value === 'artistic') {
+                    updateFilterPreviews(uploadedImageInfo.secure_url);
+                } else {
+                    filterPreview.style.display = 'none';
+                }
+            });
+        });
+
+        // Toggle pixelate controls
+        const pixelateCheckbox = document.getElementById('pixelate');
+        const pixelateControl = document.getElementById('pixelate-control');
+        
+        pixelateCheckbox.addEventListener('change', function() {
+            pixelateControl.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Custom seed toggle
+        const customSeedCheckbox = document.getElementById('custom-seed');
+        const seedValueGroup = document.getElementById('seed-value-group');
+        
+        customSeedCheckbox.addEventListener('change', function() {
+            seedValueGroup.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Update tint strength display
+        const tintStrength = document.getElementById('tint-strength');
+        const tintStrengthValue = document.getElementById('tint-strength-value');
+        
+        tintStrength.addEventListener('input', function() {
+            tintStrengthValue.textContent = `${this.value}%`;
+        });
+
+        // Update slider value displays
+        const sliders = document.querySelectorAll('input[type="range"]:not(#tint-strength)');
+        sliders.forEach(slider => {
+            slider.addEventListener('input', function() {
+                const valueDisplay = this.previousElementSibling.querySelector('span');
+                valueDisplay.textContent = this.value;
+            });
+        });
+        
+        // File upload handling
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const resultContainer = document.getElementById('result-container');
+        const originalImageDisplay = document.getElementById('original-image-display');
+        const enhancedImageDisplay = document.getElementById('enhanced-image-display');
+        const filterPreview = document.getElementById('filter-preview');
+        const applyEffectButton = document.getElementById('apply-effect-button');
+        const downloadButton = document.getElementById('download-button');
+        const resetButton = document.getElementById('reset-button');
+        
+        // Variables to store image information
+        let uploadedImageInfo = null; // Store the complete Cloudinary upload response
+        let transformedImageUrl = '';  // Store the transformed image URL
+        
+        // Configure the Cloudinary upload widget once
+        const uploadWidget = window.cloudinary.createUploadWidget({
+            cloudName: 'dwa9nkpyq',
+            uploadPreset: 'dreamscape-unsigned',
+            apiKey: '887549877845179',
+            sources: ['local', 'url', 'camera', 'google_drive', 'facebook', 'dropbox', 'instagram'],
+            showAdvancedOptions: false,
+            cropping: false,
+            multiple: false,
+            defaultSource: 'local',
+            folder: 'dreamscape-app',
+            clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+            maxFileSize: 10000000,
+            singleUploadAutoClose: true,
+            styles: {
+                palette: {
+                    window: '#121212',
+                    sourceBg: '#121212',
+                    windowBorder: '#382f79',
+                    tabIcon: '#ffffcc',
+                    inactiveTabIcon: '#5e5e5e',
+                    menuIcons: '#a76fef',
+                    link: '#7046e8',
+                    action: '#7046e8',
+                    inProgress: '#7046e8',
+                    complete: '#a76fef',
+                    error: '#ff5a00',
+                    textDark: '#eeeeee',
+                    textLight: '#121212'
+                },
+                fonts: {
+                    default: null,
+                    "sans-serif": { url: null, active: true }
+                }
+            }
+        }, (error, result) => {
+            if (error) {
+                console.error("Widget error:", error);
+                showError('Upload failed: ' + (error.message || "Unknown error"));
+                return;
+            }
+            
+            if (result.event === "success") {
+                console.log("Upload successful!", result.info);
+                
+                // Store the complete upload result for later transformation
+                uploadedImageInfo = result.info;
+                
+                // Display the original image in the UI
+                const originalUrl = result.info.secure_url;
+                originalImageDisplay.innerHTML = `<img src="${originalUrl}" alt="Original Image">`;
+                enhancedImageDisplay.innerHTML = `<div class="placeholder">Select effect options and click "Apply Effect"</div>`;
+                
+                // Show the result container, hide upload area
+                uploadArea.style.display = 'none';
+                resultContainer.style.display = 'block';
+                
+                // Enable the effect button
+                applyEffectButton.disabled = false;
+                
+                // Update the filter previews with the uploaded image
+                updateFilterPreviews(originalUrl);
+            } else if (result.event === "close") {
+                // Only show message if nothing was uploaded
+                if (!uploadedImageInfo) {
+                    console.log("Widget closed without uploading");
+                }
+            }
+        });
+        
+        // Replace drag-and-drop with direct widget trigger
+        uploadArea.addEventListener('click', () => {
+            uploadWidget.open();
+        });
+        
+        // Also allow drag-and-drop to open the widget
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            // Instead of handling file directly, just open the widget
+            uploadWidget.open();
+        });
+        
+        // Apply artistic effect button
+        applyEffectButton.addEventListener('click', async () => {
+            console.log("Apply effect button clicked");
+            
+            if (!uploadedImageInfo) {
+                showError('Please upload an image first');
+                return;
+            }
+            
+            // Disable button while processing
+            applyEffectButton.disabled = true;
+            applyEffectButton.textContent = "⏳ Processing...";
+            
+            // Show processing indicator
+            enhancedImageDisplay.innerHTML = `
+                <div class="placeholder">
+                    <p>⏳ Applying artistic effect...</p>
+                    <div class="progress-bar" style="width: 300px; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; margin: 20px auto;">
+                        <div class="progress" style="width: 0%; height: 100%; background: linear-gradient(to right, #7b2cbf, #9d4edd); transition: width 0.5s;"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Animate progress bar
+            const progressBar = enhancedImageDisplay.querySelector('.progress');
+            progressBar.style.width = '30%';
+            
+            try {
+                // Build transformation parameters based on selected options
+                const effectType = document.querySelector('input[name="effect-type"]:checked').value;
+                const transformations = [];
+                
+                // Get the original public ID from the uploaded image
+                const publicId = uploadedImageInfo.public_id;
+                const format = uploadedImageInfo.format;
+                
+                // Add size transformation based on selected sizing method
+                const sizeType = document.getElementById('output-size-type').value;
+                
+                if (sizeType === 'custom') {
+                    // Use custom width and height from sliders
+                    const width = document.getElementById('width-control').value;
+                    const height = document.getElementById('height-control').value;
+                    transformations.push(`c_scale,w_${width},h_${height}`);
+                } 
+                else if (sizeType === 'preset') {
+                    // Use preset dimensions from dropdown
+                    const outputSize = document.getElementById('output-size').value;
+                    if (outputSize) {
+                        const [width, height] = outputSize.split('x');
+                        transformations.push(`c_scale,w_${width},h_${height}`);
+                    }
+                }
+                // If original is selected, don't add any size transformation
+                
+                // Add effects based on type
+                if (effectType === 'artistic') {
+                    // Get selected artistic filter
+                    const artFilter = document.getElementById('art-filter').value;
+                    transformations.push(`e_art:${artFilter}`);
+                    
+                    // Add gradient fade if selected
+                    if (document.getElementById('gradient-fade').checked) {
+                        transformations.push('e_gradient_fade');
+                    }
+                    
+                    // Add pixelate effect if selected
+                    if (document.getElementById('pixelate').checked) {
+                        const pixelateStrength = document.getElementById('pixelate-strength').value;
+                        transformations.push(`e_pixelate:${pixelateStrength}`);
+                    }
+                } 
+                else if (effectType === 'cartoon') {
+                    // Add cartoonify effect with parameters
+                    const cartoonStrength = document.getElementById('cartoon-strength').value;
+                    const lineStrength = document.getElementById('line-strength').value;
+                    const colorReduction = document.getElementById('color-reduction').value;
+                    
+                    let cartoonTransform = `e_cartoonify:${cartoonStrength}:${lineStrength}`;
+                    if (colorReduction !== 'auto') {
+                        cartoonTransform += `:${colorReduction}`;
+                    }
+                    transformations.push(cartoonTransform);
+                } 
+                else if (effectType === 'painting') {
+                    // Add painting style effect
+                    const paintingStyle = document.getElementById('painting-style').value;
+                    const effectStrength = document.getElementById('effect-strength').value;
+                    
+                    if (paintingStyle === 'oil_paint') {
+                        transformations.push(`e_oil_paint:${effectStrength}`);
+                    } else if (paintingStyle === 'vignette') {
+                        transformations.push(`e_vignette:${effectStrength}`);
+                    } else {
+                        transformations.push(`e_art:${paintingStyle}`);
+                    }
+                    
+                    // Add tint if selected
+                    const tintStrength = document.getElementById('tint-strength').value;
+                    if (tintStrength > 0) {
+                        const tintColor = document.getElementById('tint-color').value.substring(1); // Remove # from color
+                        transformations.push(`e_tint:${tintStrength}:${tintColor}`);
+                    }
+                }
+                
+                // Update progress bar
+                progressBar.style.width = '60%';
+                
+                // Create the transformation URL
+                let transformationString = transformations.join('/');
+                if (!transformationString) transformationString = 'c_scale,w_800';
+                
+                // Final transformation URL using Cloudinary's format
+                transformedImageUrl = `https://res.cloudinary.com/dwa9nkpyq/image/upload/${transformationString}/${publicId}.${format}`;
+                console.log("Generated transformation URL:", transformedImageUrl);
+                
+                // Update progress bar
+                progressBar.style.width = '80%';
+                
+                // Display the transformed image
+                enhancedImageDisplay.innerHTML = `
+                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        <img 
+                            id="enhanced-image"
+                            src="${transformedImageUrl}" 
+                            style="max-width: 100%; max-height: 350px; object-fit: contain;" 
+                            alt="Enhanced Image"
+                            onload="this.style.opacity = '1';"
+                            onerror="document.getElementById('artistic-error').style.display = 'block'; this.style.display = 'none';"
+                        />
+                        <div id="artistic-error" style="display: none; color: #ff5555; text-align: center; margin-top: 20px;">
+                            <p>Error loading the transformed image.</p>
+                            <button id="simple-transform-btn" style="padding: 8px 12px; background: #7b2cbf; border: none; color: white; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                                Try Simple Transformation
+                            </button>
+                        </div>
+                        <p style="color: #4CAF50; margin-top: 15px; text-align: center;">✨ Artistic effect applied!</p>
+                    </div>
+                `;
+                
+                // Add error handler for the simple transform button
+                document.getElementById('artistic-error')?.addEventListener('click', (e) => {
+                    if (e.target.id === 'simple-transform-btn') {
+                        // Create a much simpler URL with just basic transformations
+                        const simpleUrl = `https://res.cloudinary.com/dwa9nkpyq/image/upload/c_scale,w_800/${publicId}.${format}`;
+                        transformedImageUrl = simpleUrl;
+                        enhancedImageDisplay.innerHTML = `
+                            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                <img 
+                                    src="${simpleUrl}" 
+                                    style="max-width: 100%; max-height: 350px; object-fit: contain;" 
+                                    alt="Enhanced Image (Simple)"
+                                />
+                                <p style="color: #FFD700; margin-top: 15px; text-align: center;">⚠️ Using simplified transformation</p>
+                            </div>
+                        `;
+                        downloadButton.disabled = false;
+                    }
+                });
+                
+                // Enable download button
+                downloadButton.disabled = false;
+                
+            } catch (error) {
+                console.error("Artistic effect error:", error);
+                enhancedImageDisplay.innerHTML = `
+                    <div class="placeholder">
+                        <p style="color: #ff5555;">Error applying artistic effect</p>
+                        <p>${error.message || "Unknown error"}</p>
+                    </div>
+                `;
+            } finally {
+                // Restore button state
+                applyEffectButton.disabled = false;
+                applyEffectButton.textContent = "🎨 Apply Effect";
+            }
+        });
+        
+        // Download button - opens the image in a new tab
+        downloadButton.addEventListener('click', () => {
+            if (transformedImageUrl) {
+                window.open(transformedImageUrl, '_blank');
+            }
+        });
+        
+        // Reset button
+        resetButton.addEventListener('click', () => {
+            // Reset to upload state
+            uploadArea.style.display = 'block';
+            resultContainer.style.display = 'none';
+            
+            // Reset Cloudinary data
+            uploadedImageInfo = null;
+            transformedImageUrl = '';
+            
+            // Reset sliders
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.value = slider.defaultValue;
+                const valueDisplay = slider.previousElementSibling?.querySelector('span');
+                if (valueDisplay) valueDisplay.textContent = slider.defaultValue;
+            });
+            
+            // Reset checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = checkbox.defaultChecked;
+            });
+            
+            // Reset to artistic filter effect type
+            document.querySelector('input[name="effect-type"][value="artistic"]').checked = true;
+            artisticControls.style.display = 'block';
+            cartoonControls.style.display = 'none';
+            paintingControls.style.display = 'none';
+            
+            // Reset tint color
+            document.getElementById('tint-color').value = '#9d4edd';
+            document.getElementById('tint-strength').value = 0;
+            document.getElementById('tint-strength-value').textContent = '0%';
+        });
+        
+        // Helper function to show error messages
+        function showError(message) {
+            // Display the error in the UI
+            const errorToast = document.createElement('div');
+            errorToast.className = 'error-toast';
+            errorToast.innerHTML = `<p>${message}</p>`;
+            errorToast.style.position = 'fixed';
+            errorToast.style.bottom = '20px';
+            errorToast.style.left = '50%';
+            errorToast.style.transform = 'translateX(-50%)';
+            errorToast.style.backgroundColor = 'rgba(255, 50, 50, 0.9)';
+            errorToast.style.color = 'white';
+            errorToast.style.padding = '10px 20px';
+            errorToast.style.borderRadius = '5px';
+            errorToast.style.zIndex = '1000';
+            
+            document.body.appendChild(errorToast);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                errorToast.style.opacity = '0';
+                errorToast.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    document.body.removeChild(errorToast);
+                }, 500);
+            }, 5000);
+        }
+
+        // Initialize stars
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            
+            // Setup size controls interaction
+            const sizeTypeSelector = document.getElementById('output-size-type');
+            const customSizeControls = document.getElementById('custom-size-controls');
+            const presetSizeControls = document.getElementById('preset-size-controls');
+            
+            sizeTypeSelector.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customSizeControls.style.display = 'block';
+                    presetSizeControls.style.display = 'none';
+                } else if (this.value === 'preset') {
+                    customSizeControls.style.display = 'none';
+                    presetSizeControls.style.display = 'block';
+                } else {
+                    // Original size
+                    customSizeControls.style.display = 'none';
+                    presetSizeControls.style.display = 'none';
+                }
+            });
+            
+            // Setup aspect ratio maintenance
+            const widthSlider = document.getElementById('width-control');
+            const heightSlider = document.getElementById('height-control');
+            const aspectRatioCheckbox = document.getElementById('maintain-aspect-ratio');
+            
+            let aspectRatio = 1; // Default square
+            let isUpdatingWidth = false;
+            let isUpdatingHeight = false;
+            
+            // Set initial aspect ratio from the original image once uploaded
+            const updateAspectRatioFromImage = () => {
+                if (uploadedImageInfo && uploadedImageInfo.width && uploadedImageInfo.height) {
+                    aspectRatio = uploadedImageInfo.width / uploadedImageInfo.height;
+                    console.log(`Set aspect ratio to ${aspectRatio} from original image`);
+                }
+            };
+            
+            // Width change handler
+            widthSlider.addEventListener('input', function() {
+                if (isUpdatingWidth) return; // Prevent recursion
+                
+                const width = parseInt(this.value);
+                widthSlider.previousElementSibling.querySelector('span').textContent = width;
+                
+                // Update height based on aspect ratio if checkbox is checked
+                if (aspectRatioCheckbox.checked && !isUpdatingHeight) {
+                    isUpdatingHeight = true;
+                    const newHeight = Math.round(width / aspectRatio);
+                    
+                    // Ensure height is within valid range
+                    const constrainedHeight = Math.min(Math.max(newHeight, 100), 2000);
+                    heightSlider.value = constrainedHeight;
+                    heightSlider.previousElementSibling.querySelector('span').textContent = constrainedHeight;
+                    isUpdatingHeight = false;
+                }
+            });
+            
+            // Height change handler
+            heightSlider.addEventListener('input', function() {
+                if (isUpdatingHeight) return; // Prevent recursion
+                
+                const height = parseInt(this.value);
+                heightSlider.previousElementSibling.querySelector('span').textContent = height;
+                
+                // Update width based on aspect ratio if checkbox is checked
+                if (aspectRatioCheckbox.checked && !isUpdatingWidth) {
+                    isUpdatingWidth = true;
+                    const newWidth = Math.round(height * aspectRatio);
+                    
+                    // Ensure width is within valid range
+                    const constrainedWidth = Math.min(Math.max(newWidth, 100), 2000);
+                    widthSlider.value = constrainedWidth;
+                    widthSlider.previousElementSibling.querySelector('span').textContent = constrainedWidth;
+                    isUpdatingWidth = false;
+                }
+            });
+            
+            // Update aspect ratio when image is uploaded
+            const originalInterval = setInterval(() => {
+                if (uploadedImageInfo) {
+                    updateAspectRatioFromImage();
+                    clearInterval(originalInterval);
+                }
+            }, 500);
+
+            // Update filter previews when an image is uploaded
+            function updateFilterPreviews(imageUrl) {
+                if (!imageUrl) return;
+                
+                // If filter preview container exists, update the previews
+                const filterPreviewContainer = document.getElementById('filter-preview-container');
+                if (!filterPreviewContainer) return;
+                
+                const filters = [
+                    { name: 'Zorro', value: 'zorro' },
+                    { name: 'Primavera', value: 'primavera' },
+                    { name: 'Athena', value: 'athena' },
+                    { name: 'Incognito', value: 'incognito' },
+                    { name: 'Red Rock', value: 'red_rock' },
+                    { name: 'Ukulele', value: 'ukulele' }
+                ];
+                
+                let previewHTML = '';
+                
+                filters.forEach(filter => {
+                    const previewUrl = `https://res.cloudinary.com/dwa9nkpyq/image/upload/c_scale,w_150,h_150/e_art:${filter.value}/${uploadedImageInfo.public_id}.${uploadedImageInfo.format}`;
+                    
+                    previewHTML += `
+                        <div class="filter-item" data-filter="${filter.value}">
+                            <div class="filter-sample" style="background-image: url('${previewUrl}')"></div>
+                            <div class="filter-name">${filter.name}</div>
+                        </div>
+                    `;
+                });
+                
+                filterPreviewContainer.innerHTML = previewHTML;
+                
+                // Add click handlers to filter items
+                document.querySelectorAll('.filter-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const filterValue = this.getAttribute('data-filter');
+                        document.getElementById('art-filter').value = filterValue;
+                        
+                        // Visual selection
+                        document.querySelectorAll('.filter-item').forEach(i => i.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -30,7 +30,7 @@ VERY IMPORTANT - ALWAYS OUTPUT  THE RESULT OF A COMPLETED TASK  WITH A BRIEF, BU
 7. DO NOT run the lint and typecheck commands on documentation files. You should only run lint and typecheck commands on files that are directly related to the functionality of the code and the current task.
 8. Always run tests after a big change has been introduced to a codebase.
 9. When creating or updating documentation files, use colored text and emojis for style. Add pictures if appropriate.
-10. When creating scripts to install or run an app, alwayse use colored text, multi-colored preferred. Create an attracive block letter ascii banner in multiple colors/gradints to all scripts. Installers should have a choice system and install a virtual environment. Users should have options to choose pip, uv or conda, and as many other options as appropriate for the install.
+10. When creating scripts to install or run an app, alwayse use colored text, multi-colored preferred. Create an attracive block letter ascii banner in multiple colors/gradints and add to all scripts. Installers should have a choice system and install a virtual environment. Users should have options to choose pip, uv or conda, and as many other options as appropriate for the install.
 11. Help commands should have also have an attractive block letter ascii banner, multi-colored text and emojis. Stylize everything.
 
 NEVER commit changes unless the user explicitly asks you to. It is VERY IMPORTANT to only commit when explicitly asked, otherwise the user will feel that you are being too proactive.
@@ -57,3 +57,13 @@ You are allowed to be proactive, but only when the user asks you to do something
 4. Use the available search tools to understand the codebase and the user's query. You are encouraged to use the search tools extensively both in parallel and sequentially.
 5. You are encouraged to use MCP tools when needed to find information or solutions to a task or problem. You should always use these tools when the task at hand involves a specific implementation detail that may need clarification or when you need to find more information to find a solution to a request or problem. You should also use these tools as needed to ensure your information is up to date and accurate and look to documentation files on web for help when appropriate.
 
+Personal Info:
+Name: Pink Pixel
+Website: pinkpixel.dev
+Github: github.com\pinkpixel-dev
+Discord: @sizzlebop
+
+Branding & Identification:
+Emoji: ✨
+Tagline: "Dream it, Pixel it”
+Signature: “Made with ❤️ by Pink Pixel”
