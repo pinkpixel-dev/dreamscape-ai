@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Dreamscape AI - Image Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="moon-container">
+        <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon">
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
+                <span>Creative Studio✨</span>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📋 Navigation</p>
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="generate.html" class="nav-link active">🌌 Generate Images</a>
+                <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
+                <a href="artistic.html" class="nav-link">🎨 Artistic Effects</a>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📐 Canvas Settings</p>
+                <div class="control-group">
+                    <label for="width">Canvas Width</label>
+                    <input type="range" id="width" min="256" max="2048" value="1024" step="64">
+                    <span class="value-display" id="width-value">1024</span>
+                </div>
+                <div class="control-group">
+                    <label for="height">Canvas Height</label>
+                    <input type="range" id="height" min="256" max="2048" value="1024" step="64">
+                    <span class="value-display" id="height-value">1024</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🌱 Seed Settings</p>
+                <div class="control-group">
+                    <label for="random-seed">
+                        <input type="checkbox" id="random-seed" checked>
+                        🎲 Random Seed
+                    </label>
+                </div>
+                <div class="control-group" id="seed-input-group">
+                    <label for="seed">🌱 Seed</label>
+                    <input type="number" id="seed" min="1" max="1337" value="42" step="1" disabled>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🎨 Model & Style</p>
+                <div class="control-group">
+                    <label for="model">Image Model</label>
+                    <select id="model">
+                        <!-- Will be populated dynamically from Pollinations API -->
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="style">Art Style</label>
+                    <select id="style">
+                        <!-- Will be populated from styles.js -->
+                    </select>
+                </div>
+                <div class="style-description" id="style-description">
+                    <!-- Will be populated from styles.js -->
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🛠️ Settings</p>
+                <div class="control-group">
+                    <label for="nologo">
+                        <input type="checkbox" id="nologo" checked>
+                        🎯 Remove Watermark
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label for="private">
+                        <input type="checkbox" id="private" checked>
+                        🔒 Keep Private
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label for="enhance-prompt">
+                        <input type="checkbox" id="enhance-prompt" checked>
+                        ✨ Enhance Prompt
+                    </label>
+                </div>
+                <div class="control-group enhance-description" id="enhance-description">
+                    Uses AI to transform your prompt into a structured format with added detail and style
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="title-container">
+                <div class="title-wrapper">
+                    <img src="../title.png" alt="Dreamscape AI" class="title-image">
+                </div>
+                <p class="subtitle-text">Transform your imagination into images</p>
+            </div>
+            
+            <div class="content-area">
+                <p class="input-prompt">🌟 What will you create today?</p>
+                <div class="input-container">
+                    <input type="text" id="prompt-input" placeholder="A majestic purple dragon soaring through a galaxy of stars... ✨" maxlength="1000">
+                    <button id="create-button">🌌 Create Magic</button>
+                </div>
+                
+                <div class="result-container" id="result-container">
+                    <!-- Generated image will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../styles.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        console.log("Generate.html - Debug: Script executed");
+        
+        // Try a different approach for star initialization
+        window.addEventListener('load', function() {
+            console.log("Generate.html - Debug: Window loaded");
+            // Direct call to createStarsV4
+            if (typeof createStarsV4 === 'function') {
+                console.log("Generate.html - Debug: Function exists, calling createStarsV4");
+                createStarsV4();
+            } else {
+                console.log("Generate.html - Debug: createStarsV4 function not found!");
+            }
+            
+            // Fix clouds to match other pages (opacity 0.3)
+            document.querySelector('.clouds').style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                z-index: 2 !important;
+                background: transparent !important;
+                overflow: hidden !important;
+                pointer-events: none !important;
+            `;
+            
+            // Create two cloud layers for seamless animation
+            const cloudContainer = document.querySelector('.clouds');
+            cloudContainer.innerHTML = '';
+            
+            // Create new CSS-only cloud animation
+            if (!document.querySelector('style#new-cloud-animation')) {
+                const cloudStyleEl = document.createElement('style');
+                cloudStyleEl.id = 'new-cloud-animation';
+                cloudStyleEl.textContent = `
+                    .cloud-layer {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        opacity: 0.2;
+                    }
+                    
+                    .cloud-layer-1 {
+                        background: 
+                            radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
+                            radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
+                            radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
+                            radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+                        animation: cloudMove1 120s linear infinite;
+                    }
+                    
+                    .cloud-layer-2 {
+                        background: 
+                            radial-gradient(circle at 65% 40%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 60%),
+                            radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
+                            radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
+                            radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+                        animation: cloudMove2 180s linear infinite;
+                    }
+                    
+                    .cloud-layer-3 {
+                        background: 
+                            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%),
+                            radial-gradient(circle at 20% 90%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 45%),
+                            radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 55%),
+                            radial-gradient(circle at 40% 10%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
+                        animation: cloudMove3 150s linear infinite;
+                    }
+                    
+                    @keyframes cloudMove1 {
+                        0% { transform: translate3d(0%, 0%, 0); }
+                        100% { transform: translate3d(100%, 0%, 0); }
+                    }
+                    
+                    @keyframes cloudMove2 {
+                        0% { transform: translate3d(-100%, 0%, 0); }
+                        100% { transform: translate3d(0%, 0%, 0); }
+                    }
+                    
+                    @keyframes cloudMove3 {
+                        0% { transform: translate3d(0%, 0%, 0); }
+                        100% { transform: translate3d(-100%, 0%, 0); }
+                    }
+                `;
+                document.head.appendChild(cloudStyleEl);
+            }
+            
+            // Create cloud layers
+            for (let i = 1; i <= 3; i++) {
+                const cloudLayer = document.createElement('div');
+                cloudLayer.className = `cloud-layer cloud-layer-${i}`;
+                cloudContainer.appendChild(cloudLayer);
+            }
+            
+            console.log("Pure CSS clouds created for generate.html");
+        });
+    </script>
+</body>
+</html> 

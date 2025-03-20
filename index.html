@@ -3,129 +3,386 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>✨ Dreamscape AI</title>
+    <title>✨ Dreamscape AI - Creative Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        /* Feature cards for homepage */
+        .features-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+            padding: 0 20px;
+        }
+
+        /* Make the cards themselves links */
+        .feature-card {
+            display: block;
+            text-decoration: none;
+            background: rgba(30, 15, 50, 0.15);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            width: 300px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            color: white;
+            z-index: 5; /* Ensure cards are above backgrounds */
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(157, 78, 221, 0.3);
+            border-color: rgba(157, 78, 221, 0.5);
+        }
+        
+        /* Sparkle effects for the cards - these will be positioned by JavaScript */
+        .sparkle-effect {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            pointer-events: none;
+            z-index: 1000;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff"><path d="M12 0L14.59 9.41 24 12 14.59 14.59 12 24 9.41 14.59 0 12 9.41 9.41z"/></svg>');
+            background-size: contain;
+            opacity: 0;
+            transform: scale(0);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .sparkle-effect.purple {
+            filter: drop-shadow(0 0 5px rgba(199, 125, 255, 0.8));
+        }
+        
+        .sparkle-effect.pink {
+            filter: drop-shadow(0 0 5px rgba(255, 126, 238, 0.8));
+        }
+        
+        .sparkle-effect.blue {
+            filter: drop-shadow(0 0 5px rgba(126, 220, 255, 0.8));
+        }
+        
+        .sparkle-effect.gold {
+            filter: drop-shadow(0 0 5px rgba(255, 222, 126, 0.8));
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-family: 'Audiowide', cursive;
+            font-size: 20px;
+            color: var(--text-white);
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            font-size: 16px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .title-container {
+            margin-top: 60px;
+        }
+
+        .title-wrapper {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .subtitle-main {
+            font-size: 24px;
+            text-align: center;
+            color: var(--text-white);
+            margin-bottom: 40px;
+            font-weight: 300;
+            text-shadow: 0 0 10px rgba(157, 78, 221, 0.7);
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .coming-soon-badge {
+            background: rgba(157, 78, 221, 0.2);
+            color: var(--text-white);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 15px;
+            display: inline-block;
+            border: 1px solid rgba(157, 78, 221, 0.4);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            animation: pulse-badge 2s infinite ease-in-out;
+        }
+        
+        .coming-soon-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
+            20% {
+                left: 100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+        
+        @keyframes pulse-badge {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 8px rgba(157, 78, 221, 0.6);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 12px rgba(157, 78, 221, 0.8);
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Background animations - same order and structure as generate.html -->
     <div class="stars"></div>
     <div class="twinkling"></div>
-    <div class="clouds"></div>
     <div class="moon-container">
         <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon">
     </div>
     
-    <div class="app-container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="favicon.png" alt="Dreamscape AI" class="sidebar-logo">
-                <span>Creative Studio✨</span>
+    <div class="main-container">
+        <div class="title-container">
+            <div class="title-wrapper">
+                <img src="title.png" alt="Dreamscape AI" class="title-image" style="max-width: 500px;">
             </div>
-            
-            <div class="sidebar-section">
-                <p class="section-title">📋 Navigation</p>
-                <a href="index.html" class="nav-link active">🏠 Home</a>
-                <a href="public/enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
-                <a href="public/artistic.html" class="nav-link">🎨 Artistic Effects</a>
-            </div>
-            
-            <div class="sidebar-section">
-                <p class="section-title">📐 Canvas Settings</p>
-                <div class="control-group">
-                    <label for="width">Canvas Width</label>
-                    <input type="range" id="width" min="256" max="2048" value="1024" step="64">
-                    <span class="value-display" id="width-value">1024</span>
-                </div>
-                <div class="control-group">
-                    <label for="height">Canvas Height</label>
-                    <input type="range" id="height" min="256" max="2048" value="1024" step="64">
-                    <span class="value-display" id="height-value">1024</span>
-                </div>
-            </div>
-            
-            <div class="sidebar-section">
-                <p class="section-title">🌱 Seed Settings</p>
-                <div class="control-group">
-                    <label for="random-seed">
-                        <input type="checkbox" id="random-seed" checked>
-                        🎲 Random Seed
-                    </label>
-                </div>
-                <div class="control-group" id="seed-input-group">
-                    <label for="seed">🌱 Seed</label>
-                    <input type="number" id="seed" min="1" max="1337" value="42" step="1" disabled>
-                </div>
-            </div>
-            
-            <div class="sidebar-section">
-                <p class="section-title">🎨 Model & Style</p>
-                <div class="control-group">
-                    <label for="model">Image Model</label>
-                    <select id="model">
-                        <!-- Will be populated dynamically from Pollinations API -->
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="style">Art Style</label>
-                    <select id="style">
-                        <!-- Will be populated from styles.js -->
-                    </select>
-                </div>
-                <div class="style-description" id="style-description">
-                    <!-- Will be populated from styles.js -->
-                </div>
-            </div>
-            
-            <div class="sidebar-section">
-                <p class="section-title">🛠️ Settings</p>
-                <div class="control-group">
-                    <label for="nologo">
-                        <input type="checkbox" id="nologo" checked>
-                        🎯 Remove Watermark
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label for="private">
-                        <input type="checkbox" id="private" checked>
-                        🔒 Keep Private
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label for="enhance-prompt">
-                        <input type="checkbox" id="enhance-prompt" checked>
-                        ✨ Enhance Prompt
-                    </label>
-                </div>
-                <div class="control-group enhance-description" id="enhance-description">
-                    Uses AI to transform your prompt into a structured format with added detail and style
-                </div>
-            </div>
+            <p class="subtitle-main">Your AI-powered creative studio for image generation & enhancement</p>
         </div>
         
-        <div class="main-content">
-            <div class="title-container">
-                <div class="title-wrapper">
-                    <img src="title.png" alt="Dreamscape AI" class="title-image">
-                </div>
-                <p class="subtitle-text">Transform your imagination</p>
-            </div>
+        <div class="features-container">
+            <!-- Generate Images Card -->
+            <a href="public/generate.html" class="feature-card">
+                <div class="feature-icon">🌌</div>
+                <h3 class="feature-title">Generate Images</h3>
+                <p class="feature-description">Transform your text descriptions into beautiful AI-generated images with powerful models and artistic styles.</p>
+            </a>
             
-            <div class="content-area">
-                <p class="input-prompt">🌟 What will you create today?</p>
-                <div class="input-container">
-                    <input type="text" id="prompt-input" placeholder="A majestic purple dragon soaring through a galaxy of stars... ✨" maxlength="1000">
-                    <button id="create-button">🌌 Create Magic</button>
-                </div>
-                
-                <div class="result-container" id="result-container">
-                    <!-- Generated image will be displayed here -->
-                </div>
-            </div>
+            <!-- Enhance Images Card -->
+            <a href="public/enhance.html" class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h3 class="feature-title">Enhance & Resize</h3>
+                <p class="feature-description">Upgrade your images with AI enhancement, fix low resolution photos, and resize for different platforms.</p>
+            </a>
+            
+            <!-- Artistic Effects Card -->
+            <a href="public/artistic.html" class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3 class="feature-title">Artistic Effects</h3>
+                <p class="feature-description">Apply beautiful artistic styles to your photos, transforming them into various art forms and aesthetics.</p>
+            </a>
+            
+            <!-- Chat with Voice Card (Coming Soon) -->
+            <a href="#" class="feature-card" onclick="alert('Coming Soon! This feature is currently under development.'); return false;">
+                <div class="feature-icon">🎤</div>
+                <h3 class="feature-title">Chat with Voice</h3>
+                <p class="feature-description">Interact naturally with AI using text and voice. Ask questions, get creative ideas, and interact conversationally.</p>
+                <span class="coming-soon-badge">Coming Soon</span>
+            </a>
         </div>
     </div>
-    
+
+    <!-- Same script references as generate.html, in same order -->
     <script src="styles.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Add sparkle effect JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all feature cards
+            const cards = document.querySelectorAll('.feature-card');
+            
+            // Create sparkle container
+            const sparkleContainer = document.createElement('div');
+            sparkleContainer.style.position = 'fixed';
+            sparkleContainer.style.top = '0';
+            sparkleContainer.style.left = '0';
+            sparkleContainer.style.width = '100%';
+            sparkleContainer.style.height = '100%';
+            sparkleContainer.style.pointerEvents = 'none';
+            sparkleContainer.style.zIndex = '9999';
+            document.body.appendChild(sparkleContainer);
+            
+            // Pre-create sparkle elements for better performance
+            const sparklePool = [];
+            const colors = ['purple', 'pink', 'blue', 'gold'];
+            
+            for (let i = 0; i < 30; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle-effect ' + colors[i % colors.length];
+                sparkle.style.opacity = '0';
+                sparkle.style.position = 'absolute';
+                sparkleContainer.appendChild(sparkle);
+                sparklePool.push({
+                    element: sparkle,
+                    inUse: false
+                });
+            }
+            
+            // Add mouse tracking for each card
+            cards.forEach(card => {
+                let activeSparkles = [];
+                let animationFrame;
+                
+                card.addEventListener('mouseenter', startSparkles);
+                card.addEventListener('mousemove', updateSparkles);
+                card.addEventListener('mouseleave', stopSparkles);
+                
+                function startSparkles() {
+                    if (animationFrame) cancelAnimationFrame(animationFrame);
+                    animationFrame = requestAnimationFrame(sparkleAnimation);
+                }
+                
+                function updateSparkles(e) {
+                    // Update the card bounds for accurate positioning
+                    cardBounds = card.getBoundingClientRect();
+                }
+                
+                function stopSparkles() {
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                        animationFrame = null;
+                    }
+                    
+                    // Fade out active sparkles
+                    activeSparkles.forEach(sparkleInfo => {
+                        sparkleInfo.element.style.opacity = '0';
+                        sparkleInfo.element.style.transform = 'scale(0)';
+                        
+                        // Return to pool after animation
+                        setTimeout(() => {
+                            sparkleInfo.inUse = false;
+                        }, 300);
+                    });
+                    
+                    activeSparkles = [];
+                }
+                
+                function sparkleAnimation() {
+                    const cardBounds = card.getBoundingClientRect();
+                    
+                    // Add new sparkle at random position around the card border
+                    if (Math.random() < 0.3) { // Control frequency of new sparkles
+                        // Find an available sparkle from the pool
+                        const availableSparkle = sparklePool.find(s => !s.inUse);
+                        
+                        if (availableSparkle) {
+                            availableSparkle.inUse = true;
+                            const sparkle = availableSparkle.element;
+                            
+                            // Decide which edge to place the sparkle on
+                            const edge = Math.floor(Math.random() * 4);
+                            let x, y;
+                            
+                            switch(edge) {
+                                case 0: // Top edge
+                                    x = cardBounds.left + Math.random() * cardBounds.width;
+                                    y = cardBounds.top;
+                                    break;
+                                case 1: // Right edge
+                                    x = cardBounds.right;
+                                    y = cardBounds.top + Math.random() * cardBounds.height;
+                                    break;
+                                case 2: // Bottom edge
+                                    x = cardBounds.left + Math.random() * cardBounds.width;
+                                    y = cardBounds.bottom;
+                                    break;
+                                case 3: // Left edge
+                                    x = cardBounds.left;
+                                    y = cardBounds.top + Math.random() * cardBounds.height;
+                                    break;
+                            }
+                            
+                            // Position the sparkle
+                            sparkle.style.left = `${x}px`;
+                            sparkle.style.top = `${y}px`;
+                            
+                            // Random size
+                            const size = 10 + Math.random() * 10;
+                            sparkle.style.width = `${size}px`;
+                            sparkle.style.height = `${size}px`;
+                            
+                            // Random rotation
+                            const rotation = Math.random() * 360;
+                            sparkle.style.transform = `rotate(${rotation}deg) scale(1)`;
+                            
+                            // Show the sparkle
+                            sparkle.style.opacity = '1';
+                            
+                            // Add to active sparkles
+                            activeSparkles.push(availableSparkle);
+                            
+                            // Remove after animation completes
+                            setTimeout(() => {
+                                if (sparkle.parentNode) {
+                                    sparkle.style.opacity = '0';
+                                    sparkle.style.transform = 'scale(0)';
+                                    
+                                    // Return to pool
+                                    setTimeout(() => {
+                                        availableSparkle.inUse = false;
+                                        // Remove from active sparkles
+                                        const index = activeSparkles.indexOf(availableSparkle);
+                                        if (index > -1) {
+                                            activeSparkles.splice(index, 1);
+                                        }
+                                    }, 300);
+                                }
+                            }, 1000 + Math.random() * 1000); // Random duration
+                        }
+                    }
+                    
+                    // Continue animation if still hovering
+                    if (animationFrame) {
+                        animationFrame = requestAnimationFrame(sparkleAnimation);
+                    }
+                }
+            });
+            
+            // Verify links are clickable by adding debugging
+            cards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    console.log('Card clicked:', card.getAttribute('href'));
+                });
+            });
+            
+            console.log('Sparkle effect initialized for', cards.length, 'cards');
+        });
+    </script>
 </body>
 </html> 

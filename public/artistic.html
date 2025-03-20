@@ -12,164 +12,10 @@
     <!-- Add Cloudinary SDK directly -->
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/url-polyfill/1.1.12/url-polyfill.min.js"></script>
-    <style>
-        :root {
-            --primary-color: #9d4edd;
-            --primary-dark: #7b2cbf;
-            --background-dark: #19031b;  
-            --background-darker: #0c021b; 
-            --text-light: #c8cdf1;
-            --text-white: #ffffff;
-            --accent-color: #5a2d88;
-            --border-color: rgba(157, 78, 221, 0.2);
-            --card-bg: rgba(157, 78, 221, 0.05);
-            --sidebar-bg: rgba(30, 30, 30, 0.95);
-        }
-        
-        /* Ensure stars background is properly displayed */
-        .stars {
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            background: transparent url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png") repeat;
-            background-size: 1000px 1000px;
-            opacity: 0.6;
-            mix-blend-mode: screen;
-            z-index: 0;
-        }
-
-        .twinkling {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            background: transparent;
-            overflow: hidden;
-            pointer-events: none;
-            top: 0;
-            left: 0;
-        }
-
-        .clouds {
-            width: 10000px;
-            height: 100%;
-            position: fixed;
-            background: transparent url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/clouds_repeat.png") repeat;
-            background-size: 4000px 4000px;
-            z-index: 2;
-            opacity: 0.4;
-            animation: move-background 150s linear infinite;
-        }
-
-        .filter-preview {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .filter-item {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .filter-item:hover {
-            background: rgba(157, 78, 221, 0.2);
-            border-color: rgba(157, 78, 221, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .filter-item.selected {
-            background: rgba(157, 78, 221, 0.3);
-            border-color: rgba(157, 78, 221, 0.5);
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
-        }
-
-        .filter-name {
-            margin-top: 8px;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        .filter-sample {
-            width: 100%;
-            height: 80px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        
-        /* Critical fixes for placeholders and image containers */
-        .image-holder {
-            background-color: rgba(0, 0, 0, 0.3) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 8px !important;
-            position: relative !important;
-            overflow: hidden !important;
-        }
-        
-        .image-holder img {
-            max-width: 100% !important;
-            max-height: 400px !important;
-            object-fit: contain !important;
-            background-color: transparent !important;
-            display: block !important;
-            margin: 0 auto !important;
-            position: relative !important;
-            z-index: 1 !important;
-        }
-        
-        .placeholder {
-            background-color: rgba(0, 0, 0, 0.3) !important;
-            color: white !important;
-            padding: 20px !important;
-            border-radius: 8px !important;
-            text-align: center !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: relative !important;
-            z-index: 1 !important;
-        }
-        
-        /* Ensure image display containers maintain styles */
-        #original-image-display, #enhanced-image-display {
-            min-height: 300px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            overflow: hidden !important;
-            background-color: rgba(0, 0, 0, 0.3) !important;
-        }
-        
-        /* Result container styles */
-        .result-container, 
-        .image-comparison, 
-        .original-image, 
-        .enhanced-image {
-            background-color: rgba(0, 0, 0, 0.2) !important;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .filter-preview {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
 </head>
 <body>
     <div class="stars"></div>
     <div class="twinkling"></div>
-    <div class="clouds"></div>
     <div class="moon-container">
         <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon">
     </div>
@@ -184,6 +30,7 @@
             <div class="sidebar-section">
                 <p class="section-title">📋 Navigation</p>
                 <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="generate.html" class="nav-link">🌌 Generate Images</a>
                 <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
                 <a href="artistic.html" class="nav-link active">🎨 Artistic Effects</a>
             </div>
@@ -407,630 +254,211 @@
     </div>
     
     <script src="js/cloudinary-api.js"></script>
+    <script src="../styles.js"></script>
+    <script src="../script.js"></script>
+    
+    <!-- Add subtle stars to artistic.html -->
     <script>
-        // Basic JavaScript for star animation
-        function createStars() {
-            const container = document.querySelector('.twinkling');
-            // Clear any existing stars
-            container.innerHTML = '';
+        window.addEventListener('load', function() {
+            console.log("Adding subtle stars to artistic.html");
             
-            // Create 500 stars
-            for (let i = 0; i < 500; i++) {
-                createTwinklingStar(container);
-            }
-            
-            // Start shooting stars
-            createShootingStars(container);
-        }
-
-        function createTwinklingStar(container) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            
-            // Use a weighted distribution for star sizes
-            const random = Math.random();
-            if (random < 0.6) {
-                star.classList.add('star-1'); // 60% small stars
-            } else if (random < 0.8) {
-                star.classList.add('star-2'); // 20% medium stars
-            } else if (random < 0.95) {
-                star.classList.add('star-3'); // 15% large stars
-            } else {
-                star.classList.add('star-4'); // 5% extra large stars
-            }
-            
-            // Random position
-            star.style.top = `${Math.random() * 100}%`;
-            star.style.left = `${Math.random() * 100}%`;
-            
-            // Random animation delay
-            star.style.animationDelay = `${Math.random() * 5}s`;
-            
-            // Random animation duration between 3-8 seconds
-            star.style.animationDuration = `${3 + Math.random() * 5}s`;
-            
-            container.appendChild(star);
-            return star;
-        }
-
-        function createShootingStars(container) {
-            // Create a shooting star every 8 seconds
-            setInterval(() => {
-                createShootingStar(container);
-            }, 8000);
-            
-            // Create initial shooting star
-            createShootingStar(container);
-        }
-
-        function createShootingStar(container) {
-            const shootingStar = document.createElement('div');
-            shootingStar.className = 'shooting-star';
-            
-            // Random position at the top edge of the screen
-            const left = Math.random() * 100;
-            shootingStar.style.left = `${left}%`;
-            shootingStar.style.top = `${Math.random() * 30}%`;
-            
-            container.appendChild(shootingStar);
-            
-            // Remove the shooting star after the animation
-            setTimeout(() => {
-                shootingStar.remove();
-            }, 3000);
-        }
-        
-        // Effect type radio buttons
-        const effectTypes = document.querySelectorAll('input[name="effect-type"]');
-        const artisticControls = document.getElementById('artistic-controls');
-        const cartoonControls = document.getElementById('cartoon-controls');
-        const paintingControls = document.getElementById('painting-controls');
-        
-        effectTypes.forEach(radio => {
-            radio.addEventListener('change', function() {
-                // Hide all control sections
-                artisticControls.style.display = 'none';
-                cartoonControls.style.display = 'none';
-                paintingControls.style.display = 'none';
-                
-                // Show the selected section
-                if (this.value === 'artistic') {
-                    artisticControls.style.display = 'block';
-                } else if (this.value === 'cartoon') {
-                    cartoonControls.style.display = 'block';
-                } else if (this.value === 'painting') {
-                    paintingControls.style.display = 'block';
+            // Create a custom style with higher z-index for enhanced visibility
+            const styleEl = document.createElement('style');
+            styleEl.textContent = `
+                /* Make stars background more subtle like index page */
+                .stars {
+                    opacity: 0.6 !important;
                 }
                 
-                // If we have an uploaded image, regenerate filter previews
-                if (uploadedImageInfo && this.value === 'artistic') {
-                    updateFilterPreviews(uploadedImageInfo.secure_url);
-                } else {
-                    filterPreview.style.display = 'none';
+                /* Specific style for extra bright stars with reduced glow */
+                .star-extra-bright {
+                    position: absolute !important;
+                    background-color: #ffffff !important;
+                    border-radius: 50% !important;
+                    pointer-events: none !important;
+                    z-index: 4 !important; /* Above other stars and moon */
+                    opacity: 0 !important; /* Start invisible for fade-in effect */
+                    transition: opacity 1.5s ease-in !important; /* Smooth transition */
                 }
-            });
-        });
-
-        // Toggle pixelate controls
-        const pixelateCheckbox = document.getElementById('pixelate');
-        const pixelateControl = document.getElementById('pixelate-control');
-        
-        pixelateCheckbox.addEventListener('change', function() {
-            pixelateControl.style.display = this.checked ? 'block' : 'none';
-        });
-
-        // Custom seed toggle
-        const customSeedCheckbox = document.getElementById('custom-seed');
-        const seedValueGroup = document.getElementById('seed-value-group');
-        
-        customSeedCheckbox.addEventListener('change', function() {
-            seedValueGroup.style.display = this.checked ? 'block' : 'none';
-        });
-
-        // Update tint strength display
-        const tintStrength = document.getElementById('tint-strength');
-        const tintStrengthValue = document.getElementById('tint-strength-value');
-        
-        tintStrength.addEventListener('input', function() {
-            tintStrengthValue.textContent = `${this.value}%`;
-        });
-
-        // Update slider value displays
-        const sliders = document.querySelectorAll('input[type="range"]:not(#tint-strength)');
-        sliders.forEach(slider => {
-            slider.addEventListener('input', function() {
-                const valueDisplay = this.previousElementSibling.querySelector('span');
-                valueDisplay.textContent = this.value;
-            });
-        });
-        
-        // File upload handling
-        const uploadArea = document.getElementById('upload-area');
-        const fileInput = document.getElementById('file-input');
-        const resultContainer = document.getElementById('result-container');
-        const originalImageDisplay = document.getElementById('original-image-display');
-        const enhancedImageDisplay = document.getElementById('enhanced-image-display');
-        const filterPreview = document.getElementById('filter-preview');
-        const applyEffectButton = document.getElementById('apply-effect-button');
-        const downloadButton = document.getElementById('download-button');
-        const resetButton = document.getElementById('reset-button');
-        
-        // Variables to store image information
-        let uploadedImageInfo = null; // Store the complete Cloudinary upload response
-        let transformedImageUrl = '';  // Store the transformed image URL
-        
-        // Configure the Cloudinary upload widget once
-        const uploadWidget = window.cloudinary.createUploadWidget({
-            cloudName: 'dwa9nkpyq',
-            uploadPreset: 'dreamscape-unsigned',
-            apiKey: '887549877845179',
-            sources: ['local', 'url', 'camera', 'google_drive', 'facebook', 'dropbox', 'instagram'],
-            showAdvancedOptions: false,
-            cropping: false,
-            multiple: false,
-            defaultSource: 'local',
-            folder: 'dreamscape-app',
-            clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
-            maxFileSize: 10000000,
-            singleUploadAutoClose: true,
-            styles: {
-                palette: {
-                    window: '#121212',
-                    sourceBg: '#121212',
-                    windowBorder: '#382f79',
-                    tabIcon: '#ffffcc',
-                    inactiveTabIcon: '#5e5e5e',
-                    menuIcons: '#a76fef',
-                    link: '#7046e8',
-                    action: '#7046e8',
-                    inProgress: '#7046e8',
-                    complete: '#a76fef',
-                    error: '#ff5a00',
-                    textDark: '#eeeeee',
-                    textLight: '#121212'
-                },
-                fonts: {
-                    default: null,
-                    "sans-serif": { url: null, active: true }
+                
+                /* Remove super bright animation and use more subtle one */
+                @keyframes subtle-twinkle {
+                    0%, 100% { opacity: 0.3; }
+                    50% { opacity: 0.8; }
                 }
-            }
-        }, (error, result) => {
-            if (error) {
-                console.error("Widget error:", error);
-                showError('Upload failed: ' + (error.message || "Unknown error"));
-                return;
-            }
-            
-            if (result.event === "success") {
-                console.log("Upload successful!", result.info);
                 
-                // Store the complete upload result for later transformation
-                uploadedImageInfo = result.info;
-                
-                // Display the original image in the UI
-                const originalUrl = result.info.secure_url;
-                originalImageDisplay.innerHTML = `<img src="${originalUrl}" alt="Original Image">`;
-                enhancedImageDisplay.innerHTML = `<div class="placeholder">Select effect options and click "Apply Effect"</div>`;
-                
-                // Show the result container, hide upload area
-                uploadArea.style.display = 'none';
-                resultContainer.style.display = 'block';
-                
-                // Enable the effect button
-                applyEffectButton.disabled = false;
-                
-                // Update the filter previews with the uploaded image
-                updateFilterPreviews(originalUrl);
-            } else if (result.event === "close") {
-                // Only show message if nothing was uploaded
-                if (!uploadedImageInfo) {
-                    console.log("Widget closed without uploading");
+                /* Fix clouds to remove hard edge */
+                .clouds {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    z-index: 2 !important;
+                    background: transparent !important;
+                    pointer-events: none !important;
+                    overflow: hidden !important;
                 }
+                
+                /* Add the missing moveBackground animation */
+                @keyframes moveSeamlessBackground {
+                    0% {
+                        transform: translate3d(0, 0, 0);
+                    }
+                    100% { 
+                        transform: translate3d(-100%, 0, 0);
+                    }
+                }
+            `;
+            document.head.appendChild(styleEl);
+            
+            // Set opacity of stars background to match index
+            document.querySelector('.stars').style.opacity = '0.6';
+            
+            // Make twinkling container explicitly have position and z-index
+            const twinklingContainer = document.querySelector('.twinkling');
+            if (twinklingContainer) {
+                twinklingContainer.style.zIndex = '1';
+                twinklingContainer.style.position = 'fixed';
+                
+                // Create stars array to add them gradually
+                const starsToAdd = [];
+                
+                // Add just 25 extra bright stars (down from 50)
+                for (let i = 0; i < 25; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star-extra-bright';
+                    
+                    // Size between 2-4px for more subtle visibility
+                    const size = Math.floor(Math.random() * 3) + 2;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Random position
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    star.style.left = `${x}%`;
+                    star.style.top = `${y}%`;
+                    
+                    // More subtle glow with reduced box shadow
+                    star.style.boxShadow = `0 0 ${size*2}px ${size}px rgba(255, 255, 255, 0.6)`;
+                    
+                    // Twinkling animation with more subtle parameters
+                    const animationDuration = Math.random() * 3 + 3;
+                    star.style.animation = `subtle-twinkle ${animationDuration}s infinite ease-in-out`;
+                    star.style.animationDelay = `${Math.random() * 5}s`;
+                    
+                    // Add to array instead of directly to the DOM
+                    starsToAdd.push(star);
+                }
+                
+                // Function to add stars gradually with random timing
+                const addStarsGradually = () => {
+                    if (starsToAdd.length === 0) return;
+                    
+                    // Take a random star from the array
+                    const randomIndex = Math.floor(Math.random() * starsToAdd.length);
+                    const star = starsToAdd.splice(randomIndex, 1)[0];
+                    
+                    // Add star to container
+                    twinklingContainer.appendChild(star);
+                    
+                    // Make star visible with fade-in effect after a small delay
+                    setTimeout(() => {
+                        star.style.opacity = '1';
+                    }, 50);
+                    
+                    // Schedule next star with random timing between 100-300ms
+                    const nextDelay = Math.random() * 200 + 100;
+                    setTimeout(addStarsGradually, nextDelay);
+                };
+                
+                // Start adding stars after a short delay
+                setTimeout(addStarsGradually, 500);
+                
+                console.log("✨ Added gradually appearing stars to artistic.html");
             }
-        });
-        
-        // Replace drag-and-drop with direct widget trigger
-        uploadArea.addEventListener('click', () => {
-            uploadWidget.open();
-        });
-        
-        // Also allow drag-and-drop to open the widget
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
             
-            // Instead of handling file directly, just open the widget
-            uploadWidget.open();
-        });
-        
-        // Apply artistic effect button
-        applyEffectButton.addEventListener('click', async () => {
-            console.log("Apply effect button clicked");
-            
-            if (!uploadedImageInfo) {
-                showError('Please upload an image first');
-                return;
-            }
-            
-            // Disable button while processing
-            applyEffectButton.disabled = true;
-            applyEffectButton.textContent = "⏳ Processing...";
-            
-            // Show processing indicator
-            enhancedImageDisplay.innerHTML = `
-                <div class="placeholder">
-                    <p>⏳ Applying artistic effect...</p>
-                    <div class="progress-bar" style="width: 300px; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; margin: 20px auto;">
-                        <div class="progress" style="width: 0%; height: 100%; background: linear-gradient(to right, #7b2cbf, #9d4edd); transition: width 0.5s;"></div>
-                    </div>
-                </div>
+            // Fix clouds to create seamless animation
+            const cloudContainer = document.querySelector('.clouds');
+            cloudContainer.innerHTML = '';
+            cloudContainer.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                z-index: 2 !important;
+                background: transparent !important;
+                overflow: hidden !important;
+                pointer-events: none !important;
             `;
             
-            // Animate progress bar
-            const progressBar = enhancedImageDisplay.querySelector('.progress');
-            progressBar.style.width = '30%';
-            
-            try {
-                // Build transformation parameters based on selected options
-                const effectType = document.querySelector('input[name="effect-type"]:checked').value;
-                const transformations = [];
-                
-                // Get the original public ID from the uploaded image
-                const publicId = uploadedImageInfo.public_id;
-                const format = uploadedImageInfo.format;
-                
-                // Add size transformation based on selected sizing method
-                const sizeType = document.getElementById('output-size-type').value;
-                
-                if (sizeType === 'custom') {
-                    // Use custom width and height from sliders
-                    const width = document.getElementById('width-control').value;
-                    const height = document.getElementById('height-control').value;
-                    transformations.push(`c_scale,w_${width},h_${height}`);
-                } 
-                else if (sizeType === 'preset') {
-                    // Use preset dimensions from dropdown
-                    const outputSize = document.getElementById('output-size').value;
-                    if (outputSize) {
-                        const [width, height] = outputSize.split('x');
-                        transformations.push(`c_scale,w_${width},h_${height}`);
-                    }
-                }
-                // If original is selected, don't add any size transformation
-                
-                // Add effects based on type
-                if (effectType === 'artistic') {
-                    // Get selected artistic filter
-                    const artFilter = document.getElementById('art-filter').value;
-                    transformations.push(`e_art:${artFilter}`);
-                    
-                    // Add gradient fade if selected
-                    if (document.getElementById('gradient-fade').checked) {
-                        transformations.push('e_gradient_fade');
+            // Create new CSS-only cloud animation
+            if (!document.querySelector('style#new-cloud-animation')) {
+                const cloudStyleEl = document.createElement('style');
+                cloudStyleEl.id = 'new-cloud-animation';
+                cloudStyleEl.textContent = `
+                    .cloud-layer {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        opacity: 0.2;
                     }
                     
-                    // Add pixelate effect if selected
-                    if (document.getElementById('pixelate').checked) {
-                        const pixelateStrength = document.getElementById('pixelate-strength').value;
-                        transformations.push(`e_pixelate:${pixelateStrength}`);
-                    }
-                } 
-                else if (effectType === 'cartoon') {
-                    // Add cartoonify effect with parameters
-                    const cartoonStrength = document.getElementById('cartoon-strength').value;
-                    const lineStrength = document.getElementById('line-strength').value;
-                    const colorReduction = document.getElementById('color-reduction').value;
-                    
-                    let cartoonTransform = `e_cartoonify:${cartoonStrength}:${lineStrength}`;
-                    if (colorReduction !== 'auto') {
-                        cartoonTransform += `:${colorReduction}`;
-                    }
-                    transformations.push(cartoonTransform);
-                } 
-                else if (effectType === 'painting') {
-                    // Add painting style effect
-                    const paintingStyle = document.getElementById('painting-style').value;
-                    const effectStrength = document.getElementById('effect-strength').value;
-                    
-                    if (paintingStyle === 'oil_paint') {
-                        transformations.push(`e_oil_paint:${effectStrength}`);
-                    } else if (paintingStyle === 'vignette') {
-                        transformations.push(`e_vignette:${effectStrength}`);
-                    } else {
-                        transformations.push(`e_art:${paintingStyle}`);
+                    .cloud-layer-1 {
+                        background: 
+                            radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
+                            radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
+                            radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
+                            radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+                        animation: cloudMove1 120s linear infinite;
                     }
                     
-                    // Add tint if selected
-                    const tintStrength = document.getElementById('tint-strength').value;
-                    if (tintStrength > 0) {
-                        const tintColor = document.getElementById('tint-color').value.substring(1); // Remove # from color
-                        transformations.push(`e_tint:${tintStrength}:${tintColor}`);
+                    .cloud-layer-2 {
+                        background: 
+                            radial-gradient(circle at 65% 40%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 60%),
+                            radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
+                            radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
+                            radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+                        animation: cloudMove2 180s linear infinite;
                     }
-                }
-                
-                // Update progress bar
-                progressBar.style.width = '60%';
-                
-                // Create the transformation URL
-                let transformationString = transformations.join('/');
-                if (!transformationString) transformationString = 'c_scale,w_800';
-                
-                // Final transformation URL using Cloudinary's format
-                transformedImageUrl = `https://res.cloudinary.com/dwa9nkpyq/image/upload/${transformationString}/${publicId}.${format}`;
-                console.log("Generated transformation URL:", transformedImageUrl);
-                
-                // Update progress bar
-                progressBar.style.width = '80%';
-                
-                // Display the transformed image
-                enhancedImageDisplay.innerHTML = `
-                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <img 
-                            id="enhanced-image"
-                            src="${transformedImageUrl}" 
-                            style="max-width: 100%; max-height: 350px; object-fit: contain;" 
-                            alt="Enhanced Image"
-                            onload="this.style.opacity = '1';"
-                            onerror="document.getElementById('artistic-error').style.display = 'block'; this.style.display = 'none';"
-                        />
-                        <div id="artistic-error" style="display: none; color: #ff5555; text-align: center; margin-top: 20px;">
-                            <p>Error loading the transformed image.</p>
-                            <button id="simple-transform-btn" style="padding: 8px 12px; background: #7b2cbf; border: none; color: white; border-radius: 4px; cursor: pointer; margin-top: 10px;">
-                                Try Simple Transformation
-                            </button>
-                        </div>
-                        <p style="color: #4CAF50; margin-top: 15px; text-align: center;">✨ Artistic effect applied!</p>
-                    </div>
+                    
+                    .cloud-layer-3 {
+                        background: 
+                            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%),
+                            radial-gradient(circle at 20% 90%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 45%),
+                            radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 55%),
+                            radial-gradient(circle at 40% 10%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
+                        animation: cloudMove3 150s linear infinite;
+                    }
+                    
+                    @keyframes cloudMove1 {
+                        0% { transform: translate3d(0%, 0%, 0); }
+                        100% { transform: translate3d(100%, 0%, 0); }
+                    }
+                    
+                    @keyframes cloudMove2 {
+                        0% { transform: translate3d(-100%, 0%, 0); }
+                        100% { transform: translate3d(0%, 0%, 0); }
+                    }
+                    
+                    @keyframes cloudMove3 {
+                        0% { transform: translate3d(0%, 0%, 0); }
+                        100% { transform: translate3d(-100%, 0%, 0); }
+                    }
                 `;
-                
-                // Add error handler for the simple transform button
-                document.getElementById('artistic-error')?.addEventListener('click', (e) => {
-                    if (e.target.id === 'simple-transform-btn') {
-                        // Create a much simpler URL with just basic transformations
-                        const simpleUrl = `https://res.cloudinary.com/dwa9nkpyq/image/upload/c_scale,w_800/${publicId}.${format}`;
-                        transformedImageUrl = simpleUrl;
-                        enhancedImageDisplay.innerHTML = `
-                            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                <img 
-                                    src="${simpleUrl}" 
-                                    style="max-width: 100%; max-height: 350px; object-fit: contain;" 
-                                    alt="Enhanced Image (Simple)"
-                                />
-                                <p style="color: #FFD700; margin-top: 15px; text-align: center;">⚠️ Using simplified transformation</p>
-                            </div>
-                        `;
-                        downloadButton.disabled = false;
-                    }
-                });
-                
-                // Enable download button
-                downloadButton.disabled = false;
-                
-            } catch (error) {
-                console.error("Artistic effect error:", error);
-                enhancedImageDisplay.innerHTML = `
-                    <div class="placeholder">
-                        <p style="color: #ff5555;">Error applying artistic effect</p>
-                        <p>${error.message || "Unknown error"}</p>
-                    </div>
-                `;
-            } finally {
-                // Restore button state
-                applyEffectButton.disabled = false;
-                applyEffectButton.textContent = "🎨 Apply Effect";
+                document.head.appendChild(cloudStyleEl);
             }
-        });
-        
-        // Download button - opens the image in a new tab
-        downloadButton.addEventListener('click', () => {
-            if (transformedImageUrl) {
-                window.open(transformedImageUrl, '_blank');
+            
+            // Create cloud layers
+            for (let i = 1; i <= 3; i++) {
+                const cloudLayer = document.createElement('div');
+                cloudLayer.className = `cloud-layer cloud-layer-${i}`;
+                cloudContainer.appendChild(cloudLayer);
             }
-        });
-        
-        // Reset button
-        resetButton.addEventListener('click', () => {
-            // Reset to upload state
-            uploadArea.style.display = 'block';
-            resultContainer.style.display = 'none';
             
-            // Reset Cloudinary data
-            uploadedImageInfo = null;
-            transformedImageUrl = '';
-            
-            // Reset sliders
-            document.querySelectorAll('input[type="range"]').forEach(slider => {
-                slider.value = slider.defaultValue;
-                const valueDisplay = slider.previousElementSibling?.querySelector('span');
-                if (valueDisplay) valueDisplay.textContent = slider.defaultValue;
-            });
-            
-            // Reset checkboxes
-            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = checkbox.defaultChecked;
-            });
-            
-            // Reset to artistic filter effect type
-            document.querySelector('input[name="effect-type"][value="artistic"]').checked = true;
-            artisticControls.style.display = 'block';
-            cartoonControls.style.display = 'none';
-            paintingControls.style.display = 'none';
-            
-            // Reset tint color
-            document.getElementById('tint-color').value = '#9d4edd';
-            document.getElementById('tint-strength').value = 0;
-            document.getElementById('tint-strength-value').textContent = '0%';
-        });
-        
-        // Helper function to show error messages
-        function showError(message) {
-            // Display the error in the UI
-            const errorToast = document.createElement('div');
-            errorToast.className = 'error-toast';
-            errorToast.innerHTML = `<p>${message}</p>`;
-            errorToast.style.position = 'fixed';
-            errorToast.style.bottom = '20px';
-            errorToast.style.left = '50%';
-            errorToast.style.transform = 'translateX(-50%)';
-            errorToast.style.backgroundColor = 'rgba(255, 50, 50, 0.9)';
-            errorToast.style.color = 'white';
-            errorToast.style.padding = '10px 20px';
-            errorToast.style.borderRadius = '5px';
-            errorToast.style.zIndex = '1000';
-            
-            document.body.appendChild(errorToast);
-            
-            // Remove after 5 seconds
-            setTimeout(() => {
-                errorToast.style.opacity = '0';
-                errorToast.style.transition = 'opacity 0.5s';
-                setTimeout(() => {
-                    document.body.removeChild(errorToast);
-                }, 500);
-            }, 5000);
-        }
-
-        // Initialize stars
-        document.addEventListener('DOMContentLoaded', () => {
-            createStars();
-            
-            // Setup size controls interaction
-            const sizeTypeSelector = document.getElementById('output-size-type');
-            const customSizeControls = document.getElementById('custom-size-controls');
-            const presetSizeControls = document.getElementById('preset-size-controls');
-            
-            sizeTypeSelector.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customSizeControls.style.display = 'block';
-                    presetSizeControls.style.display = 'none';
-                } else if (this.value === 'preset') {
-                    customSizeControls.style.display = 'none';
-                    presetSizeControls.style.display = 'block';
-                } else {
-                    // Original size
-                    customSizeControls.style.display = 'none';
-                    presetSizeControls.style.display = 'none';
-                }
-            });
-            
-            // Setup aspect ratio maintenance
-            const widthSlider = document.getElementById('width-control');
-            const heightSlider = document.getElementById('height-control');
-            const aspectRatioCheckbox = document.getElementById('maintain-aspect-ratio');
-            
-            let aspectRatio = 1; // Default square
-            let isUpdatingWidth = false;
-            let isUpdatingHeight = false;
-            
-            // Set initial aspect ratio from the original image once uploaded
-            const updateAspectRatioFromImage = () => {
-                if (uploadedImageInfo && uploadedImageInfo.width && uploadedImageInfo.height) {
-                    aspectRatio = uploadedImageInfo.width / uploadedImageInfo.height;
-                    console.log(`Set aspect ratio to ${aspectRatio} from original image`);
-                }
-            };
-            
-            // Width change handler
-            widthSlider.addEventListener('input', function() {
-                if (isUpdatingWidth) return; // Prevent recursion
-                
-                const width = parseInt(this.value);
-                widthSlider.previousElementSibling.querySelector('span').textContent = width;
-                
-                // Update height based on aspect ratio if checkbox is checked
-                if (aspectRatioCheckbox.checked && !isUpdatingHeight) {
-                    isUpdatingHeight = true;
-                    const newHeight = Math.round(width / aspectRatio);
-                    
-                    // Ensure height is within valid range
-                    const constrainedHeight = Math.min(Math.max(newHeight, 100), 2000);
-                    heightSlider.value = constrainedHeight;
-                    heightSlider.previousElementSibling.querySelector('span').textContent = constrainedHeight;
-                    isUpdatingHeight = false;
-                }
-            });
-            
-            // Height change handler
-            heightSlider.addEventListener('input', function() {
-                if (isUpdatingHeight) return; // Prevent recursion
-                
-                const height = parseInt(this.value);
-                heightSlider.previousElementSibling.querySelector('span').textContent = height;
-                
-                // Update width based on aspect ratio if checkbox is checked
-                if (aspectRatioCheckbox.checked && !isUpdatingWidth) {
-                    isUpdatingWidth = true;
-                    const newWidth = Math.round(height * aspectRatio);
-                    
-                    // Ensure width is within valid range
-                    const constrainedWidth = Math.min(Math.max(newWidth, 100), 2000);
-                    widthSlider.value = constrainedWidth;
-                    widthSlider.previousElementSibling.querySelector('span').textContent = constrainedWidth;
-                    isUpdatingWidth = false;
-                }
-            });
-            
-            // Update aspect ratio when image is uploaded
-            const originalInterval = setInterval(() => {
-                if (uploadedImageInfo) {
-                    updateAspectRatioFromImage();
-                    clearInterval(originalInterval);
-                }
-            }, 500);
-
-            // Update filter previews when an image is uploaded
-            function updateFilterPreviews(imageUrl) {
-                if (!imageUrl) return;
-                
-                // If filter preview container exists, update the previews
-                const filterPreviewContainer = document.getElementById('filter-preview-container');
-                if (!filterPreviewContainer) return;
-                
-                const filters = [
-                    { name: 'Zorro', value: 'zorro' },
-                    { name: 'Primavera', value: 'primavera' },
-                    { name: 'Athena', value: 'athena' },
-                    { name: 'Incognito', value: 'incognito' },
-                    { name: 'Red Rock', value: 'red_rock' },
-                    { name: 'Ukulele', value: 'ukulele' }
-                ];
-                
-                let previewHTML = '';
-                
-                filters.forEach(filter => {
-                    const previewUrl = `https://res.cloudinary.com/dwa9nkpyq/image/upload/c_scale,w_150,h_150/e_art:${filter.value}/${uploadedImageInfo.public_id}.${uploadedImageInfo.format}`;
-                    
-                    previewHTML += `
-                        <div class="filter-item" data-filter="${filter.value}">
-                            <div class="filter-sample" style="background-image: url('${previewUrl}')"></div>
-                            <div class="filter-name">${filter.name}</div>
-                        </div>
-                    `;
-                });
-                
-                filterPreviewContainer.innerHTML = previewHTML;
-                
-                // Add click handlers to filter items
-                document.querySelectorAll('.filter-item').forEach(item => {
-                    item.addEventListener('click', function() {
-                        const filterValue = this.getAttribute('data-filter');
-                        document.getElementById('art-filter').value = filterValue;
-                        
-                        // Visual selection
-                        document.querySelectorAll('.filter-item').forEach(i => i.classList.remove('selected'));
-                        this.classList.add('selected');
-                    });
-                });
-            }
+            console.log("Pure CSS clouds created for artistic.html");
         });
     </script>
 </body>
