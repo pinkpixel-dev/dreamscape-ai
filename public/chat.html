@@ -174,6 +174,26 @@
             }
         }
 
+        .image-upload-button {
+            width: 50px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-upload-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
         .voice-model-selector, .text-model-selector {
             margin-bottom: 15px;
             width: 100%;
@@ -304,6 +324,21 @@
             overflow: auto;
             max-height: 80px;
         }
+
+        /* Add styles for twinkling and shooting stars */
+        .star-extra-bright {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes subtle-twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -337,6 +372,27 @@
                     <label for="text-model">Select Text Model</label>
                     <select id="text-model" class="text-model-selector">
                         <option value="loading">Loading models...</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="personality">AI Personality</label>
+                    <select id="personality" class="personality-selector">
+                        <option value="default">Default</option>
+                        <option value="friendly-helper">Friendly Helper</option>
+                        <option value="professional-expert">Professional Expert</option>
+                        <option value="witty-comedian">Witty Comedian</option>
+                        <option value="snarky-guru">Snarky Guru</option>
+                        <option value="empathetic-coach">Empathetic Coach</option>
+                        <option value="direct-no-nonsense">Direct No-Nonsense</option>
+                        <option value="casual-cool-chat">Casual, Cool Chat</option>
+                        <option value="enthusiastic-innovator">Enthusiastic Innovator</option>
+                        <option value="wise-mentor">Wise Mentor</option>
+                        <option value="quirky-sidekick">Quirky Sidekick</option>
+                        <option value="samuel-jackson-slang">Samuel Jackson Slang</option>
+                        <option value="professor-morgan-freeman">Professor Morgan Freeman</option>
+                        <option value="playful-jabber">Playful Jabber</option>
+                        <option value="leet-gamer">Leet Gamer</option>
+                        <option value="sci-fi-morpheus">Sci-Fi Morpheus</option>
                     </select>
                 </div>
             </div>
@@ -387,7 +443,17 @@
                 <div class="chat-input-container">
                     <button id="voice-button" class="voice-button">🎤</button>
                     <textarea id="chat-input" class="chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                    <button id="image-upload-button" class="image-upload-button" title="Upload an image">🖼️</button>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;" />
                     <button id="send-button" class="send-button">Send</button>
+                </div>
+
+                <!-- Preview of uploaded image -->
+                <div id="image-preview-container" style="display: none;">
+                    <div style="position: relative; display: inline-block; margin-top: 10px;">
+                        <img id="image-preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid rgba(157, 78, 221, 0.3);" />
+                        <button id="remove-image" style="position: absolute; top: -8px; right: -8px; background-color: rgba(30, 15, 50, 0.8); color: white; border: 1px solid rgba(157, 78, 221, 0.5); border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -405,6 +471,17 @@
             const testMicrophoneBtn = document.getElementById('test-microphone');
             const micDeviceSelect = document.getElementById('mic-device-select');
             const refreshMicsBtn = document.getElementById('refresh-mics');
+            const imageUploadButton = document.getElementById('image-upload-button');
+            const imageUploadInput = document.getElementById('image-upload');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const removeImageButton = document.getElementById('remove-image');
+            
+            // Track currently uploaded image
+            let currentUploadedImage = null;
+            
+            // Initialize twinkling stars and shooting stars
+            initializeStarBackground();
             
             let isRecording = false;
             let recognition = null;
@@ -431,32 +508,149 @@
                     return response.json();
                 })
                 .then(data => {
-                    textModels = data;
+                    console.log("Raw models data:", data);
+                    
+                    // Check the structure of the first model to understand the API response
+                    if (data.length > 0) {
+                        console.log("First model structure:", JSON.stringify(data[0]));
+                    }
+                    
+                    // Filter out models that should not be displayed
+                    const excludeModels = [
+                        'unity', 'midijourney', 'rtist', 'searchgpt', 'llamalight', 
+                        'llamaguard', 'sur', 'sur-mistral', 'llama-scaleway', 'openai-audio'
+                    ];
+                    
+                    // Handle both array of objects with 'id' property and array of strings
+                    const filteredModels = Array.isArray(data) 
+                        ? data.filter(model => {
+                            const modelId = typeof model === 'object' ? (model.id || model.name) : model;
+                            const shouldInclude = !excludeModels.includes(modelId);
+                            console.log(`Model ${modelId}: include = ${shouldInclude}`);
+                            return shouldInclude;
+                          })
+                        : [];
+                    
+                    console.log("Filtered models:", filteredModels);
+                    
+                    textModels = filteredModels;
                     textModelSelect.innerHTML = '';
                     
-                    // Populate the dropdown with available models
-                    data.forEach(model => {
+                    // Map for changing display names
+                    const displayNameMap = {
+                        'openai': 'GPT-4o-mini (vision)',
+                        'openai-large': 'GPT-4o (vision)',
+                        'openai-reasoning': 'o3-mini - Advanced Reasoning',
+                        'qwen-coder': 'Qwen 2.5 Coder 32B',
+                        'llama': 'Llama 3.3 70B',
+                        'mistral': 'Mistral Small 3.1 (vision)',
+                        'evil': 'Evil Mode - Experimental',
+                        'deepseek': 'DeepSeek-V3',
+                        'deepseek-r1': 'DeepSeek Distill Qwen 32B',
+                        'deepseek-reasoning': 'DeepSeek R1 - Reasoning',
+                        'deepseek-r1-llama': 'DeepSeek R1 - Llama 70B',
+                        'qwen-reasoning': 'Qwen QWQ 32B - Reasoning',
+                        'phi': 'Phi-4 Instruct',
+                        'llama-vision': 'Llama 3.2 11B (vision)',
+                        'pixtral': 'Pixtral 12B (vision)',
+                        'gemini': 'Gemini 2.0 Flash',
+                        'gemini-thinking': 'Gemini 2.0 Flash Thinking',
+                        'hormoz': 'Hormoz 8b',
+                        'hypnosis-tracy': 'Hypnosis Tracy - Self-Help'
+                    };
+                    
+                    // Debug: Print available model IDs from API
+                    console.log("Available model IDs:", filteredModels.map(model => 
+                        typeof model === 'object' ? (model.id || model.name) : model
+                    ));
+                    
+                    // Sort models to match the expected order in SITE_IMPROVEMENTS.md
+                    const modelOrder = [
+                        'openai', 'openai-large', 'openai-reasoning', 'qwen-coder', 
+                        'llama', 'mistral', 'evil', 'deepseek', 'deepseek-r1', 
+                        'deepseek-reasoning', 'deepseek-r1-llama', 'qwen-reasoning',
+                        'phi', 'llama-vision', 'pixtral', 'gemini', 'gemini-thinking',
+                        'hormoz', 'hypnosis-tracy'
+                    ];
+                    
+                    // Sort the models based on the order in modelOrder
+                    filteredModels.sort((a, b) => {
+                        const idA = typeof a === 'object' ? (a.id || a.name) : a;
+                        const idB = typeof b === 'object' ? (b.id || b.name) : b;
+                        
+                        const indexA = modelOrder.indexOf(idA);
+                        const indexB = modelOrder.indexOf(idB);
+                        
+                        // If both models are in the list, sort by their position
+                        if (indexA !== -1 && indexB !== -1) {
+                            return indexA - indexB;
+                        }
+                        
+                        // If only one model is in the list, prioritize it
+                        if (indexA !== -1) return -1;
+                        if (indexB !== -1) return 1;
+                        
+                        // If neither is in the list, keep original order
+                        return 0;
+                    });
+                    
+                    console.log("Sorted models:", filteredModels.map(model => 
+                        typeof model === 'object' ? (model.id || model.name) : model
+                    ));
+                    
+                    // Clear existing options
+                    textModelSelect.innerHTML = '';
+                    
+                    // Populate the dropdown with available models using new display names
+                    filteredModels.forEach(model => {
                         const option = document.createElement('option');
-                        option.value = model.id;
-                        option.textContent = model.name;
+                        const modelId = typeof model === 'object' ? (model.id || model.name) : model;
+                        option.value = modelId;
+                        
+                        // Use the mapped display name if available, otherwise use original name
+                        if (displayNameMap[modelId]) {
+                            option.textContent = displayNameMap[modelId];
+                            console.log(`Mapped model ${modelId} to ${displayNameMap[modelId]}`);
+                        } else {
+                            option.textContent = typeof model === 'object' ? model.name : model;
+                            console.log(`Using original name for ${modelId}`);
+                        }
+                        
                         textModelSelect.appendChild(option);
                     });
                     
-                    // Pre-select a default model (first one)
-                    if (data.length > 0) {
-                        textModelSelect.value = data[0].id;
+                    // Pre-select GPT-4o (openai-large) as default model when available
+                    const preferredModelId = 'openai-large'; // GPT-4o
+                    const hasPreferredModel = filteredModels.some(model => {
+                        const modelId = typeof model === 'object' ? (model.id || model.name) : model;
+                        return modelId === preferredModelId;
+                    });
+                    
+                    if (hasPreferredModel) {
+                        console.log(`Setting default model to ${preferredModelId} (GPT-4o)`);
+                        textModelSelect.value = preferredModelId;
+                    } else if (filteredModels.length > 0) {
+                        // Fall back to the first model if preferred model isn't available
+                        const firstModelId = typeof filteredModels[0] === 'object' 
+                            ? (filteredModels[0].id || filteredModels[0].name) 
+                            : filteredModels[0];
+                        console.log(`Preferred model not found, using ${firstModelId} as default`);
+                        textModelSelect.value = firstModelId;
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching models:', error);
-                    // Provide some default models as fallback
+                    // Provide some default models as fallback with updated display names
                     textModelSelect.innerHTML = `
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="claude-3-haiku">Claude 3 Haiku</option>
-                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                        <option value="claude-3-opus">Claude 3 Opus</option>
+                        <option value="openai-large">GPT-4o (vision)</option>
+                        <option value="openai">GPT-4o-mini (vision)</option>
+                        <option value="qwen-coder">Qwen 2.5 Coder 32B</option>
+                        <option value="llama">Llama 3.3 70B</option>
+                        <option value="mistral">Mistral Small 3.1 (vision)</option>
                     `;
+                    
+                    // Set default model to GPT-4o
+                    textModelSelect.value = 'openai-large';
                 });
             
             // Populate microphone devices dropdown
@@ -578,12 +772,68 @@
                 }
                 });
             
+            // Handle image upload button click
+            imageUploadButton.addEventListener('click', function() {
+                imageUploadInput.click();
+            });
+            
+            // Handle image upload
+            imageUploadInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    
+                    // Check if file is an image
+                    if (!file.type.match('image.*')) {
+                        alert('Please select an image file');
+                        return;
+                    }
+                    
+                    // Check if file size is less than 10MB
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('Image size should be less than 10MB');
+                        return;
+                    }
+                    
+                    // Store file for later upload
+                    currentUploadedImage = file;
+                    
+                    // Preview image
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreviewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Handle remove image button click
+            removeImageButton.addEventListener('click', function() {
+                currentUploadedImage = null;
+                imagePreviewContainer.style.display = 'none';
+                imageUploadInput.value = '';
+            });
+
             // Add message to the chat
-            function addMessage(text, isUser = false) {
+            function addMessage(text, isUser = false, imageUrl = null) {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-                messageDiv.textContent = text;
                 
+                // If there's an image, add it first
+                if (imageUrl) {
+                    const imageElement = document.createElement('img');
+                    imageElement.src = imageUrl;
+                    imageElement.style.maxWidth = '100%';
+                    imageElement.style.maxHeight = '300px';
+                    imageElement.style.borderRadius = '8px';
+                    imageElement.style.marginBottom = '10px';
+                    messageDiv.appendChild(imageElement);
+                    
+                    // Add a line break
+                    messageDiv.appendChild(document.createElement('br'));
+                }
+                
+                messageDiv.appendChild(document.createTextNode(text));
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
@@ -619,15 +869,162 @@
                     // Get selected model or use default if not available
                     const modelId = textModelSelect.value || 'gpt-4o';
                     
-                    // Use simple GET endpoint as the most reliable option
-                    const encodedText = encodeURIComponent(text);
-                    const url = `https://text.pollinations.ai/${encodedText}`;
+                    // Check if it's a vision-capable model
+                    const visionModels = ['openai', 'openai-large', 'mistral', 'llama-vision', 'pixtral'];
+                    const isVisionModel = visionModels.includes(modelId);
                     
-                    console.log("Sending request to:", url);
-                    console.log("Original text:", text);
-                    console.log("Encoded text:", encodedText);
+                    // Get selected personality
+                    const personality = document.getElementById('personality').value;
+                    let systemPrompt = '';
                     
-                    const response = await fetch(url);
+                    // Set system prompt based on selected personality
+                    switch(personality) {
+                        case 'friendly-helper':
+                            systemPrompt = "You're a warm, approachable assistant who provides clear, concise answers with a friendly tone. You relate like a helpful neighbor, always eager to lend a hand and keep the conversation engaging without any robotic disclaimers.";
+                            break;
+                        case 'professional-expert':
+                            systemPrompt = "Adopt a polished, businesslike tone that conveys expertise and authority. Your responses are direct and matter-of-fact, presenting information efficiently and confidently. You maintain a respectful and knowledgeable demeanor at all times.";
+                            break;
+                        case 'witty-comedian':
+                            systemPrompt = "Respond with a blend of clever humor and charm. Your tone is light, playful, and occasionally irreverent, infusing fun puns and witty remarks without straying into snark. Keep the humor smart and engaging while being respectful.";
+                            break;
+                        case 'snarky-guru':
+                            systemPrompt = "Speak with a dash of sarcasm and a sharp wit, blending clever insights with a slightly irreverent tone. Your responses are insightful yet snappy, delivering advice and information with a confident, tongue-in-cheek edge—always respectful but never bland.";
+                            break;
+                        case 'empathetic-coach':
+                            systemPrompt = "Provide guidance with genuine care and practical advice. Your tone is encouraging, understanding, and supportive. Use straightforward language and share actionable insights, ensuring the conversation feels personal and uplifting.";
+                            break;
+                        case 'direct-no-nonsense':
+                            systemPrompt = "Be blunt and straightforward with a focus on practicality and clarity. Your language is concise and to the point, cutting through fluff and getting straight to the answer. Maintain respect and empathy while ensuring every response is efficient and honest.";
+                            break;
+                        case 'casual-cool-chat':
+                            systemPrompt = "Engage in conversation with a relaxed, laid-back style. Use a mix of casual language and occasional slang to keep things friendly and approachable. Your tone is conversational, easygoing, and authentic, making users feel like they're chatting with a cool friend.";
+                            break;
+                        case 'enthusiastic-innovator':
+                            systemPrompt = "Exude energy and forward-thinking optimism in every interaction. Your language is vibrant and dynamic, inspiring creativity and innovation. Share ideas boldly while remaining clear and grounded in practical advice.";
+                            break;
+                        case 'wise-mentor':
+                            systemPrompt = "Speak with the seasoned insight of a mentor who's seen it all. Your responses are thoughtful and reflective, combining wisdom with pragmatic guidance. Provide balanced advice that's both encouraging and intellectually stimulating.";
+                            break;
+                        case 'quirky-sidekick':
+                            systemPrompt = "Adopt a playful, eccentric tone that's full of charm and unexpected insights. Your language is colorful and imaginative, with a light-hearted touch that keeps the conversation fun and engaging. Always be supportive and clever, adding a splash of whimsy to practical advice.";
+                            break;
+                        case 'samuel-jackson-slang':
+                            systemPrompt = "Talk with bold swagger and plenty of streetwise flair—think Samuel Jackson dropping truth bombs. Your language is loaded with slang, irreverent humor, and a no-nonsense attitude. Keep it real, direct, and unapologetically cool, making sure every line feels like it's coming straight from a seasoned renegade.";
+                            break;
+                        case 'professor-morgan-freeman':
+                            systemPrompt = "Adopt the calm, reflective tone of a wise professor reminiscent of Morgan Freeman. Your words are measured and thoughtful, offering deep insights with a soothing yet authoritative voice. Every response should evoke a sense of learned experience and gentle guidance, making even the most complex topics accessible.";
+                            break;
+                        case 'playful-jabber':
+                            systemPrompt = "Respond with a light-hearted, playful edge that isn't afraid to tease the user in a friendly, snarky manner. Your tone should be witty and slightly irreverent, tossing in a jab or two that's all in good fun. Keep the humor sharp yet respectful, ensuring the user knows it's all part of an engaging banter.";
+                            break;
+                        case 'leet-gamer':
+                            systemPrompt = "Channel the spirit of a seasoned gamer with a heavy dose of leet speak and playful confidence. Your language is energetic, filled with gamer slang, and sprinkled with references to leveling up, epic wins, and the occasional 'GG.' Keep your tone casual and fun, as if you're chatting with a crew of friends in a digital battleground.";
+                            break;
+                        case 'sci-fi-morpheus':
+                            systemPrompt = "Speak with the visionary tone of a futuristic mentor like Morpheus from The Matrix. Your language is philosophical, bold, and filled with cyberpunk imagery. Share deep insights about reality and possibility with a calm, enigmatic demeanor that challenges conventional thinking and invites the user to explore beyond the ordinary.";
+                            break;
+                        default:
+                            systemPrompt = ""; // Default - no special personality
+                    }
+                    
+                    // Format the full prompt with system message first, then user message
+                    let fullPrompt = text;
+                    if (systemPrompt) {
+                        fullPrompt = `system: ${systemPrompt}\n\nuser: ${text}`;
+                    }
+                    
+                    // Handle image upload if present and using a vision model
+                    let imageBase64 = null;
+                    let imageUrl = null;
+                    
+                    if (currentUploadedImage && isVisionModel) {
+                        try {
+                            // Convert image to base64
+                            imageBase64 = await readFileAsBase64(currentUploadedImage);
+                            
+                            // For displaying in chat
+                            imageUrl = URL.createObjectURL(currentUploadedImage);
+                            
+                            // Add image preview to the user's message
+                            addMessage(text, true, imageUrl);
+                            
+                            // Clear the image upload after sending
+                            currentUploadedImage = null;
+                            imagePreviewContainer.style.display = 'none';
+                            imageUploadInput.value = '';
+                        } catch (error) {
+                            console.error('Error processing image:', error);
+                            addMessage(text, true); // Fallback to text-only message
+                        }
+                    } else {
+                        // Regular text message
+                        addMessage(text, true);
+                    }
+                    
+                    // Construct URL with system prompt if selected
+                    let url = '';
+                    let requestOptions = {};
+                    
+                    if (imageBase64 && isVisionModel) {
+                        // Use POST endpoint for image + text
+                        url = 'https://text.pollinations.ai/';
+                        
+                        // Create request body with text, image and optional system prompt
+                        const requestBody = {
+                            messages: [
+                                { 
+                                    role: 'user', 
+                                    content: [
+                                        { type: "text", text: text },
+                                        { 
+                                            type: "image_url", 
+                                            image_url: {
+                                                url: `data:image/jpeg;base64,${imageBase64}`
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            model: modelId
+                        };
+                        
+                        // Add system message if we have a system prompt
+                        if (systemPrompt) {
+                            requestBody.messages.unshift({
+                                role: 'system',
+                                content: systemPrompt
+                            });
+                        }
+                        
+                        requestOptions = {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(requestBody)
+                        };
+                        
+                        console.log("Sending vision request with image and text");
+                        console.log("Using system prompt:", systemPrompt ? "Yes" : "No");
+                        console.log("Using model:", modelId);
+                    } else {
+                        // Use standard GET endpoint for text-only with encoded fullPrompt
+                        const encodedFullPrompt = encodeURIComponent(fullPrompt);
+                        url = `https://text.pollinations.ai/${encodedFullPrompt}`;
+                        
+                        requestOptions = {
+                            method: 'GET'
+                        };
+                        
+                        console.log("Sending request to:", url);
+                        console.log("Original text:", text);
+                        console.log("Using personality:", personality);
+                        console.log("System prompt:", systemPrompt);
+                    }
+                    
+                    // Send the request
+                    const response = await fetch(url, requestOptions);
                     
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -653,7 +1050,7 @@
             sendButton.addEventListener('click', () => {
                 const text = chatInput.value.trim();
                 if (text) {
-                    addMessage(text, true);
+                    // Don't add the message here, it will be added in sendMessage()
                     chatInput.value = '';
                     sendMessage(text);
                 }
@@ -1073,17 +1470,9 @@
                     // Add the recognized text to chat and send automatically
                     const recognizedText = finalTranscript.trim();
                     debugLog('Automatically sending message: ' + recognizedText);
-                    addMessage(recognizedText, true);
-                    sendMessage(recognizedText);
+                    // Don't add the message here, it will be added in sendMessage()
                     chatInput.value = '';
-                    
-                    // Hide debug container after successful recognition
-                    const debugContainer = document.getElementById('speech-debug');
-                    if (debugContainer) {
-                        setTimeout(() => {
-                            debugContainer.style.display = 'none';
-                        }, 3000);
-                    }
+                    sendMessage(recognizedText);
                 } else {
                     debugLog('No final transcript available');
                 }
@@ -1365,7 +1754,7 @@
                 fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'audio/l16; rate=16000; channels=1' // Exact format Watson expects
+                        'Content-Type': 'audio/l16; rate=16000; channels=1' // Exact format Watson expects it
                     },
                     body: audioBlob // Send the raw audio blob
                 })
@@ -1444,9 +1833,9 @@
                     // Add the recognized text to chat and send automatically
                     const recognizedText = finalTranscript.trim();
                     debugLog('Automatically sending message: ' + recognizedText);
-                    addMessage(recognizedText, true);
-                    sendMessage(recognizedText);
+                    // Don't add the message here, it will be added in sendMessage()
                     chatInput.value = '';
+                    sendMessage(recognizedText);
                 } else {
                     debugLog('No transcript to process');
                 }
@@ -1475,6 +1864,136 @@
                 } else {
                     return startBasicRecognition();
                 }
+            }
+
+            // Initialize the background star animations
+            function initializeStarBackground() {
+                // Make sure twinkling container is ready
+                const twinklingContainer = document.querySelector('.twinkling');
+                if (!twinklingContainer) return;
+                
+                // Set proper styles
+                twinklingContainer.style.zIndex = '1';
+                twinklingContainer.style.position = 'fixed';
+                
+                // Create 25 extra bright stars
+                for (let i = 0; i < 25; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star-extra-bright';
+                    
+                    // Size between 2-4px
+                    const size = Math.floor(Math.random() * 3) + 2;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Random position
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    star.style.left = `${x}%`;
+                    star.style.top = `${y}%`;
+                    
+                    // Subtle glow
+                    star.style.boxShadow = `0 0 ${size*2}px ${size}px rgba(255, 255, 255, 0.6)`;
+                    
+                    // Twinkling animation
+                    const animationDuration = Math.random() * 3 + 3;
+                    star.style.animation = `subtle-twinkle ${animationDuration}s infinite ease-in-out`;
+                    star.style.animationDelay = `${Math.random() * 5}s`;
+                    
+                    twinklingContainer.appendChild(star);
+                }
+                
+                // Create shooting stars periodically
+                setInterval(() => {
+                    createShootingStar(twinklingContainer);
+                }, 8000); // New shooting star every 8 seconds
+                
+                // Create initial shooting stars
+                setTimeout(() => createShootingStar(twinklingContainer), 1000);
+                setTimeout(() => createShootingStar(twinklingContainer), 4000);
+            }
+            
+            // Create a shooting star
+            function createShootingStar(container) {
+                const star = document.createElement('div');
+                star.classList.add('shooting-star');
+                
+                // Random position at top portion of the screen
+                const x = Math.random() * 70 + 10; // 10-80% of viewport width
+                const y = Math.random() * 30 + 5; // 5-35% of viewport height
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                
+                // Set styles for shooting star
+                star.style.position = 'absolute';
+                star.style.height = '1px';
+                star.style.width = '0';
+                star.style.background = 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%)';
+                star.style.transformOrigin = '0 0';
+                star.style.boxShadow = '0 0 5px 1px rgba(255, 255, 255, 0.4)';
+                star.style.zIndex = '1';
+                star.style.opacity = '0';
+                
+                // Set animation
+                star.style.animation = 'shooting 10s linear';
+                
+                // Add to container
+                container.appendChild(star);
+                
+                // Remove after animation finishes
+                setTimeout(() => {
+                    if (star && star.parentNode) {
+                        star.remove();
+                    }
+                }, 10000);
+                
+                return star;
+            }
+            
+            // Add shooting star animation keyframes
+            const styleSheet = document.createElement('style');
+            styleSheet.type = 'text/css';
+            styleSheet.innerText = `
+                @keyframes shooting {
+                    0% {
+                        transform: translateX(0) translateY(0) rotate(215deg);
+                        opacity: 0;
+                        width: 0;
+                    }
+                    0.1% {
+                        opacity: 0.6;
+                        width: 50px;
+                    }
+                    5% {
+                        width: 150px;
+                        opacity: 0.6;
+                    }
+                    10% {
+                        transform: translateX(300px) translateY(300px) rotate(215deg);
+                        opacity: 0;
+                        width: 0;
+                    }
+                    100% {
+                        transform: translateX(300px) translateY(300px) rotate(215deg);
+                        opacity: 0;
+                        width: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(styleSheet);
+
+            // Function to read file as base64
+            function readFileAsBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        // Get base64 string without the prefix
+                        const base64String = reader.result.split(',')[1];
+                        resolve(base64String);
+                    };
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
             }
         });
     </script>

@@ -1,16 +1,18 @@
 # Planned changes for Dreamscape AI
 
-## Change the list of fetched models in text chat - chat.html
+## All changes should be implemented one at a time and then checked and tested after
+
+#### Change the list of fetched models in text chat - chat.html
 - Remove the ones that are not text chat specific
 - Change the names of the models to improve site appearance
 
 #### New list should look like this:
-GPT-4o-mini
-GPT-4o
+GPT-4o-mini (vison)
+GPT-4o (vision)
 o3-mini - Advanced Reasoning
 Qwen 2.5 Coder 32B
 Llama 3.3 70B
-Mistral Small 3.1
+Mistral Small 3.1 (vision)
 Evil Mode - Experimental
 DeepSeek-V3
 DeepSeek-R1 Distill Qwen 32B
@@ -19,8 +21,8 @@ DeepSeek R1 - Llama 70B
 Qwen QWQ 32B - Reasoning
 Llama 3.1 8B Instruct
 Phi-4 Instruct
-Llama 3.2 11B Vision
-Pixtral 12B
+Llama 3.2 11B (vision)
+Pixtral 12B (vision)
 Gemini 2.0 Flash
 Gemini 2.0 Flash Thinking
 Hormoz 8b
@@ -59,11 +61,11 @@ sur-mistral
 llama-scaleway
 openai-audio
 
-#### Add personality choices
+DONE - #### Add personality choices
 - Dropdown menu with personalities to choose from
 - Use system prompts from PROMPTS.md attached to text input prompt sent to Pollinations
 
-#### Implement a method to upload a picture to chat for vision model to describe an image
+DONE - #### Implement a method to upload a picture to chat for vision model to describe an image
 Vision models:
 - GPT-4o-mini
 - GPT-4o
@@ -71,7 +73,7 @@ Vision models:
 - Llama 3.2 11B Vision
 - Pixtral 12B
 
-#### Fix the background for chat.html
+DONE - #### Fix the background for chat.html
 - twinkling stars missing
 - shooting stars missing
 
