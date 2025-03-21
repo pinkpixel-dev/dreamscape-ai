@@ -2,11 +2,11 @@
 
 ## All changes should be implemented one at a time and then checked and tested after
 
-#### Change the list of fetched models in text chat - chat.html
+DONE - #### Change the list of fetched models in text chat - chat.html
 - Remove the ones that are not text chat specific
 - Change the names of the models to improve site appearance
 
-#### New list should look like this:
+DONE - #### New list should look like this:
 GPT-4o-mini (vison)
 GPT-4o (vision)
 o3-mini - Advanced Reasoning
@@ -28,7 +28,7 @@ Gemini 2.0 Flash Thinking
 Hormoz 8b
 Hypnosis Tracy - Self-help
 
-#### Change display names as follows:
+DONE - #### Change display names as follows:
 Change display name from openai to GPT-4o-mini
 Change display name fro openai-large to GPT-4o
 Change display name from openai-reasoning to o3-mini - Advanced Reasoning
@@ -49,7 +49,7 @@ Change display name from gemini-thinking to Gemini 2.0 Flash Thinking
 Change display name from hormoz to Hormoz 8b
 Change display name from hypnosis-tracy to Hypnosis Tracy - Self-Help
 
-#### Remove from displaying in list:
+DONE - #### Remove from displaying in list:
 unity
 midijourney
 rtist
@@ -82,6 +82,11 @@ DONE - #### Fix the background for chat.html
 ## Remake the voice chat page
 (uses GPT-4o-audio for chat)
 
+
+ #### Fix the background for voice.html
+- twinkling stars missing
+- shooting stars missing
+
 #### Display full voice list in dropdown:
 alloy
 echo
@@ -98,6 +103,8 @@ amuch
 dan
 
 #### Setup microphone with speech to text api exactly like chat.html
+
+#### Implement ability to leave microphone on for hands free voice chat
 
 #### Implement ChatGPT style animation for the voice
 ![alt text](image.png)
