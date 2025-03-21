@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Dreamscape AI - Text Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/enhance.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    
+    <!-- Watson Speech SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/ibm-watson@7.1.2/dist/speech-to-text.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.1/dist/socket.io.js"></script>
+    <style>
+        /* Chat-specific styles */
+        .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 30px 30px 30px; /* Increased top padding */
+            height: 100%;
+            overflow-y: auto;
+            width: 100%;
+        }
+        
+        .page-header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 30px;
+            text-align: center; /* Center the title */
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            min-width: 800px;
+            max-width: 1200px;
+            background: rgba(30, 15, 50, 0.15);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            margin: 0 auto;
+        }
+
+        .sidebar-content {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            max-height: 60vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 12px; /* Consistent rounding on all messages */
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(50, 30, 80, 0.3);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            color: var(--text-light);
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 15px;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 10px;
+            background: rgba(20, 10, 30, 0.3);
+            color: var(--text-white);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 16px;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        .send-button {
+            padding: 0 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .voice-button {
+            width: 50px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .voice-button.active, .voice-button.recording {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .voice-model-selector, .text-model-selector {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(30, 15, 50, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 14px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        /* Remove audio-related CSS styles */
+        .play-audio-button, .audio-message, .help-text {
+            display: none;
+        }
+
+        /* Loading/typing animation */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: rgba(157, 78, 221, 0.7);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.5);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .voice-status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 5px;
+        }
+
+        .voice-status-indicator.active {
+            background-color: #10b981;
+            box-shadow: 0 0 5px #10b981;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        .voice-status-indicator.error {
+            background-color: #ef4444;
+            box-shadow: 0 0 5px #ef4444;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .microphone-test-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 14px;
+            text-decoration: underline;
+            cursor: pointer;
+            opacity: 0.8;
+            padding: 0;
+            margin-top: 10px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .microphone-test-btn:hover {
+            opacity: 1;
+        }
+
+        .debug-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            font-family: monospace;
+            overflow: auto;
+            max-height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background animations -->
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="moon-container">
+        <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon">
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
+                <span>Creative Studio✨</span>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📋 Navigation</p>
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="generate.html" class="nav-link">🌌 Generate Images</a>
+                <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
+                <a href="artistic.html" class="nav-link">🎨 Artistic Effects</a>
+                <a href="chat.html" class="nav-link active">💬 Text Chat</a>
+                <a href="voice.html" class="nav-link">🎤 Voice Assistant</a>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🤖 Text Model</p>
+                <div class="control-group">
+                    <label for="text-model">Select Text Model</label>
+                    <select id="text-model" class="text-model-selector">
+                        <option value="loading">Loading models...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🎤 Voice Settings</p>
+                <div class="control-group">
+                    <label for="mic-device-select">Microphone</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="mic-device-select" style="flex-grow: 1; margin-bottom: 10px;">
+                            <option value="">Loading devices...</option>
+                        </select>
+                        <button id="refresh-mics" style="background: none; border: none; color: var(--text-light); font-size: 14px; cursor: pointer; padding: 0; margin-left: 10px; display: inline-block; vertical-align: middle; opacity: 0.8;">🔄</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="speech-engine">Recognition Engine</label>
+                    <select id="speech-engine" style="margin-bottom: 10px;">
+                        <option value="web-speech">Web Speech API</option>
+                        <option value="watson">Watson API</option>
+                    </select>
+                </div>
+                <span class="sidebar-label" style="display: flex; align-items: center; margin-top: 5px;">
+                    Status: <span id="mic-status-text" style="margin-left: 5px; margin-right: 5px;">Not initialized</span>
+                    <span class="voice-status-indicator" id="mic-status-indicator"></span>
+                </span>
+                <button id="test-microphone" class="microphone-test-btn">Test Microphone</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="page-header">
+                <h1>Dreamscape AI Chat 💬</h1>
+                <p>Interact with AI using text. Ask questions, get creative ideas, and have a conversation.</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Removed redundant text since title is now Dreamscape AI Chat -->
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai-message">
+                        Hello! Chat with me using text or voice.
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <button id="voice-button" class="voice-button">🎤</button>
+                    <textarea id="chat-input" class="chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                    <button id="send-button" class="send-button">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const voiceButton = document.getElementById('voice-button');
+            const textModelSelect = document.getElementById('text-model');
+            const micStatusText = document.getElementById('mic-status-text');
+            const micStatusIndicator = document.getElementById('mic-status-indicator');
+            const testMicrophoneBtn = document.getElementById('test-microphone');
+            const micDeviceSelect = document.getElementById('mic-device-select');
+            const refreshMicsBtn = document.getElementById('refresh-mics');
+            
+            let isRecording = false;
+            let recognition = null;
+            let finalTranscript = '';
+            let recognitionTimeout = null;
+            let textModels = [];
+            let tempMessageId = null;
+            let audioDevices = []; // Store available audio devices
+            
+            // Add global variables to better track state
+            let recognitionActive = false;
+            let restartingRecognition = false;
+            
+            // Flag to determine which speech recognition to use (Web Speech or Watson)
+            let useWatson = true; // Set to true to use Watson, false to use Web Speech API
+            let watsonStream = null;
+            
+            // Fetch available text models from the API
+            fetch('https://text.pollinations.ai/models')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    textModels = data;
+                    textModelSelect.innerHTML = '';
+                    
+                    // Populate the dropdown with available models
+                    data.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.id;
+                        option.textContent = model.name;
+                        textModelSelect.appendChild(option);
+                    });
+                    
+                    // Pre-select a default model (first one)
+                    if (data.length > 0) {
+                        textModelSelect.value = data[0].id;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching models:', error);
+                    // Provide some default models as fallback
+                    textModelSelect.innerHTML = `
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="claude-3-haiku">Claude 3 Haiku</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="claude-3-opus">Claude 3 Opus</option>
+                    `;
+                });
+            
+            // Populate microphone devices dropdown
+            function populateMicrophoneDevices() {
+                debugLog('Loading available microphone devices...');
+                // Clear device list first
+                audioDevices = [];
+                micDeviceSelect.innerHTML = '<option value="">Loading devices...</option>';
+                
+                navigator.mediaDevices.enumerateDevices()
+                    .then(devices => {
+                        // Filter for audio input devices only
+                        const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                        audioDevices = audioInputs;
+                        
+                        debugLog(`Found ${audioInputs.length} audio input devices`);
+                        
+                        if (audioInputs.length === 0) {
+                            micDeviceSelect.innerHTML = '<option value="">No microphones found</option>';
+                            return;
+                        }
+                        
+                        // Clear and populate the dropdown
+                        micDeviceSelect.innerHTML = '';
+                        
+                        // Add a default option
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = "";
+                        defaultOption.textContent = "Default Microphone";
+                        defaultOption.selected = true; // Make system default the default selection
+                        micDeviceSelect.appendChild(defaultOption);
+                        
+                        // Add each device as an option
+                        audioInputs.forEach((device, index) => {
+                            const option = document.createElement('option');
+                            option.value = device.deviceId;
+                            
+                            // Get a user-friendly name
+                            let label = device.label || `Microphone ${index + 1}`;
+                            
+                            // Highlight the system default device
+                            if (label.includes('Default') || label.includes('Communications')) {
+                                label += ' (System Default)';
+                            }
+                            
+                            option.textContent = label;
+                            micDeviceSelect.appendChild(option);
+                            
+                            debugLog(`Device ${index}: ${label} (ID: ${device.deviceId.substring(0, 8)}...)`);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error enumerating devices:', err);
+                        micDeviceSelect.innerHTML = '<option value="">Error loading devices</option>';
+                        debugLog(`Device enumeration error: ${err.message}`);
+                    });
+            }
+            
+            // Request microphone permission and populate devices on page load
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    // Stop the stream immediately, we just needed permission
+                    stream.getTracks().forEach(track => track.stop());
+                    // Now get the device list
+                    populateMicrophoneDevices();
+                })
+                .catch(err => {
+                    console.error('Error getting microphone permission:', err);
+                    micDeviceSelect.innerHTML = '<option value="">Permission denied</option>';
+                    micStatusText.textContent = "No permission";
+                    micStatusIndicator.classList.add('error');
+                    debugLog(`Microphone permission error: ${err.message}`);
+                });
+            
+            // Initialize the speech recognition engine dropdown
+            const speechEngineSelect = document.getElementById('speech-engine');
+            
+            if (speechEngineSelect) {
+                debugLog('Found speech recognition engine dropdown');
+                
+                // Set default to Web Speech API
+                speechEngineSelect.value = 'web-speech';
+                useWatson = false; // Default to Web Speech API
+                
+                speechEngineSelect.addEventListener('change', function() {
+                    // Update the speech recognition engine based on selection
+                    if (this.value === 'watson') {
+                        useWatson = true;
+                        debugLog('Switched to Watson API');
+                    } else {
+                        useWatson = false;
+                        debugLog('Switched to Web Speech API');
+                    }
+                });
+            } else {
+                debugLog('Warning: Speech recognition engine dropdown not found in the DOM');
+            }
+            
+            // Listen for device selection changes
+            micDeviceSelect.addEventListener('change', function() {
+                const selectedDeviceId = this.value;
+                const selectedDevice = selectedDeviceId ? audioDevices.find(d => d.deviceId === selectedDeviceId) : null;
+                
+                if (selectedDeviceId) {
+                    debugLog(`Microphone changed to: ${selectedDevice ? selectedDevice.label : selectedDeviceId}`);
+                } else {
+                    debugLog('Microphone set to browser default');
+                }
+                
+                // Test the selected microphone automatically when changed
+                if (selectedDevice) {
+                    // Stop any active recognition first
+                    if (recognitionActive) {
+                        stopBasicRecognition();
+                    }
+                    
+                    // Optional: Auto-test the microphone when changed
+                    // setTimeout(() => testMicrophoneBtn.click(), 500);
+                }
+                });
+            
+            // Add message to the chat
+            function addMessage(text, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+                messageDiv.textContent = text;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Show typing indicator
+            function showTypingIndicator() {
+                const indicator = document.createElement('div');
+                indicator.className = 'message ai-message typing-indicator';
+                indicator.id = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    indicator.appendChild(dot);
+                }
+                
+                chatMessages.appendChild(indicator);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Remove typing indicator
+            function removeTypingIndicator() {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+            
+            // Send message to the API and get response
+            async function sendMessage(text) {
+                showTypingIndicator();
+                
+                try {
+                    // Get selected model or use default if not available
+                    const modelId = textModelSelect.value || 'gpt-4o';
+                    
+                    // Use simple GET endpoint as the most reliable option
+                    const encodedText = encodeURIComponent(text);
+                    const url = `https://text.pollinations.ai/${encodedText}`;
+                    
+                    console.log("Sending request to:", url);
+                    console.log("Original text:", text);
+                    console.log("Encoded text:", encodedText);
+                    
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("API Error Response:", errorText);
+                        throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
+                    }
+                    
+                    const responseData = await response.text();
+                    
+                    removeTypingIndicator();
+                    console.log("Response received:", responseData);
+                    
+                    // Add AI response
+                    addMessage(responseData, false);
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    removeTypingIndicator();
+                    addMessage(`Sorry, there was an error processing your request: ${error.message}. Please try again with a shorter message or different model.`, false);
+                }
+            }
+            
+            // Handle send button click
+            sendButton.addEventListener('click', () => {
+                const text = chatInput.value.trim();
+                if (text) {
+                    addMessage(text, true);
+                    chatInput.value = '';
+                    sendMessage(text);
+                }
+            });
+            
+            // Handle Enter key press (Shift+Enter for new line)
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendButton.click();
+                }
+            });
+            
+            // Handle voice button click for speech-to-text
+            voiceButton.addEventListener('click', function() {
+                if (!recognitionActive) {
+                    // If we're not currently recording, start
+                    debugLog('Voice button clicked: Starting recognition');
+                    if (useWatson) {
+                        startWatsonRecognition();
+                    } else {
+                    startBasicRecognition();
+                    }
+                } else {
+                    // If we're already recording, stop and process any text
+                    debugLog('Voice button clicked: Stopping recognition');
+                    if (useWatson) {
+                        stopWatsonRecognition();
+                    } else {
+                    stopBasicRecognition();
+                        // Ensure we handle the recognition end for Web Speech API
+                        // since it might not trigger the onend event when stopped manually
+                        setTimeout(() => {
+                            if (finalTranscript.trim() !== '') {
+                                debugLog('Processing final transcript after manual stop');
+                                handleRecognitionEnd();
+                            }
+                        }, 500);
+                    }
+                }
+            });
+            
+            // Add a debug div to the UI for realtime feedback
+            const debugContainer = document.createElement('div');
+            debugContainer.id = 'speech-debug';
+            debugContainer.style = 'position: fixed; bottom: 80px; right: 20px; background: rgba(0,0,0,0.8); color: #10b981; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 12px; max-width: 300px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;';
+            document.body.appendChild(debugContainer);
+            
+            // Add debug toggle button
+            const debugToggleBtn = document.createElement('button');
+            debugToggleBtn.textContent = '🐞 Debug';
+            debugToggleBtn.style = 'position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.6); color: #10b981; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 1000;';
+            debugToggleBtn.addEventListener('click', function() {
+                const debugContainer = document.getElementById('speech-debug');
+                if (debugContainer) {
+                    if (debugContainer.style.display === 'none') {
+                        debugContainer.style.display = 'block';
+                        debugToggleBtn.textContent = '🐞 Hide Debug';
+                    } else {
+                        debugContainer.style.display = 'none';
+                        debugToggleBtn.textContent = '🐞 Debug';
+                    }
+                }
+            });
+            document.body.appendChild(debugToggleBtn);
+            
+            // Debug log function
+            function debugLog(message) {
+                console.log(`[Speech] ${message}`);
+                const debugContainer = document.getElementById('speech-debug');
+                if (debugContainer) {
+                    const time = new Date().toLocaleTimeString();
+                    debugContainer.innerHTML += `<div>[${time}] ${message}</div>`;
+                    debugContainer.scrollTop = debugContainer.scrollHeight;
+                }
+            }
+            
+            // Function to start speech recognition with basic configuration
+            function startBasicRecognition() {
+                // Don't start if already active
+                if (recognitionActive) {
+                    debugLog('Recognition already active, not starting again');
+                    return false;
+                }
+
+                // Show debug container
+                const debugContainer = document.getElementById('speech-debug');
+                if (debugContainer) {
+                    debugContainer.style.display = 'block';
+                    debugContainer.innerHTML = ''; // Clear previous logs
+                }
+                
+                debugLog(`Starting speech recognition...`);
+                
+                try {
+                    // Clear any previous transcripts
+                    finalTranscript = '';
+                    
+                    // Create a new recognition instance each time to avoid issues
+                    if (recognition) {
+                        try {
+                            recognition.abort(); // Try to abort any previous instance
+                            recognition.onend = null; // Remove event listeners
+                            recognition.onresult = null;
+                            recognition.onerror = null;
+                            recognition.onspeechstart = null;
+                            recognition.onspeechend = null;
+                        } catch (e) {
+                            debugLog(`Error cleaning up previous recognition: ${e.message}`);
+                        }
+                    }
+                    
+                    // Check for browser support first
+                    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                        throw new Error("This browser doesn't support speech recognition.");
+                    }
+                    
+                    debugLog('Creating new SpeechRecognition instance');
+                    // Create a new recognition instance
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    
+                    // Get the selected device ID
+                    const selectedDeviceId = micDeviceSelect.value;
+                    const selectedDevice = selectedDeviceId ? audioDevices.find(d => d.deviceId === selectedDeviceId) : null;
+                    
+                    if (selectedDeviceId) {
+                        debugLog(`Using selected microphone: ${selectedDevice ? selectedDevice.label : selectedDeviceId}`);
+                    } else {
+                        debugLog('Using default microphone');
+                    }
+                    
+                    // Try to ensure microphone is ready
+                    let microphoneReady = false;
+                    
+                    // First check if we have a successful stream from the microphone test
+                    if (window.lastSuccessfulAudioStream && window.lastSuccessfulAudioContext) {
+                        debugLog('Using existing successful audio stream from microphone test');
+                        microphoneReady = true;
+                        
+                        // Make sure the audio context is running
+                        if (window.lastSuccessfulAudioContext.state === 'suspended') {
+                            window.lastSuccessfulAudioContext.resume().then(() => {
+                                debugLog('Resumed existing audio context');
+                            }).catch(e => {
+                                debugLog(`Failed to resume audio context: ${e.message}`);
+                            });
+                        }
+                    } 
+                    
+                    // If we don't have a successful stream yet, initialize one
+                    if (!microphoneReady) {
+                        try {
+                            debugLog('Initializing audio context to ensure microphone is active');
+                            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            
+                            // Try to initialize the audio input with the selected device
+                            if (selectedDeviceId) {
+                                navigator.mediaDevices.getUserMedia({ 
+                                    audio: { 
+                                        deviceId: { exact: selectedDeviceId },
+                                        echoCancellation: true,
+                                        noiseSuppression: true,
+                                        autoGainControl: true
+                                    } 
+                                })
+                                .then(stream => {
+                                    debugLog('Successfully initialized selected microphone');
+                                    // Keep this stream active for recognition
+                                    window.lastSuccessfulAudioStream = stream;
+                                    window.lastSuccessfulAudioContext = audioContext;
+                                })
+                                .catch(err => {
+                                    debugLog(`Error initializing selected mic: ${err.message}. Falling back to default.`);
+                                });
+                            }
+                            
+                            // Resume audio context if it's suspended
+                            if (audioContext.state === 'suspended') {
+                                audioContext.resume().then(() => {
+                                    debugLog('Audio context resumed successfully');
+                                }).catch(e => {
+                                    debugLog(`Error resuming audio context: ${e.message}`);
+                                });
+                            }
+                        } catch (e) {
+                            debugLog(`Audio context initialization error (non-critical): ${e.message}`);
+                        }
+                    }
+                    
+                    // Configure basic settings
+                    recognition.lang = 'en-US';
+                    recognition.interimResults = true; // Changed to true to get partial results
+                    recognition.continuous = false; // Changed to false for reliability (true can cause issues)
+                    recognition.maxAlternatives = 3; // Get the most likely result
+                    
+                    debugLog(`Recognition configured: lang=${recognition.lang}, continuous=${recognition.continuous}, interimResults=${recognition.interimResults}`);
+                    
+                    // Event: When recognition results are available
+                    recognition.onresult = function(event) {
+                        debugLog(`Got results: ${event.results.length} result sets`);
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const result = event.results[i];
+                            debugLog(`Result ${i}: isFinal=${result.isFinal}`);
+                            
+                            if (result.isFinal) {
+                                const transcript = result[0].transcript;
+                                const confidence = result[0].confidence;
+                                debugLog(`Final transcript: "${transcript}" (confidence: ${Math.round(confidence * 100)}%)`);
+                                
+                                finalTranscript += transcript;
+                                
+                                // Update the display immediately
+                                const displayText = finalTranscript.trim();
+                                chatInput.value = displayText;
+                                chatInput.dispatchEvent(new Event('input'));
+                                
+                                // Show alternatives if available
+                                if (result.length > 1) {
+                                    debugLog(`Alternatives:`);
+                                    for (let j = 1; j < result.length; j++) {
+                                        debugLog(`  ${j}: "${result[j].transcript}" (confidence: ${Math.round(result[j].confidence * 100)}%)`);
+                                    }
+                                }
+                            } else {
+                                // For interim results
+                                const transcript = result[0].transcript;
+                                debugLog(`Interim: "${transcript}"`);
+                                
+                                // Update the display with interim text
+                                chatInput.value = finalTranscript + transcript;
+                                chatInput.dispatchEvent(new Event('input'));
+                            }
+                        }
+                    };
+                    
+                    // Event: When recognition detects speech start
+                    recognition.onspeechstart = function() {
+                        debugLog('Speech detected! Recording audio...');
+                        isRecording = true;
+                        
+                        // Clear any pending no-speech timeouts
+                        if (recognitionTimeout) {
+                            clearTimeout(recognitionTimeout);
+                        }
+                        
+                        // Update UI to show active recording
+                        voiceButton.classList.add('active', 'recording'); // Add BOTH classes for animation
+                        micStatusText.textContent = 'Recording...';
+                        micStatusIndicator.classList.add('active');
+                    };
+                    
+                    // Event: When recognition doesn't detect speech
+                    recognition.onspeechend = function() {
+                        debugLog('Speech ended');
+                        // Don't stop recognition here - let onend handle it
+                    };
+                    
+                    // Event: When recognition has an error
+                    recognition.onerror = function(event) {
+                        debugLog(`Error: ${event.error}, details: ${event.message || 'No details'}`);
+                        debugLog(`User agent: ${navigator.userAgent}`);
+                        debugLog(`Permissions state: ${navigator.permissions ? 'Available' : 'Not available'}`);
+                        
+                        // Try to get permission state if available
+                        if (navigator.permissions) {
+                            navigator.permissions.query({name:'microphone'})
+                                .then(function(permissionStatus) {
+                                    debugLog(`Microphone permission: ${permissionStatus.state}`);
+                                })
+                                .catch(function(error) {
+                                    debugLog(`Permission check error: ${error.message}`);
+                                });
+                        }
+                        
+                        if (event.error === 'no-speech') {
+                            debugLog('No speech detected within timeout period');
+                            // We'll handle this specially
+                            handleNoSpeech();
+                        } else if (event.error === 'audio-capture') {
+                            showErrorMessage("❌ No microphone detected. Please check your microphone.");
+                        } else if (event.error === 'not-allowed') {
+                            showErrorMessage("❌ Microphone permission denied. Please allow microphone access.");
+                        } else if (event.error === 'aborted') {
+                            debugLog('Recognition aborted');
+                            // This is normal when stopping
+                        } else {
+                            showErrorMessage(`❌ Speech recognition error: ${event.error}`);
+                        }
+                        
+                        // Update recognition state
+                        recognitionActive = false;
+                        
+                        // Only stop if we're not restarting
+                        if (!restartingRecognition) {
+                            stopBasicRecognition();
+                        }
+                    };
+                    
+                    // Event: When recognition ends (for any reason)
+                    recognition.onend = function() {
+                        debugLog('Recognition ended');
+                        
+                        // If we're restarting, don't process the transcript yet
+                        if (restartingRecognition) {
+                            debugLog('Restarting recognition...');
+                            restartingRecognition = false;
+                            setTimeout(() => {
+                                try {
+                                    recognition.start();
+                                } catch (e) {
+                                    debugLog(`Error restarting: ${e.message}`);
+                                    recognitionActive = false;
+                                    resetSpeechUI();
+                                }
+                            }, 100);
+                            return;
+                        }
+                        
+                        // Always ensure handleRecognitionEnd is called to process any text
+                        recognitionActive = false;
+                            handleRecognitionEnd();
+                    };
+                    
+                    // Clear any previous transcript
+                    finalTranscript = '';
+                    
+                    // Set a flag to indicate recognition is active
+                    isRecording = true;
+                    recognitionActive = true;
+                    restartingRecognition = false;
+                    
+                    // Update UI to indicate recording state
+                    resetSpeechUI();
+                    voiceButton.classList.add('active', 'recording'); // Add BOTH classes for animation
+                    micStatusText.textContent = 'Listening...';
+                    micStatusIndicator.classList.add('active');
+                    
+                    // Start recognition
+                    debugLog('Starting recognition');
+                    recognition.start();
+                    
+                    // Set a timeout to check if we've detected any speech
+                    // This helps when the browser doesn't fire the no-speech error
+                    if (recognitionTimeout) {
+                        clearTimeout(recognitionTimeout);
+                    }
+                    
+                    recognitionTimeout = setTimeout(function() {
+                        if (recognitionActive && finalTranscript === '') {
+                            debugLog('No speech detected after timeout');
+                            handleNoSpeech();
+                        }
+                    }, 10000); // Increased from 7000 to 10000 (10 seconds) to give more time for detection
+                    
+                    return true;
+                } catch (error) {
+                    debugLog(`Error setting up recognition: ${error.message}`);
+                    showErrorMessage(`❌ Could not start speech recognition: ${error.message}`);
+                    recognitionActive = false;
+                    resetSpeechUI();
+                    return false;
+                }
+            }
+            
+            // Handle the case when no speech is detected
+            function handleNoSpeech() {
+                debugLog('Handling no speech case');
+                
+                // Check if we had any speech
+                if (finalTranscript === '') {
+                    showErrorMessage("❌ No speech detected. Please try again.");
+                    
+                    // Update UI
+                    resetSpeechUI();
+                    
+                    // Mark recognition as inactive
+                    recognitionActive = false;
+                    
+                    // Option to restart recognition
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'retry-speech-btn';
+                    retryBtn.textContent = 'Try Again';
+                    retryBtn.style = 'background: #8b5cf6; color: white; border: none; border-radius: 4px; padding: 5px 10px; margin-left: 10px; cursor: pointer;';
+                    
+                    // Find the error message and append the button
+                    const latestMessage = document.querySelector('.message.system-message:last-child .message-text p');
+                    if (latestMessage) {
+                        latestMessage.appendChild(retryBtn);
+                        
+                        // Add click event to retry
+                        retryBtn.addEventListener('click', function() {
+                            debugLog('Retry button clicked');
+                            startBasicRecognition();
+                            this.remove();
+                        });
+                    }
+                }
+            }
+            
+            // Handle the end of a recognition session
+            function handleRecognitionEnd() {
+                debugLog('Handling recognition end');
+                
+                // Clean up
+                clearTimeout(recognitionTimeout);
+                isRecording = false;
+                recognitionActive = false;
+                
+                // Reset UI
+                resetSpeechUI();
+                
+                // Process the transcript if we have one
+                if (finalTranscript.trim() !== '') {
+                    debugLog(`Final transcript: "${finalTranscript}"`);
+                    
+                    // Add the recognized text to chat and send automatically
+                    const recognizedText = finalTranscript.trim();
+                    debugLog('Automatically sending message: ' + recognizedText);
+                    addMessage(recognizedText, true);
+                    sendMessage(recognizedText);
+                    chatInput.value = '';
+                    
+                    // Hide debug container after successful recognition
+                    const debugContainer = document.getElementById('speech-debug');
+                    if (debugContainer) {
+                        setTimeout(() => {
+                            debugContainer.style.display = 'none';
+                        }, 3000);
+                    }
+                } else {
+                    debugLog('No final transcript available');
+                }
+            }
+            
+            // Function to stop speech recognition
+            function stopBasicRecognition() {
+                debugLog('Stopping recognition');
+                
+                // Clear timeout
+                if (recognitionTimeout) {
+                    clearTimeout(recognitionTimeout);
+                }
+                
+                // If recognition is active, stop it
+                if (recognition) {
+                    try {
+                        if (recognitionActive) {
+                            recognition.stop();
+                            debugLog('Recognition stopped');
+                        }
+                    } catch (error) {
+                        debugLog(`Error stopping recognition: ${error.message}`);
+                    }
+                }
+                
+                // Reset UI and state
+                recognitionActive = false;
+                resetSpeechUI();
+                
+                // handleRecognitionEnd will be called by the recognition.onend event
+                // and will handle sending the message, so we don't need to do it here
+                
+                // Hide debug container after a delay
+                const debugContainer = document.getElementById('speech-debug');
+                if (debugContainer) {
+                    setTimeout(() => {
+                        debugContainer.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            // Function to reset the UI after speech recognition
+            function resetSpeechUI() {
+                isRecording = false;
+                voiceButton.classList.remove('active', 'recording');
+                voiceButton.textContent = '🎤';
+                micStatusText.textContent = "Ready";
+                micStatusIndicator.classList.remove('active');
+            }
+            
+            // Helper function to show error messages
+            function showErrorMessage(message) {
+                chatMessages.innerHTML += `
+                    <div class="message system-message">
+                        <div class="message-content">
+                            <div class="message-text">
+                                <p>${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Initialize mic status
+            micStatusText.textContent = "Ready";
+            
+            // Click outside to stop listening
+            document.addEventListener('click', function(event) {
+                if (recognitionActive && event.target !== voiceButton && !voiceButton.contains(event.target)) {
+                    debugLog('Click outside detected: Stopping recognition');
+                    
+                    // Save transcript before stopping
+                    const currentTranscript = finalTranscript.trim();
+                    const hasTranscript = currentTranscript !== '';
+                    
+                    if (useWatson) {
+                        stopWatsonRecognition();
+                    } else {
+                    stopBasicRecognition();
+                        
+                        // For Web Speech API, ensure we handle any transcript after stopping
+                        if (hasTranscript) {
+                            debugLog('Processing saved transcript after click-outside stop');
+                            setTimeout(() => {
+                                if (!finalTranscript.trim() && currentTranscript) {
+                                    // Use the saved transcript if it was cleared
+                                    finalTranscript = currentTranscript;
+                                }
+                                handleRecognitionEnd();
+                            }, 500);
+                        }
+                    }
+                }
+            });
+            
+            // ----- WATSON SPEECH RECOGNITION IMPLEMENTATION -----
+            
+            // Function to start Watson speech recognition
+            function startWatsonRecognition() {
+                // Don't start if already active
+                if (recognitionActive) {
+                    debugLog('Recognition already active, not starting again');
+                    return false;
+                }
+                
+                // Show debug container
+                const debugContainer = document.getElementById('speech-debug');
+                if (debugContainer) {
+                    debugContainer.style.display = 'block';
+                    debugContainer.innerHTML = ''; // Clear previous logs
+                }
+                
+                debugLog(`Starting Watson speech recognition...`);
+                finalTranscript = '';
+                
+                try {
+                    // Get the selected device ID
+                    const selectedDeviceId = micDeviceSelect.value;
+                    const selectedDevice = selectedDeviceId ? audioDevices.find(d => d.deviceId === selectedDeviceId) : null;
+                    
+                    if (selectedDeviceId) {
+                        debugLog(`Using selected microphone: ${selectedDevice ? selectedDevice.label : selectedDeviceId}`);
+                    } else {
+                        debugLog('Using default microphone');
+                    }
+                    
+                    // Configure audio constraints based on selected device
+                    const audioConstraints = {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    };
+                    
+                    // Add deviceId constraint if a device is selected
+                    if (selectedDeviceId) {
+                        audioConstraints.deviceId = { exact: selectedDeviceId };
+                    }
+                    
+                    // First, get microphone stream
+                    navigator.mediaDevices.getUserMedia({ audio: audioConstraints })
+                        .then(stream => {
+                            // Store the stream
+                            watsonStream = stream;
+                            
+                            // Update UI
+                            isRecording = true;
+                            recognitionActive = true;
+                            voiceButton.classList.add('active', 'recording');
+                            micStatusText.textContent = 'Recording...';
+                            micStatusIndicator.classList.add('active');
+                            
+                            debugLog('Microphone stream acquired, setting up Watson...');
+                            
+                            // Create an audio context
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            const source = audioContext.createMediaStreamSource(stream);
+                            
+                            // Create a processor node for the audio
+                            const processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+                            
+                            // Connect nodes
+                            source.connect(processorNode);
+                            processorNode.connect(audioContext.destination);
+                            
+                            // Sample rate for Watson (must be 16000Hz)
+                            const WATSON_SAMPLE_RATE = 16000;
+                            const ORIGINAL_SAMPLE_RATE = audioContext.sampleRate;
+                            const DOWNSAMPLE_RATIO = ORIGINAL_SAMPLE_RATE / WATSON_SAMPLE_RATE;
+                            
+                            debugLog(`Original sample rate: ${ORIGINAL_SAMPLE_RATE}Hz, downsampling to ${WATSON_SAMPLE_RATE}Hz`);
+                            
+                            // Create a buffer to collect audio samples
+                            let audioChunks = [];
+                            
+                            // Process audio in chunks
+                            processorNode.onaudioprocess = function(event) {
+                                if (!recognitionActive) return;
+                                
+                                // Get audio samples from the input channel
+                                const inputData = event.inputBuffer.getChannelData(0);
+                                
+                                // Downsample to 16000 Hz by picking every Nth sample
+                                // This is a simple but not ideal downsampling approach
+                                const downsampledLength = Math.floor(inputData.length / DOWNSAMPLE_RATIO);
+                                const downsampledData = new Float32Array(downsampledLength);
+                                
+                                for (let i = 0; i < downsampledLength; i++) {
+                                    // Pick every Nth sample (simple downsampling)
+                                    const originalIndex = Math.floor(i * DOWNSAMPLE_RATIO);
+                                    downsampledData[i] = inputData[originalIndex];
+                                }
+                                
+                                // Convert downsampled data to 16-bit PCM (what Watson expects)
+                                const pcmBuffer = new Int16Array(downsampledLength);
+                                
+                                // Use little-endian (which is what Watson expects)
+                                for (let i = 0; i < downsampledLength; i++) {
+                                    // Convert float32 to int16 with proper scaling and clamping
+                                    const scaled = Math.max(-1, Math.min(1, downsampledData[i]));
+                                    // Use little-endian format (which is standard for PCM)
+                                    pcmBuffer[i] = Math.floor(scaled * 32767);
+                                }
+                                
+                                // Save this chunk
+                                audioChunks.push(pcmBuffer);
+                                
+                                // Every 5 chunks (about 500ms of audio), send to Watson
+                                if (audioChunks.length >= 5) {
+                                    sendAudioToWatson(audioChunks);
+                                    audioChunks = []; // Reset chunks
+                                }
+                            };
+                            
+                            // Save the processor for later cleanup
+                            window.watsonProcessor = processorNode;
+                            
+                            // Timeout for "no speech detected"
+                            if (recognitionTimeout) {
+                                clearTimeout(recognitionTimeout);
+                            }
+                            
+                            recognitionTimeout = setTimeout(function() {
+                                if (recognitionActive && finalTranscript === '') {
+                                    debugLog('No speech detected after timeout');
+                                    stopWatsonRecognition();
+                                    handleNoSpeech();
+                                }
+                            }, 10000);
+                            
+                            debugLog('Watson recognition started');
+                        })
+                        .catch(error => {
+                            debugLog(`Error accessing microphone: ${error.message}`);
+                            showErrorMessage(`❌ Could not access microphone: ${error.message}`);
+                            resetSpeechUI();
+                            recognitionActive = false;
+                        });
+                    
+                    return true;
+                } catch (error) {
+                    debugLog(`Error setting up Watson recognition: ${error.message}`);
+                    showErrorMessage(`❌ Could not start speech recognition: ${error.message}`);
+                    resetSpeechUI();
+                    recognitionActive = false;
+                    return false;
+                }
+            }
+            
+            // Function to send audio chunks to Watson
+            function sendAudioToWatson(audioChunks) {
+                if (!recognitionActive) return;
+                
+                // Combine all chunks into one buffer
+                const totalLength = audioChunks.reduce((length, chunk) => length + chunk.length, 0);
+                const combinedBuffer = new Int16Array(totalLength);
+                
+                let offset = 0;
+                for (const chunk of audioChunks) {
+                    combinedBuffer.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                
+                // Create a properly formatted audio blob
+                // Use audio/l16 MIME type with proper Watson format
+                const audioBlob = new Blob([combinedBuffer.buffer], { 
+                    type: 'audio/l16; rate=16000; channels=1' // Format exactly as Watson expects it
+                });
+                
+                // Log the size of the audio data
+                debugLog(`Sending audio to Watson: ${audioBlob.size} bytes`);
+                
+                // Determine the API URL based on the current location
+                const apiUrl = new URL('/api/speech-to-text', window.location.origin).href;
+                debugLog(`Sending audio to API: ${apiUrl}`);
+                
+                // Send to our backend proxy instead of directly to Watson
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'audio/l16; rate=16000; channels=1' // Exact format Watson expects
+                    },
+                    body: audioBlob // Send the raw audio blob
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    debugLog(`Watson response: ${JSON.stringify(data)}`);
+                    
+                    // Check if we got successful results
+                    if (data.success && data.results && data.results.results && data.results.results.length > 0) {
+                        // Process transcripts
+                        for (const result of data.results.results) {
+                            if (result.final) {
+                                // It's a final result
+                                const transcript = result.alternatives[0].transcript;
+                                debugLog(`Watson final transcript: "${transcript}"`);
+                                
+                                // Add to final transcript
+                                finalTranscript += ' ' + transcript;
+                                
+                                // Update UI
+                                chatInput.value = finalTranscript.trim();
+                                chatInput.dispatchEvent(new Event('input'));
+                                } else {
+                                // Interim result
+                                const transcript = result.alternatives[0].transcript;
+                                debugLog(`Watson interim transcript: "${transcript}"`);
+                                
+                                // Update UI with interim + final text
+                                chatInput.value = finalTranscript + ' ' + transcript;
+                                chatInput.dispatchEvent(new Event('input'));
+                            }
+                        }
+                    } else if (data.error) {
+                        debugLog(`Watson API error: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    debugLog(`API error: ${error.message}`);
+                });
+            }
+            
+            // Function to stop Watson speech recognition
+            function stopWatsonRecognition() {
+                debugLog('Stopping Watson recognition');
+                
+                // Clear timeout
+                if (recognitionTimeout) {
+                    clearTimeout(recognitionTimeout);
+                }
+                
+                // Stop the audio processing
+                if (window.watsonProcessor) {
+                    window.watsonProcessor.disconnect();
+                    window.watsonProcessor = null;
+                }
+                
+                // Stop the microphone stream
+                if (watsonStream) {
+                    watsonStream.getTracks().forEach(track => track.stop());
+                    watsonStream = null;
+                }
+                
+                // Update state
+                recognitionActive = false;
+                resetSpeechUI();
+                
+                // Process final transcript
+                if (finalTranscript.trim() !== '') {
+                    debugLog(`Final transcript: "${finalTranscript}"`);
+                    
+                    // Add the recognized text to chat and send automatically
+                    const recognizedText = finalTranscript.trim();
+                    debugLog('Automatically sending message: ' + recognizedText);
+                    addMessage(recognizedText, true);
+                    sendMessage(recognizedText);
+                    chatInput.value = '';
+                } else {
+                    debugLog('No transcript to process');
+                }
+                
+                // Hide debug container after a delay
+                const debugContainer = document.getElementById('speech-debug');
+                if (debugContainer) {
+                    setTimeout(() => {
+                        debugContainer.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            // ----- END WATSON SPEECH RECOGNITION -----
+            
+            // Refresh microphones button
+            refreshMicsBtn.addEventListener('click', function() {
+                populateMicrophoneDevices();
+            });
+            
+            // Function to start speech recognition based on selected engine
+            function startSpeechRecognition() {
+                debugLog('Starting speech recognition with selected engine');
+                if (useWatson) {
+                    return startWatsonRecognition();
+                } else {
+                    return startBasicRecognition();
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

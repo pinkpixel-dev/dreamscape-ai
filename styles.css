@@ -461,7 +461,7 @@ body {
 
 /* Sidebar Styles */
 .sidebar {
-    width: 320px;
+    width: 300px;
     background: rgba(12, 2, 27, 0.3); /* Make nearly transparent, just a hint of color */
     border-right: 1px solid rgba(157, 78, 221, 0.05); /* Very subtle border like content area */
     padding: 1.5rem;
@@ -516,13 +516,13 @@ select, input[type="number"] {
 }
 
 .sidebar-section {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
 }
 
 .section-title {
-    font-size: 1rem;
-    margin: 1rem 0 0.8rem 0;
+    font-size: 0.9rem;
+    margin: 0.7rem 0 0.5rem 0;
     color: var(--text-white);
     font-weight: 500;
 }
@@ -1084,12 +1084,13 @@ select option,
 /* Enhancement page specific styles */
 .nav-link {
     display: block;
-    padding: 0.8rem 1rem;
+    padding: 0.5rem 0.8rem;
     color: var(--text-light);
     text-decoration: none;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 0.3rem;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
 }
 
 .nav-link:hover {

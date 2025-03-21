@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Dreamscape AI - Voice Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/enhance.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <style>
+        /* Voice-specific styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: rgba(30, 15, 50, 0.15);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            max-height: 60vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(50, 30, 80, 0.3);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            color: var(--text-light);
+            margin-right: auto;
+            margin-left: 0;
+            border-bottom-left-radius: 4px;
+        }
+
+        .voice-button-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .main-voice-button {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .main-voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(157, 78, 221, 0.5);
+        }
+
+        .main-voice-button.recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-status {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 16px;
+            color: var(--text-light);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .model-selector {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(30, 15, 50, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 14px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        .play-audio-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .play-audio-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .audio-message {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Loading/typing animation */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: rgba(157, 78, 221, 0.7);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.5);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: rgba(157, 78, 221, 0.7);
+            margin-top: 3px;
+            margin-left: 20px;
+        }
+
+        .listening-wave {
+            position: absolute;
+            left: 50%;
+            top: 50%; 
+            transform: translate(-50%, -50%);
+            height: 130px;
+            width: 130px;
+            background: radial-gradient(circle, rgba(157, 78, 221, 0.2) 0%, rgba(30, 15, 50, 0) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .listening-wave.active {
+            animation: wave 2s infinite;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+
+        .text-input-toggle {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .text-input-toggle button {
+            background: rgba(157, 78, 221, 0.3);
+            border: 1px solid rgba(157, 78, 221, 0.4);
+            color: var(--text-light);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .text-input-toggle button:hover {
+            background: rgba(157, 78, 221, 0.5);
+        }
+
+        .chat-input-container {
+            display: none;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 15px;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 10px;
+            background: rgba(20, 10, 30, 0.3);
+            color: var(--text-white);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 16px;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        .send-button {
+            padding: 0 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background animations -->
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="moon-container">
+        <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon">
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
+                <span>Creative Studio✨</span>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📋 Navigation</p>
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="generate.html" class="nav-link">🌌 Generate Images</a>
+                <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
+                <a href="artistic.html" class="nav-link">🎨 Artistic Effects</a>
+                <a href="chat.html" class="nav-link">💬 Text Chat</a>
+                <a href="voice.html" class="nav-link active">🎤 Voice Assistant</a>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🤖 Text Model</p>
+                <div class="control-group">
+                    <label for="text-model">Select Text Model</label>
+                    <select id="text-model" class="model-selector">
+                        <option value="loading">Loading models...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🎤 Voice Settings</p>
+                <div class="control-group">
+                    <label for="voice-model">Voice Model</label>
+                    <select id="voice-model" class="model-selector">
+                        <option value="alloy">Alloy</option>
+                        <option value="echo">Echo</option>
+                        <option value="fable">Fable</option>
+                        <option value="onyx">Onyx</option>
+                        <option value="nova">Nova</option>
+                        <option value="shimmer">Shimmer</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="auto-listen">
+                        <input type="checkbox" id="auto-listen">
+                        🎧 Auto Listen After Response
+                    </label>
+                    <div class="help-text">Automatically start listening after AI responds</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="page-header">
+                <h1>Voice Assistant</h1>
+                <p>Interact naturally with AI using your voice. Ask questions, get spoken responses, and have voice conversations.</p>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai-message">
+                        Hello! I'm your AI voice assistant. Click the microphone button below and start speaking to interact with me.
+                    </div>
+                </div>
+                
+                <div class="voice-button-container">
+                    <div class="listening-wave" id="listening-wave"></div>
+                    <button id="main-voice-button" class="main-voice-button">🎤</button>
+                </div>
+                <div class="voice-status" id="voice-status">Click microphone to speak</div>
+                
+                <div class="text-input-toggle">
+                    <button id="text-toggle-button">Use text input instead</button>
+                </div>
+                
+                <div class="chat-input-container" id="text-input-container">
+                    <textarea id="chat-input" class="chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                    <button id="send-button" class="send-button">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const mainVoiceButton = document.getElementById('main-voice-button');
+            const voiceStatus = document.getElementById('voice-status');
+            const listeningWave = document.getElementById('listening-wave');
+            const textToggleButton = document.getElementById('text-toggle-button');
+            const textInputContainer = document.getElementById('text-input-container');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const textModelSelect = document.getElementById('text-model');
+            const voiceModelSelect = document.getElementById('voice-model');
+            const autoListenCheckbox = document.getElementById('auto-listen');
+            
+            let isRecording = false;
+            let mediaRecorder;
+            let audioChunks = [];
+            let textModels = [];
+            let isTextInputMode = false;
+            
+            // Fetch available text models from the API
+            fetch('https://text.pollinations.ai/models')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    textModels = data;
+                    textModelSelect.innerHTML = '';
+                    
+                    // Populate the dropdown with available models
+                    data.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.id;
+                        option.textContent = model.name;
+                        textModelSelect.appendChild(option);
+                    });
+                    
+                    // Pre-select a default model (first one)
+                    if (data.length > 0) {
+                        textModelSelect.value = data[0].id;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching models:', error);
+                    // Provide some default models as fallback
+                    textModelSelect.innerHTML = `
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="claude-3-haiku">Claude 3 Haiku</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="claude-3-opus">Claude 3 Opus</option>
+                    `;
+                });
+            
+            // Add message to the chat
+            function addMessage(text, isUser = false, hasAudio = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+                
+                if (hasAudio && !isUser) {
+                    // Create audio message with play button
+                    const audioContainer = document.createElement('div');
+                    audioContainer.className = 'audio-message';
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = text;
+                    
+                    const playButton = document.createElement('button');
+                    playButton.className = 'play-audio-button';
+                    playButton.innerHTML = '▶';
+                    playButton.setAttribute('data-text', text);
+                    playButton.addEventListener('click', () => playTextAsAudio(text));
+                    
+                    audioContainer.appendChild(textSpan);
+                    audioContainer.appendChild(playButton);
+                    messageDiv.appendChild(audioContainer);
+                } else {
+                    messageDiv.textContent = text;
+                }
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Show typing indicator
+            function showTypingIndicator() {
+                const indicator = document.createElement('div');
+                indicator.className = 'message ai-message typing-indicator';
+                indicator.id = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    indicator.appendChild(dot);
+                }
+                
+                chatMessages.appendChild(indicator);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Remove typing indicator
+            function removeTypingIndicator() {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+            
+            // Send message to the API and get response
+            async function sendMessage(text) {
+                showTypingIndicator();
+                updateVoiceStatus("Waiting for response...");
+                
+                try {
+                    // Get selected model or use default if not available
+                    const modelId = textModelSelect.value || 'gpt-4o';
+                    
+                    // Use simple GET endpoint as the most reliable option
+                    const encodedText = encodeURIComponent(text);
+                    const url = `https://text.pollinations.ai/${encodedText}`;
+                    
+                    console.log("Sending request to:", url);
+                    console.log("Original text:", text);
+                    console.log("Encoded text:", encodedText);
+                    
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("API Error Response:", errorText);
+                        throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
+                    }
+                    
+                    const responseData = await response.text();
+                    
+                    removeTypingIndicator();
+                    console.log("Response received:", responseData);
+                    
+                    // Add AI response
+                    addMessage(responseData, false, true);
+                    
+                    // Always play audio in voice assistant mode
+                    await playTextAsAudio(responseData);
+                    
+                    updateVoiceStatus("Click microphone to speak");
+                    
+                    // Auto listen after response if enabled
+                    if (autoListenCheckbox.checked && !isTextInputMode) {
+                        setTimeout(() => {
+                            startListening();
+                        }, 1000);
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    removeTypingIndicator();
+                    updateVoiceStatus("Click microphone to speak");
+                    addMessage(`Sorry, there was an error processing your request: ${error.message}. Please try again with a shorter message or different model.`, false);
+                }
+            }
+            
+            // Play text as audio using the text-to-speech API
+            async function playTextAsAudio(text) {
+                try {
+                    updateVoiceStatus("Speaking...");
+                    
+                    // Truncate text if too long for audio (TTS often has limits)
+                    const maxLength = 500; // Lower limit to avoid 400 errors
+                    const truncatedText = text.length > maxLength ? 
+                        text.substring(0, maxLength) + "..." : 
+                        text;
+                    
+                    const voice = voiceModelSelect.value || 'alloy';
+                    
+                    // Use the correct TTS endpoint format 
+                    const encodedText = encodeURIComponent(truncatedText);
+                    const audioUrl = `https://text.pollinations.ai/${encodedText}?model=openai-audio&voice=${voice}`;
+                    
+                    console.log("Audio URL:", audioUrl);
+                    
+                    // Create audio element with proper error handling
+                    const audio = new Audio();
+                    
+                    // Add error handling
+                    audio.onerror = (e) => {
+                        console.error('Audio playback error:', e);
+                        updateVoiceStatus("Audio playback failed");
+                        setTimeout(() => {
+                            updateVoiceStatus("Click microphone to speak");
+                        }, 2000);
+                    };
+                    
+                    // Add ended event listener
+                    audio.onended = () => {
+                        console.log("Audio playback ended");
+                        updateVoiceStatus("Click microphone to speak");
+                    };
+                    
+                    // Set source and play
+                    audio.src = audioUrl;
+                    
+                    // Play with explicit catch to handle autoplay restrictions
+                    try {
+                        await audio.play();
+                        console.log("Audio playback started");
+                    } catch (playError) {
+                        console.error('Error playing audio:', playError);
+                        updateVoiceStatus("Click microphone to speak");
+                        
+                        if (playError.name === 'NotAllowedError') {
+                            alert('Autoplay was blocked. Please interact with the page first and try again.');
+                        } else {
+                            alert('Could not play audio. This might be due to browser restrictions or network issues.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error setting up audio:', error);
+                    updateVoiceStatus("Click microphone to speak");
+                }
+            }
+            
+            // Update voice status display
+            function updateVoiceStatus(text) {
+                voiceStatus.textContent = text;
+            }
+            
+            // Start listening for voice input
+            function startListening() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(stream => {
+                            isRecording = true;
+                            mainVoiceButton.classList.add('recording');
+                            mainVoiceButton.textContent = '⏹️';
+                            listeningWave.classList.add('active');
+                            updateVoiceStatus("Listening...");
+                            
+                            mediaRecorder = new MediaRecorder(stream);
+                            audioChunks = [];
+                            
+                            mediaRecorder.addEventListener('dataavailable', event => {
+                                audioChunks.push(event.data);
+                            });
+                            
+                            mediaRecorder.addEventListener('stop', () => {
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                                const formData = new FormData();
+                                formData.append('audio', audioBlob);
+                                
+                                // Show a temporary message indicating processing
+                                updateVoiceStatus("Processing your audio...");
+                                
+                                // Here you would send the audio to a speech-to-text service
+                                // For demonstration, we'll just simulate this with a timeout
+                                setTimeout(() => {
+                                    // Simulate received text
+                                    const transcribedText = "This is simulated speech-to-text. In a real implementation, you would send the audio to a service for transcription.";
+                                    
+                                    // Add the transcribed message
+                                    addMessage(transcribedText, true);
+                                    
+                                    // Send to AI
+                                    sendMessage(transcribedText);
+                                }, 2000);
+                                
+                                // Clean up stream tracks
+                                stream.getTracks().forEach(track => track.stop());
+                            });
+                            
+                            mediaRecorder.start();
+                            
+                            // Auto stop after 10 seconds of silence
+                            setTimeout(() => {
+                                if (isRecording) {
+                                    stopListening();
+                                }
+                            }, 10000);
+                        })
+                        .catch(error => {
+                            console.error('Error accessing microphone:', error);
+                            updateVoiceStatus("Microphone access denied");
+                            alert('Could not access your microphone. Please check your permissions.');
+                        });
+                } else {
+                    updateVoiceStatus("Your browser doesn't support voice recording");
+                    alert('Your browser does not support recording audio.');
+                }
+            }
+            
+            // Stop listening for voice input
+            function stopListening() {
+                if (isRecording) {
+                    isRecording = false;
+                    mainVoiceButton.classList.remove('recording');
+                    mainVoiceButton.textContent = '🎤';
+                    listeningWave.classList.remove('active');
+                    
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                }
+            }
+            
+            // Toggle between voice and text input modes
+            function toggleTextInput() {
+                isTextInputMode = !isTextInputMode;
+                
+                if (isTextInputMode) {
+                    textInputContainer.style.display = 'flex';
+                    textToggleButton.textContent = 'Use voice input instead';
+                    mainVoiceButton.style.display = 'none';
+                    voiceStatus.style.display = 'none';
+                } else {
+                    textInputContainer.style.display = 'none';
+                    textToggleButton.textContent = 'Use text input instead';
+                    mainVoiceButton.style.display = 'flex';
+                    voiceStatus.style.display = 'block';
+                }
+            }
+            
+            // Handle main voice button click
+            mainVoiceButton.addEventListener('click', () => {
+                if (!isRecording) {
+                    startListening();
+                } else {
+                    stopListening();
+                }
+            });
+            
+            // Handle text toggle button click
+            textToggleButton.addEventListener('click', toggleTextInput);
+            
+            // Handle send button click
+            sendButton.addEventListener('click', () => {
+                const text = chatInput.value.trim();
+                if (text) {
+                    addMessage(text, true);
+                    chatInput.value = '';
+                    sendMessage(text);
+                }
+            });
+            
+            // Handle Enter key press (Shift+Enter for new line)
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
