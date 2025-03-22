@@ -520,6 +520,14 @@
     </div>
 
     <script>
+        // Global variables
+        let chatHistory = []; // Add chat history array to store messages
+        let chatSummary = ""; // Variable to store the current summary
+        let summarizationInProgress = false; // Flag to prevent multiple summarization requests
+        const MAX_MESSAGES_BEFORE_SUMMARY = 2; // Generate summary after every interaction (user + AI)
+        const SUMMARY_MODEL = "openai"; // Use GPT-4o-mini for summarization
+
+        // Wait for the DOM to load
         document.addEventListener('DOMContentLoaded', function() {
             const chatMessages = document.getElementById('chat-messages');
             const chatInput = document.getElementById('chat-input');
@@ -557,7 +565,7 @@
             let restartingRecognition = false;
             
             // Flag to determine which speech recognition to use (Web Speech or Watson)
-            let useWatson = true; // Set to true to use Watson, false to use Web Speech API
+            let useWatson = false; // Set to false to use Web Speech API by default, true to use Watson
             let watsonStream = null;
             
             // Add Watson speech recognition variables
@@ -575,101 +583,75 @@
             // Voice button click handler 
             voiceButton.addEventListener('click', function() {
                 console.log('Voice button clicked, current state:', isRecording ? 'recording' : 'not recording');
-                
+
                 if (isRecording) {
-                    console.log('Stopping recording...');
-                    
-                    // Set a flag indicating we're waiting for final transcripts
-                    // This prevents double-sending in the speech recognition onend handler
-                    window.waitingForTranscripts = true;
-                    
-                    // First stop recording to finalize any pending transcripts
+                    // First stop recording
                     stopSpeechRecognition();
-                    
-                    // Reset timer if it exists
+                            
+                    // Set a flag to wait for final transcripts
+                    window.waitingForTranscripts = true;
+                            
+                    // Clear any existing timeout
                     if (window.watsonCheckTimer) {
                         clearTimeout(window.watsonCheckTimer);
                     }
                     
-                    // Only process Watson if we're using Watson
-                    if (useWatson) {
-                        // Increase the maximum wait time to ensure we catch all responses
-                        watsonMaxWaitTime = 5000; // 5 seconds max wait
+                    // Common function to process and send transcript for both APIs
+                    function processAndSendTranscript() {
+                        // Only update the input, don't send yet
+                        if (speechTranscript && speechTranscript.trim()) {
+                            chatInput.value = speechTranscript.trim();
+                            // Show the text input again
+                            chatInput.style.display = '';
+                            // Focus the text input for editing
+                            chatInput.focus();
+                        } else {
+                            console.log('No transcription to display');
+                            // Show the text input again if nothing to send
+                            chatInput.style.display = '';
+                        }
                         
-                        // Instead of a fixed delay, use a function that checks for pending requests
+                        // Clear the speech transcript after processing
+                        speechTranscript = '';
+                        finalTranscript = '';
+                    }
+                    
+                    // Choose appropriate handler based on selected API
+                    if (useWatson) {
+                        // Watson API handling - check for pending requests
                         function checkWatsonComplete() {
                             console.log(`Checking Watson status: ${pendingWatsonRequests} pending requests, last response was ${Date.now() - watsonLastResponseTime}ms ago`);
                             
                             // If there are no pending requests and it's been at least 500ms since the last response
                             // OR if it's been more than our maximum wait time since the last response
-                            if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 800) || 
+                            if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 500) || 
                                 (Date.now() - watsonLastResponseTime > watsonMaxWaitTime)) {
                                 
                                 // All requests are done or we've waited too long
                                 window.waitingForTranscripts = false;
                                 
-                                console.log('Watson processing complete, sending transcript:', finalTranscript);
-                                
-                                // Send the transcript if we have one
-                                if (finalTranscript && finalTranscript.trim()) {
-                                    const messageText = finalTranscript.trim();
-                                    console.log('Sending transcribed message directly:', messageText);
-                                    
-                                    // IMPORTANT: Don't add the message here since sendMessage will do it
-                                    // Remove this line to prevent duplicate messages
-                                    // addMessage(messageText, true);
-                                    
-                                    // Send to Pollinations
-                                    sendMessage(messageText);
-                                    
-                                    // Clear the transcript
-                                    speechTranscript = '';
-                                    finalTranscript = '';
-                                }
-                                
-                                // Always make the input visible again after processing
-                                chatInput.value = '';
-                                chatInput.style.display = '';
-                                micStatusText.textContent = "Ready";
-                                micStatusIndicator.classList.remove('active');
+                                console.log('Watson processing complete, speech transcript:', speechTranscript);
+                                processAndSendTranscript();
                             } else {
-                                // We're still waiting, check again in 500ms (increased from 300ms)
+                                // We're still waiting, check again in 300ms
                                 console.log('Still waiting for Watson responses...');
-                                window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
+                                window.watsonCheckTimer = setTimeout(checkWatsonComplete, 300);
                             }
                         }
                         
-                        // Start checking after 1500ms initial delay (increased from 1000ms)
-                        // to ensure all responses are captured
-                        window.watsonCheckTimer = setTimeout(checkWatsonComplete, 1500);
+                        // Start checking after 500ms initial delay
+                        window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
                     } else {
-                        // We're using Web Speech API - let the onend handler take care of sending
-                        // The transcript will be processed in the handleRecognitionEnd function
-                        console.log('Using Web Speech API, transcript will be handled by recognition.onend handler');
-                        
-                        // IMPORTANT: Do NOT clear the waitingForTranscripts flag with a timeout
-                        // Instead, we'll set it to false immediately to ensure handleRecognitionEnd
-                        // will process and send the transcript automatically
-                        window.waitingForTranscripts = false;
-                        
-                        // Update UI status to show processing
-                        micStatusText.textContent = "Processing speech...";
-                        
-                        // We don't need to do anything else here as the handleRecognitionEnd 
-                        // function will handle sending the transcript and resetting the UI
+                        // Web Speech API handling - just use the final transcript directly
+                        console.log('Web Speech API processing complete, speech transcript:', speechTranscript);
+                        processAndSendTranscript();
                     }
-                    
                 } else {
-                    console.log('Starting recording...');
                     // Start fresh recording
                     speechTranscript = '';
                     finalTranscript = '';
                     pendingWatsonRequests = 0;
                     watsonLastResponseTime = 0;
-                    
-                    // Clear any waiting flag from previous recordings
-                    window.waitingForTranscripts = false;
-                    
                     startSpeechRecognition();
                     
                     // Hide the text input while recording
@@ -1117,6 +1099,62 @@
                 messageDiv.appendChild(document.createTextNode(text));
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Add message to chat history
+                chatHistory.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: text
+                });
+                
+                // Check if we need to generate a summary
+                if (!summarizationInProgress && 
+                    (chatHistory.length >= MAX_MESSAGES_BEFORE_SUMMARY && 
+                     chatHistory.length % MAX_MESSAGES_BEFORE_SUMMARY === 0)) {
+                    generateSummary();
+                }
+            }
+            
+            // Generate a summary of the conversation
+            async function generateSummary() {
+                if (summarizationInProgress || chatHistory.length < 2) return;
+                
+                summarizationInProgress = true;
+                console.log(`Starting summarization process. Current chat history has ${chatHistory.length} messages.`);
+                
+                try {
+                    console.log("Generating conversation summary...");
+                    
+                    // Prepare prompt for summarization
+                    const summaryPrompt = `system: You are a summarization assistant. Provide a concise summary of the following conversation. Focus on key points, questions, and topics discussed. The summary should be useful as context for continuing the conversation.
+
+conversation:
+${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
+
+Summarize the above conversation in a paragraph. Don't use phrases like "the conversation is about" or "the user and assistant discussed". Just provide the summary directly.`;
+                    
+                    console.log("Summary prompt created, sending to API...");
+                    const encodedSummaryPrompt = encodeURIComponent(summaryPrompt);
+                    const summaryUrl = `https://text.pollinations.ai/${encodedSummaryPrompt}?model=${SUMMARY_MODEL}`;
+                    
+                    console.log(`Sending summary request to model: ${SUMMARY_MODEL}`);
+                    const response = await fetch(summaryUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const summaryText = await response.text();
+                    chatSummary = summaryText.trim();
+                    
+                    console.log("Generated summary:", chatSummary);
+                    console.log("Summary length:", chatSummary.length, "characters");
+                } catch (error) {
+                    console.error("Error generating summary:", error);
+                    // If summary generation fails, we can continue without it
+                } finally {
+                    summarizationInProgress = false;
+                    console.log("Summarization process completed");
+                }
             }
             
             // Show typing indicator
@@ -1208,6 +1246,15 @@
                             break;
                         default:
                             systemPrompt = ""; // Default - no special personality
+                    }
+                    
+                    // Include the conversation summary in the system prompt if available
+                    if (chatSummary) {
+                        if (systemPrompt) {
+                            systemPrompt = `${systemPrompt}\n\nContext from previous conversation: ${chatSummary}\n\nContinue the conversation based on this context.`;
+                        } else {
+                            systemPrompt = `Context from previous conversation: ${chatSummary}\n\nContinue the conversation based on this context.`;
+                        }
                     }
                     
                     // Format the full prompt with system message first, then user message
@@ -1305,6 +1352,10 @@
                         console.log("Original text:", text);
                         console.log("Using personality:", personality);
                         console.log("System prompt:", systemPrompt);
+                        
+                        if (chatSummary) {
+                            console.log("Including conversation summary in the prompt");
+                        }
                     }
                     
                     // Send the request
@@ -2885,6 +2936,12 @@
                     reader.readAsDataURL(file);
                 });
             }
+
+            // Reset chat history and summary when the page is loaded or refreshed
+            window.addEventListener('load', function() {
+                chatHistory = [];
+                chatSummary = "";
+            });
         });
     </script>
 </body>
