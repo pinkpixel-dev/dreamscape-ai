@@ -578,66 +578,86 @@
                 
                 if (isRecording) {
                     console.log('Stopping recording...');
-                    // First stop recording to finalize any pending transcripts
-                    stopSpeechRecognition();
                     
                     // Set a flag indicating we're waiting for final transcripts
+                    // This prevents double-sending in the speech recognition onend handler
                     window.waitingForTranscripts = true;
+                    
+                    // First stop recording to finalize any pending transcripts
+                    stopSpeechRecognition();
                     
                     // Reset timer if it exists
                     if (window.watsonCheckTimer) {
                         clearTimeout(window.watsonCheckTimer);
                     }
                     
-                    // Increase the maximum wait time to ensure we catch all responses
-                    watsonMaxWaitTime = 5000; // 5 seconds max wait
-                    
-                    // Instead of a fixed delay, use a function that checks for pending requests
-                    function checkWatsonComplete() {
-                        console.log(`Checking Watson status: ${pendingWatsonRequests} pending requests, last response was ${Date.now() - watsonLastResponseTime}ms ago`);
+                    // Only process Watson if we're using Watson
+                    if (useWatson) {
+                        // Increase the maximum wait time to ensure we catch all responses
+                        watsonMaxWaitTime = 5000; // 5 seconds max wait
                         
-                        // If there are no pending requests and it's been at least 500ms since the last response
-                        // OR if it's been more than our maximum wait time since the last response
-                        if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 800) || 
-                            (Date.now() - watsonLastResponseTime > watsonMaxWaitTime)) {
+                        // Instead of a fixed delay, use a function that checks for pending requests
+                        function checkWatsonComplete() {
+                            console.log(`Checking Watson status: ${pendingWatsonRequests} pending requests, last response was ${Date.now() - watsonLastResponseTime}ms ago`);
                             
-                            // All requests are done or we've waited too long
-                            window.waitingForTranscripts = false;
-                            
-                            console.log('Watson processing complete, sending transcript:', finalTranscript);
-                            
-                            // Send the transcript if we have one
-                            if (finalTranscript && finalTranscript.trim()) {
-                                const messageText = finalTranscript.trim();
-                                console.log('Sending transcribed message directly:', messageText);
+                            // If there are no pending requests and it's been at least 500ms since the last response
+                            // OR if it's been more than our maximum wait time since the last response
+                            if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 800) || 
+                                (Date.now() - watsonLastResponseTime > watsonMaxWaitTime)) {
                                 
-                                // IMPORTANT: Don't add the message here since sendMessage will do it
-                                // Remove this line to prevent duplicate messages
-                                // addMessage(messageText, true);
+                                // All requests are done or we've waited too long
+                                window.waitingForTranscripts = false;
                                 
-                                // Send to Pollinations
-                                sendMessage(messageText);
+                                console.log('Watson processing complete, sending transcript:', finalTranscript);
                                 
-                                // Clear the transcript
-                                speechTranscript = '';
-                                finalTranscript = '';
+                                // Send the transcript if we have one
+                                if (finalTranscript && finalTranscript.trim()) {
+                                    const messageText = finalTranscript.trim();
+                                    console.log('Sending transcribed message directly:', messageText);
+                                    
+                                    // IMPORTANT: Don't add the message here since sendMessage will do it
+                                    // Remove this line to prevent duplicate messages
+                                    // addMessage(messageText, true);
+                                    
+                                    // Send to Pollinations
+                                    sendMessage(messageText);
+                                    
+                                    // Clear the transcript
+                                    speechTranscript = '';
+                                    finalTranscript = '';
+                                }
+                                
+                                // Always make the input visible again after processing
+                                chatInput.value = '';
+                                chatInput.style.display = '';
+                                micStatusText.textContent = "Ready";
+                                micStatusIndicator.classList.remove('active');
+                            } else {
+                                // We're still waiting, check again in 500ms (increased from 300ms)
+                                console.log('Still waiting for Watson responses...');
+                                window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
                             }
-                            
-                            // Always make the input visible again after processing
-                            chatInput.value = '';
-                            chatInput.style.display = '';
-                            micStatusText.textContent = "Ready";
-                            micStatusIndicator.classList.remove('active');
-                        } else {
-                            // We're still waiting, check again in 500ms (increased from 300ms)
-                            console.log('Still waiting for Watson responses...');
-                            window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
                         }
+                        
+                        // Start checking after 1500ms initial delay (increased from 1000ms)
+                        // to ensure all responses are captured
+                        window.watsonCheckTimer = setTimeout(checkWatsonComplete, 1500);
+                    } else {
+                        // We're using Web Speech API - let the onend handler take care of sending
+                        // The transcript will be processed in the handleRecognitionEnd function
+                        console.log('Using Web Speech API, transcript will be handled by recognition.onend handler');
+                        
+                        // IMPORTANT: Do NOT clear the waitingForTranscripts flag with a timeout
+                        // Instead, we'll set it to false immediately to ensure handleRecognitionEnd
+                        // will process and send the transcript automatically
+                        window.waitingForTranscripts = false;
+                        
+                        // Update UI status to show processing
+                        micStatusText.textContent = "Processing speech...";
+                        
+                        // We don't need to do anything else here as the handleRecognitionEnd 
+                        // function will handle sending the transcript and resetting the UI
                     }
-                    
-                    // Start checking after 1500ms initial delay (increased from 1000ms)
-                    // to ensure all responses are captured
-                    window.watsonCheckTimer = setTimeout(checkWatsonComplete, 1500);
                     
                 } else {
                     console.log('Starting recording...');
@@ -646,6 +666,10 @@
                     finalTranscript = '';
                     pendingWatsonRequests = 0;
                     watsonLastResponseTime = 0;
+                    
+                    // Clear any waiting flag from previous recordings
+                    window.waitingForTranscripts = false;
+                    
                     startSpeechRecognition();
                     
                     // Hide the text input while recording
@@ -1604,7 +1628,27 @@
                     console.error('Speech recognition not supported in this browser. Try Chrome, Edge, or Safari.');
                     micStatusText.textContent = 'Not supported';
                     micStatusIndicator.classList.add('error');
+                    
+                    // Show notification about browser support
+                    showNotification('Web Speech API not supported', 
+                        'Your browser does not support speech recognition. For best results, please use Google Chrome, Microsoft Edge, or Safari 14.1+.', 
+                        'warning', 10000);
+                    
                     return;
+                }
+                
+                // If there's an existing recognition instance, clean it up first
+                if (recognition) {
+                    try {
+                        recognition.onend = null; // Remove previous handler
+                        recognition.onresult = null;
+                        recognition.onerror = null;
+                        recognition.abort();
+                        recognition = null;
+                        console.log('Cleaned up previous recognition instance');
+                    } catch (e) {
+                        console.warn('Error cleaning up previous recognition instance:', e);
+                    }
                 }
                 
                 // Create the recognition object
@@ -1625,6 +1669,7 @@
                     for (let i = event.resultIndex; i < event.results.length; ++i) {
                         if (event.results[i].isFinal) {
                             finalTranscript += event.results[i][0].transcript;
+                            console.log('Final transcript updated:', finalTranscript);
                         } else {
                             interimTranscript += event.results[i][0].transcript;
                         }
@@ -1639,12 +1684,37 @@
                 
                 recognition.onerror = function(event) {
                     console.error('Speech recognition error:', event.error);
-                    micStatusText.textContent = `Error: ${event.error}`;
+                    
+                    // Update status based on error type
+                    switch(event.error) {
+                        case 'not-allowed':
+                        case 'service-not-allowed':
+                            micStatusText.textContent = 'Permission denied';
+                            // Show notification about permission
+                            showNotification('Microphone permission required', 
+                                'Please allow microphone access to use speech recognition.', 
+                                'error', 8000);
+                            break;
+                            
+                        case 'no-speech':
+                            micStatusText.textContent = 'No speech detected';
+                            break;
+                            
+                        case 'network':
+                            micStatusText.textContent = 'Network error';
+                            break;
+                            
+                        default:
+                            micStatusText.textContent = `Error: ${event.error}`;
+                    }
+                    
                     micStatusIndicator.classList.add('error');
                     
                     // Handle no-speech error with a prompt
                     if (event.error === 'no-speech') {
                         console.log('No speech detected');
+                        // Don't immediately stop on no-speech errors
+                        return;
                     }
                     
                     recognitionActive = false;
@@ -1662,7 +1732,24 @@
                         
                         setTimeout(() => {
                             if (recognitionActive) {
-                                recognition.start();
+                                try {
+                                    recognition.start();
+                                    console.log('Recognition restarted after timeout');
+                                    restartingRecognition = false;
+                                } catch (e) {
+                                    console.error('Failed to restart recognition:', e);
+                                    restartingRecognition = false;
+                                    recognitionActive = false;
+                                    
+                                    // Try to recreate the recognition object
+                                    setTimeout(() => {
+                                        if (isRecording) {
+                                            console.log('Recreating recognition object');
+                                            setupWebSpeechRecognition();
+                                        }
+                                    }, 500);
+                                }
+                            } else {
                                 restartingRecognition = false;
                             }
                         }, 300);
@@ -1672,12 +1759,109 @@
                 try {
                     recognition.start();
                     console.log('Web Speech recognition started');
+                    
+                    // Add a class to indicate active speech recognition
+                    document.body.classList.add('webspeech-active');
                 } catch (e) {
                     console.error('Error starting speech recognition:', e);
                     micStatusText.textContent = `Error: ${e.message}`;
                     micStatusIndicator.classList.add('error');
                     recognitionActive = false;
+                    
+                    // Show a dialog with the error information
+                    showNotification('Speech Recognition Error', 
+                        `There was an error starting speech recognition: ${e.message}. Please try again.`, 
+                        'error', 8000);
+                    
+                    document.body.classList.remove('webspeech-active');
                 }
+            }
+            
+            // Helper function to show notifications to the user
+            function showNotification(title, message, type = 'info', duration = 5000) {
+                // Check if we already have a notification container
+                let notificationContainer = document.getElementById('notification-container');
+                
+                if (!notificationContainer) {
+                    // Create a container for notifications if it doesn't exist
+                    notificationContainer = document.createElement('div');
+                    notificationContainer.id = 'notification-container';
+                    notificationContainer.style.position = 'fixed';
+                    notificationContainer.style.top = '10px';
+                    notificationContainer.style.right = '10px';
+                    notificationContainer.style.zIndex = '9999';
+                    document.body.appendChild(notificationContainer);
+                }
+                
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.style.backgroundColor = type === 'error' ? '#f44336' : 
+                                                    type === 'warning' ? '#ff9800' : '#4CAF50';
+                notification.style.color = 'white';
+                notification.style.padding = '15px';
+                notification.style.marginBottom = '10px';
+                notification.style.borderRadius = '5px';
+                notification.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+                notification.style.minWidth = '250px';
+                notification.style.maxWidth = '400px';
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                
+                // Add title if provided
+                if (title) {
+                    const titleElement = document.createElement('div');
+                    titleElement.style.fontWeight = 'bold';
+                    titleElement.style.marginBottom = '5px';
+                    titleElement.textContent = title;
+                    notification.appendChild(titleElement);
+                }
+                
+                // Add message
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                notification.appendChild(messageElement);
+                
+                // Add close button
+                const closeButton = document.createElement('span');
+                closeButton.innerHTML = '&times;';
+                closeButton.style.position = 'absolute';
+                closeButton.style.top = '5px';
+                closeButton.style.right = '10px';
+                closeButton.style.cursor = 'pointer';
+                closeButton.style.fontSize = '20px';
+                closeButton.onclick = function() {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                };
+                notification.appendChild(closeButton);
+                notification.style.position = 'relative';
+                
+                // Add to container
+                notificationContainer.appendChild(notification);
+                
+                // Show with animation
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                }, 10);
+                
+                // Auto remove after duration
+                if (duration > 0) {
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }, duration);
+                }
+                
+                return notification;
             }
             
             // Handle sending the message to the API
@@ -2010,14 +2194,31 @@
                 if (finalTranscript.trim() !== '') {
                     debugLog(`Final transcript: "${finalTranscript}"`);
                     
+                    // Check if we're already in the process of sending from the voice button handler
+                    // This will be true for Watson but false for Web Speech API
+                    if (window.waitingForTranscripts) {
+                        debugLog('Already processing transcript through voice button handler, skipping duplicate send');
+                        return;
+                    }
+                    
                     // Add the recognized text to chat and send automatically
                     const recognizedText = finalTranscript.trim();
                     debugLog('Automatically sending message: ' + recognizedText);
-                    // Don't add the message here, it will be added in sendMessage()
-                    chatInput.value = '';
-                    sendMessage(recognizedText);
+                    
+                    // Make sure the text appears in the input box momentarily for visual feedback
+                    chatInput.value = recognizedText;
+                    chatInput.style.display = '';
+                    
+                    // Send after a very short delay to allow the UI to update
+                    setTimeout(() => {
+                        // Clear the input and send the message
+                        chatInput.value = '';
+                        sendMessage(recognizedText);
+                    }, 100);
                 } else {
                     debugLog('No final transcript available');
+                    // Ensure the input is visible even if no transcript
+                    chatInput.style.display = '';
                 }
             }
             

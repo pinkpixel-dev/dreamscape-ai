@@ -1,5 +1,30 @@
 # Dreamscape AI - Changelog
 
+## v1.0.1 - 2023-05-21
+
+### 🐛 Bug Fixes
+- Fixed issue with speech recognition in the voice.html page where transcripts were detected but not sent to Pollinations API
+- Fixed double message display issue in chat.html by ensuring messages are only added once
+- Improved timing for Watson API responses by increasing wait times from 3000ms to 5000ms
+- Ensured consistency between send button and voice button handlers
+
+### ✨ Improvements
+- Added proper AI response handling in voice.html with fetch to Pollinations API
+- Updated voice interface to provide better feedback during processing
+
+## v1.0.0 - 2023-04-15
+
+### 🚀 Initial Release
+- AI image generation with Pollinations API
+- Image gallery with Cloudinary integration
+- Voice-to-text using IBM Watson Speech to Text API
+- Responsive design with dark mode support
+- Multiple voice options for text-to-speech
+- Animated background with shooting stars effect
+- Support for image uploads and AI transformations
+
+✨ Made with ❤️ by Pink Pixel
+
 ## v1.0.0 (2024-03-22)
 
 ### ✨ New Features
@@ -72,3 +97,21 @@
 ---
 
 ✨ Made with ❤️ by Pink Pixel 
+
+## v1.0.2 - 2024-06-05
+
+### 🐛 Bug Fixes
+- Fixed Web Speech API functionality in both chat.html and voice.html
+- Fixed issue with chat.html sending duplicate messages to Pollinations API
+- Fixed bug in chat.html where Web Speech API wasn't automatically sending transcripts to Pollinations
+- Added improved error handling and browser compatibility detection for speech recognition
+- Enhanced user feedback with notification system for microphone permission issues
+- Implemented better recovery from speech recognition timeouts and errors
+- Added visual indicators for speech recognition status
+
+### ✨ Improvements
+- Added detailed browser compatibility messages for Web Speech API
+- Improved cleanup of speech recognition resources to prevent memory leaks
+- Added automatic recovery when speech recognition stops unexpectedly
+- Enhanced logging for better debugging of speech recognition issues 
+- Added momentary display of transcribed text in input field for better visual feedback

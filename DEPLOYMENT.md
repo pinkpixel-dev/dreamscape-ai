@@ -74,11 +74,26 @@ If you prefer to deploy manually:
 After deployment:
 
 1. Visit your Cloudflare Pages URL (shown after deployment)
-2. Test the image enhancement functionality
-3. Test the speech recognition feature:
-   - Click the microphone button in the chat interface
-   - Speak into your microphone
-   - Verify that your speech is transcribed correctly
+2. Test each interface to ensure all features are working:
+
+   ### Image Generator (Home Page)
+   - Visit the root URL (e.g., `https://your-project.pages.dev/`)
+   - Try generating an image with a text prompt
+   - Test image uploads and transformations
+
+   ### Chat Interface
+   - Navigate to `/public/chat.html` 
+   - Send a text message and verify you get a response
+   - Test image uploads for vision analysis
+   - Try the microphone button for voice input
+
+   ### Voice Assistant
+   - Navigate to `/public/voice.html`
+   - Click the microphone button and speak
+   - Verify that your speech is transcribed and sent to AI
+   - Check that you receive both a text response and audio playback
+
+3. If any interface doesn't load, ensure that all paths are correctly configured in your project settings.
 
 ## 🔍 Troubleshooting
 
@@ -86,7 +101,11 @@ If you encounter issues:
 
 1. **CORS Errors**: Ensure your Cloudflare Pages Functions are properly set up
 2. **API Key Issues**: Verify all environment variables are correctly set in Cloudflare 
-3. **Deployment Failures**: Check the Cloudflare Pages build logs for errors
+3. **Speech Recognition Issues**: If Watson is detecting speech but no AI response occurs:
+   - Check browser console for errors
+   - Verify network connections to Pollinations API
+   - Ensure the deployment includes the latest version of voice.html
+4. **Deployment Failures**: Check the Cloudflare Pages build logs for errors
 
 ## 🏁 Next Steps
 
@@ -95,6 +114,7 @@ After successful deployment, consider:
 1. Setting up a custom domain in the Cloudflare Pages dashboard
 2. Enabling automatic GitHub deployments
 3. Setting up usage limits for the Watson and Cloudinary services
+4. Adding analytics to track usage of your different interfaces
 
 ---
 

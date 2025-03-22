@@ -22,6 +22,16 @@ A versatile AI-powered creative studio for generating, enhancing, and transformi
   - Hands-free mode for continuous conversation
   - Animated visual feedback during AI responses
 
+## 🌐 Browser Compatibility
+
+For the best experience with voice features, we recommend using:
+- **Google Chrome**: Full support for Web Speech API
+- **Microsoft Edge**: Good support for speech recognition
+- **Safari 14.1+**: Partial support for speech recognition
+- **Firefox**: Limited support (might require enabling flags)
+
+The application will automatically fall back to IBM Watson for speech recognition if the Web Speech API is not available or if you manually select it.
+
 ## 🛠️ Technology
 
 - **Frontend**: HTML, CSS, JavaScript
@@ -47,9 +57,19 @@ npx wrangler pages dev . --compatibility-date=2023-03-21 --port=8123 \
 --binding CLOUDINARY_API_SECRET=your_api_secret
 ```
 
+### Using the App
+- **Image Generator**: Visit the home page to create images from text descriptions
+- **Chat Interface**: Navigate to `/public/chat.html` to use the chat interface
+  - Send text messages with the send button
+  - Upload images for visual analysis with vision-enabled models
+  - Use voice input by clicking the microphone button
+- **Voice Assistant**: Access the voice interface at `/public/voice.html`
+  - Speak naturally with the AI assistant
+  - Try different voice models for varied responses
+
 ## 📦 Deployment
 
-Refer to [dev/DEPLOYMENT.md](dev/DEPLOYMENT.md) for detailed deployment instructions using Cloudflare Pages.
+Refer to [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions using Cloudflare Pages.
 
 ## 🔑 Required API Keys
 
@@ -69,7 +89,15 @@ Refer to [dev/DEPLOYMENT.md](dev/DEPLOYMENT.md) for detailed deployment instruct
 - Music generation
 - More AI models and personalities
 
-See [CHANGELOG.md](CHANGELOG.md) for recent updates and changes.
+## 📝 Recent Updates
+
+We've made several improvements in the latest version:
+- Fixed voice recognition issues on deployed environments
+- Enhanced chat interface to prevent duplicate messages
+- Improved Watson API response times
+- Added better feedback during voice processing
+
+See [CHANGELOG.md](CHANGELOG.md) for a complete history of changes.
 
 ## 📜 License
 

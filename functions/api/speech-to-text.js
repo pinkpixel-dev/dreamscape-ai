@@ -16,7 +16,7 @@ export async function onRequestPost(context) {
         error: "Missing Watson API Key in environment variables",
         availableVars: Object.keys(context.env).length
       }), {
-        status: 500,
+        status: 200, // Return 200 to avoid CORS issues
         headers: { 
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
@@ -54,10 +54,14 @@ export async function onRequestPost(context) {
     
     // Add Watson-specific parameters
     const watsonUrlWithParams = new URL(watsonUrl);
-    watsonUrlWithParams.searchParams.append('model', 'en-AU_BroadbandModel');
+    watsonUrlWithParams.searchParams.append('model', 'en-AU_BroadbandModel'); // Changed back to AU model for key compatibility
     watsonUrlWithParams.searchParams.append('smart_formatting', 'true');
+    watsonUrlWithParams.searchParams.append('word_confidence', 'true');
+    watsonUrlWithParams.searchParams.append('inactivity_timeout', '5'); // Lower inactivity timeout (default is 30)
+    watsonUrlWithParams.searchParams.append('max_alternatives', '3'); // Get more alternatives
     
     console.log("Sending request to Watson API:", watsonUrlWithParams.toString());
+    console.log("Watson model: en-AU_BroadbandModel, settings: inactivity_timeout=5, max_alternatives=3");
     
     try {
       // Forward request to Watson
@@ -68,9 +72,19 @@ export async function onRequestPost(context) {
       });
       
       // Get Watson's response
+      const responseText = await watsonResponse.text();
+      let parsedResponse;
+      
+      try {
+        parsedResponse = JSON.parse(responseText);
+        console.log("Watson raw response:", JSON.stringify(parsedResponse).substring(0, 200) + "...");
+      } catch (parseError) {
+        console.log("Failed to parse Watson response:", responseText.substring(0, 200));
+        parsedResponse = { results: [] };
+      }
+      
       if (!watsonResponse.ok) {
-        const errorText = await watsonResponse.text();
-        console.log("Watson API error:", watsonResponse.status, errorText);
+        console.log("Watson API error:", watsonResponse.status, responseText);
         
         // Handle 400 errors specially (usually bad audio format or silent audio)
         if (watsonResponse.status === 400) {
@@ -88,7 +102,7 @@ export async function onRequestPost(context) {
         return new Response(JSON.stringify({
           success: false,
           error: `Watson API error: ${watsonResponse.status}`,
-          details: errorText
+          details: responseText
         }), {
           status: 200, // Return 200 status but with error flag in response body
           headers: { 
@@ -99,11 +113,24 @@ export async function onRequestPost(context) {
       }
       
       // Return the transcription results
-      const transcriptionResult = await watsonResponse.json();
       console.log("Watson API success, returning results");
+      
+      // Check if we have any results
+      const hasResults = parsedResponse && 
+                        parsedResponse.results && 
+                        parsedResponse.results.length > 0 && 
+                        parsedResponse.results[0].alternatives && 
+                        parsedResponse.results[0].alternatives.length > 0;
+      
+      if (hasResults) {
+        console.log("Detected transcript:", parsedResponse.results[0].alternatives[0].transcript);
+      } else {
+        console.log("No speech detected in audio");
+      }
+      
       return new Response(JSON.stringify({
         success: true,
-        results: transcriptionResult
+        results: parsedResponse
       }), {
         headers: { 
           'Content-Type': 'application/json',
