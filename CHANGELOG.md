@@ -110,8 +110,9 @@
 - Added visual indicators for speech recognition status
 
 ### ✨ Improvements
-- Added detailed browser compatibility messages for Web Speech API
-- Improved cleanup of speech recognition resources to prevent memory leaks
-- Added automatic recovery when speech recognition stops unexpectedly
-- Enhanced logging for better debugging of speech recognition issues 
+- Moved the AI Personality selector to its own dedicated section above Voice Settings in the sidebar
+- Detailed browser compatibility messages for speech recognition failures
+- Cleanup of speech recognition resources to prevent memory leaks
+- Automatic recovery from unexpected speech recognition stops
+- Enhanced logging for debugging speech recognition issues
 - Added momentary display of transcribed text in input field for better visual feedback
