@@ -583,75 +583,101 @@
             // Voice button click handler 
             voiceButton.addEventListener('click', function() {
                 console.log('Voice button clicked, current state:', isRecording ? 'recording' : 'not recording');
-
+                
                 if (isRecording) {
-                    // First stop recording
-                    stopSpeechRecognition();
-                            
-                    // Set a flag to wait for final transcripts
+                    console.log('Stopping recording...');
+                    
+                    // Set a flag indicating we're waiting for final transcripts
+                    // This prevents double-sending in the speech recognition onend handler
                     window.waitingForTranscripts = true;
-                            
-                    // Clear any existing timeout
+                    
+                    // First stop recording to finalize any pending transcripts
+                    stopSpeechRecognition();
+                    
+                    // Reset timer if it exists
                     if (window.watsonCheckTimer) {
                         clearTimeout(window.watsonCheckTimer);
                     }
                     
-                    // Common function to process and send transcript for both APIs
-                    function processAndSendTranscript() {
-                        // Only update the input, don't send yet
-                        if (speechTranscript && speechTranscript.trim()) {
-                            chatInput.value = speechTranscript.trim();
-                            // Show the text input again
-                            chatInput.style.display = '';
-                            // Focus the text input for editing
-                            chatInput.focus();
-                        } else {
-                            console.log('No transcription to display');
-                            // Show the text input again if nothing to send
-                            chatInput.style.display = '';
-                        }
-                        
-                        // Clear the speech transcript after processing
-                        speechTranscript = '';
-                        finalTranscript = '';
-                    }
-                    
-                    // Choose appropriate handler based on selected API
+                    // Only process Watson if we're using Watson
                     if (useWatson) {
-                        // Watson API handling - check for pending requests
+                        // Increase the maximum wait time to ensure we catch all responses
+                        watsonMaxWaitTime = 5000; // 5 seconds max wait
+                        
+                        // Instead of a fixed delay, use a function that checks for pending requests
                         function checkWatsonComplete() {
                             console.log(`Checking Watson status: ${pendingWatsonRequests} pending requests, last response was ${Date.now() - watsonLastResponseTime}ms ago`);
                             
                             // If there are no pending requests and it's been at least 500ms since the last response
                             // OR if it's been more than our maximum wait time since the last response
-                            if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 500) || 
+                            if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 800) || 
                                 (Date.now() - watsonLastResponseTime > watsonMaxWaitTime)) {
                                 
                                 // All requests are done or we've waited too long
                                 window.waitingForTranscripts = false;
                                 
-                                console.log('Watson processing complete, speech transcript:', speechTranscript);
-                                processAndSendTranscript();
+                                console.log('Watson processing complete, sending transcript:', finalTranscript);
+                                
+                                // Send the transcript if we have one
+                                if (finalTranscript && finalTranscript.trim()) {
+                                    const messageText = finalTranscript.trim();
+                                    console.log('Sending transcribed message directly:', messageText);
+                                    
+                                    // IMPORTANT: Don't add the message here since sendMessage will do it
+                                    // Remove this line to prevent duplicate messages
+                                    // addMessage(messageText, true);
+                                    
+                                    // Send to Pollinations
+                                    sendMessage(messageText);
+                                    
+                                    // Clear the transcript
+                                    speechTranscript = '';
+                                    finalTranscript = '';
+                                }
+                                
+                                // Always make the input visible again after processing
+                                chatInput.value = '';
+                                chatInput.style.display = '';
+                                micStatusText.textContent = "Ready";
+                                micStatusIndicator.classList.remove('active');
                             } else {
-                                // We're still waiting, check again in 300ms
+                                // We're still waiting, check again in 500ms (increased from 300ms)
                                 console.log('Still waiting for Watson responses...');
-                                window.watsonCheckTimer = setTimeout(checkWatsonComplete, 300);
+                                window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
                             }
                         }
                         
-                        // Start checking after 500ms initial delay
-                        window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
+                        // Start checking after 1500ms initial delay (increased from 1000ms)
+                        // to ensure all responses are captured
+                        window.watsonCheckTimer = setTimeout(checkWatsonComplete, 1500);
                     } else {
-                        // Web Speech API handling - just use the final transcript directly
-                        console.log('Web Speech API processing complete, speech transcript:', speechTranscript);
-                        processAndSendTranscript();
+                        // We're using Web Speech API - let the onend handler take care of sending
+                        // The transcript will be processed in the handleRecognitionEnd function
+                        console.log('Using Web Speech API, transcript will be handled by recognition.onend handler');
+                        
+                        // IMPORTANT: Do NOT clear the waitingForTranscripts flag with a timeout
+                        // Instead, we'll set it to false immediately to ensure handleRecognitionEnd
+                        // will process and send the transcript automatically
+                        window.waitingForTranscripts = false;
+                        
+                        // Update UI status to show processing
+                        micStatusText.textContent = "Processing speech...";
+                        
+                        // We don't need to do anything else here as the handleRecognitionEnd 
+                        // function will handle sending the transcript and resetting the UI
                     }
+                    
                 } else {
+                    console.log('Starting recording...');
                     // Start fresh recording
                     speechTranscript = '';
                     finalTranscript = '';
                     pendingWatsonRequests = 0;
                     watsonLastResponseTime = 0;
+                    
+                    // Clear any waiting flag from previous recordings
+                    window.waitingForTranscripts = false;
+                    
                     startSpeechRecognition();
                     
                     // Hide the text input while recording
