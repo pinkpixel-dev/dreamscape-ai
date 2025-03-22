@@ -29,6 +29,20 @@ export async function onRequestPost(context) {
     console.log("Received audio data of size:", audioData.byteLength, "bytes");
     console.log("Content-Type:", contentType);
     
+    // Only reject extremely small audio data (just enough to verify it's not empty)
+    if (audioData.byteLength < 100) {
+      console.log("Audio data too small, likely empty or corrupt");
+      return new Response(JSON.stringify({
+        success: true,
+        results: { results: [] } // Return empty results rather than error
+      }), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+    
     // Create headers for Watson API
     const watsonHeaders = new Headers();
     // Watson is very picky about the exact content-type format (spaces after semicolons, no endian parameter)
@@ -54,6 +68,20 @@ export async function onRequestPost(context) {
     if (!watsonResponse.ok) {
       const errorText = await watsonResponse.text();
       console.log("Watson API error:", watsonResponse.status, errorText);
+      
+      // Handle 400 errors specially (usually bad audio format or silent audio)
+      if (watsonResponse.status === 400) {
+        return new Response(JSON.stringify({
+          success: true,
+          results: { results: [] } // Return empty results rather than error
+        }), {
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
       return new Response(JSON.stringify({
         success: false,
         error: `Watson API error: ${watsonResponse.status}`,
