@@ -10,9 +10,29 @@ Before starting the deployment process, ensure you have:
 2. **Cloudinary Account** - [Register](https://cloudinary.com/users/register/free) (free tier is sufficient)
 3. **IBM Watson Speech to Text API Key** - [Create an account](https://cloud.ibm.com/registration) and set up a Speech to Text service
 
+## 🔒 Security: Protecting Your API Keys
+
+⚠️ **IMPORTANT: Never commit API keys to GitHub!** ⚠️
+
+The repository includes a `wrangler.toml.example` file as a template. To set up your environment:
+
+1. Copy the example file to create your own wrangler.toml:
+   ```bash
+   cp wrangler.toml.example wrangler.toml
+   ```
+
+2. Add your actual API keys to the wrangler.toml file
+3. Ensure wrangler.toml is listed in your .gitignore file
+4. Verify it's not being tracked by git with:
+   ```bash
+   git status
+   ```
+
+This keeps your secrets out of version control while maintaining the configuration structure.
+
 ## 🛠️ Correct Wrangler Configuration
 
-Create a `wrangler.toml` file in your project root with the following content:
+Create or update your `wrangler.toml` file based on the example:
 
 ```toml
 name = "dreamscape-ai"

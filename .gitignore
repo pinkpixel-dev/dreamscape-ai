@@ -1,3 +1,4 @@
 .env
 dev/
 public/js/cloudinary-api.js
+wrangler.toml

@@ -1,0 +1,9 @@
+name = "dreamscape-ai"
+compatibility_date = "2025-03-21"
+pages_build_output_dir = "."
+
+[vars]
+WATSON_API_KEY = "your-watson-api-key-here"
+CLOUDINARY_CLOUD_NAME = "your-cloudinary-cloud-name-here"
+CLOUDINARY_API_KEY = "your-cloudinary-api-key-here"
+CLOUDINARY_API_SECRET = "your-cloudinary-api-secret-here" 

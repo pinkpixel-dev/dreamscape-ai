@@ -1,9 +1,0 @@
-name = "dreamscape-ai"
-compatibility_date = "2025-03-21"
-pages_build_output_dir = "."
-
-[vars]
-WATSON_API_KEY = "FnlwFRc4RcTWmHhTvvtN2UQO3zty2TgMAQDB316iT4wu"
-CLOUDINARY_CLOUD_NAME = "dwa9nkpyq"
-CLOUDINARY_API_KEY = "887549877845179"
-CLOUDINARY_API_SECRET = "d37-Vl-1VpdhQficepHl9eY4kzo"
