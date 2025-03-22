@@ -1,90 +1,86 @@
-# Dreamscape AI
+# ✨ Dreamscape AI - Creative Studio
 
-A powerful AI-powered creative tool for generating stunning artwork and imagery with simple text prompts.
+A versatile AI-powered creative studio for generating, enhancing, and transforming images using modern AI models, plus conversational AI capabilities with text and voice interfaces.
 
-## Features
+## 🌟 Features
 
-- **AI Image Generation**: Transform your text descriptions into beautiful images with various artistic styles
-- **Style Selection**: Choose from a wide variety of artistic styles including photorealistic, fantasy, anime, watercolor, and many more
-- **Enhanced Prompts**: Utilize powerful AI language models to improve your prompts for better results
-- **Image Customization**: Control image parameters like dimensions, seed values, and more
-- **Image Enhancement via Cloudinary**: Apply professional-level enhancements to your generated images
-- **Voice-to-Text**: Speak your prompts using either browser's Web Speech API or IBM Watson Speech to Text
+### 🎨 Image Generation & Enhancement
+- **AI Image Generation**: Create images from text descriptions
+- **Image Enhancement**: Upscale and improve image quality
+- **Artistic Transformations**: Apply artistic styles to existing images
 
-## Technology
+### 💬 AI Chat Interfaces
+- **Text Chat**: Interact with multiple advanced AI models
+  - Support for vision-enabled models (upload and analyze images)
+  - 20+ model options including GPT-4o, Llama 3.3, DeepSeek and more
+  - Personality system to customize AI behavior
+  - Voice input with Watson Speech-to-Text API
 
-Dreamscape AI leverages cutting-edge AI technologies:
+- **Voice Assistant**: Natural voice conversations with AI
+  - Text-to-Speech with multiple voice options
+  - Speech recognition with Web Speech API or Watson
+  - Hands-free mode for continuous conversation
+  - Animated visual feedback during AI responses
 
-- Frontend built with modern HTML, CSS, and JavaScript
-- Integrates with the Pollinations AI API for image generation
-- Utilizes advanced language models for prompt enhancement
-- Cloudinary API for professional image transformations and enhancements
-- IBM Watson Speech to Text API for accurate voice recognition
-- Cloudflare Pages Functions for secure backend API handling
-- Responsive design for both desktop and mobile use
+## 🛠️ Technology
 
-## Getting Started
+- **Frontend**: HTML, CSS, JavaScript
+- **Image Processing**: Cloudinary API
+- **Voice Recognition**: IBM Watson Speech-to-Text API
+- **Text-to-Speech**: Web Speech API
+- **AI Models**: Pollinations AI API
+
+## 🚀 Getting Started
+
+### Prerequisites
+- IBM Watson Speech-to-Text API Key (for voice functionality)
+- Cloudinary account (for image processing)
 
 ### Local Development
-
-1. Clone this repository:
-   ```
-   git clone https://github.com/your-username/dreamscape-ai.git
-   cd dreamscape-ai
-   ```
-
-2. Run the test script to verify your API keys and setup:
-   ```
-   ./test-locally.sh
-   ```
-   This will prompt you for any missing API keys and test the connections.
-
-3. Start a local server:
-   ```
-   wrangler pages dev .
-   ```
-   Or use a simple Python server:
-   ```
-   python -m http.server 8000
-   ```
-
-4. Navigate to `http://localhost:8000` in your browser.
-
-## Deployment
-
-For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
-
-Quick deployment:
-```
-./deploy-to-cloudflare.sh
+1. Clone this repository
+2. Run the development server:
+```bash
+npx wrangler pages dev . --compatibility-date=2023-03-21 --port=8123 \
+--binding WATSON_API_KEY=your_key \
+--binding CLOUDINARY_CLOUD_NAME=your_cloud_name \
+--binding CLOUDINARY_API_KEY=your_api_key \
+--binding CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-## API Keys Required
+## 📦 Deployment
 
-This application requires the following API keys:
-- **Cloudinary**: For image enhancement features
-- **IBM Watson**: For advanced speech-to-text capabilities
+Refer to [dev/DEPLOYMENT.md](dev/DEPLOYMENT.md) for detailed deployment instructions using Cloudflare Pages.
 
-You can set these up using the provided scripts or manually as described in the deployment guide.
+## 🔑 Required API Keys
 
-## Planned Features
+1. **IBM Watson Speech-to-Text API Key**
+   - Sign up at [IBM Cloud](https://cloud.ibm.com)
+   - Create a Speech to Text service
+   - Get your API key from the service credentials
 
-- Text generation capabilities
-- Audio generation and music creation
-- Video and animation generation
-- Custom fine-tuning options
-- User galleries and sharing
-- Advanced image editing tools
+2. **Cloudinary Account**
+   - Sign up at [Cloudinary](https://cloudinary.com)
+   - Get your cloud name, API key, and API secret from your dashboard
 
-## License
+## 🔮 Planned Features
 
-MIT License - See LICENSE file for details
+- Web search capabilities
+- Video generation
+- Music generation
+- More AI models and personalities
 
-## Acknowledgements
+See [CHANGELOG.md](CHANGELOG.md) for recent updates and changes.
 
-- Powered by [Pollinations AI](https://pollinations.ai)
-- Image enhancements by [Cloudinary](https://cloudinary.com)
-- Voice recognition by [IBM Watson](https://www.ibm.com/watson/services/speech-to-text/)
-- Uses various open source libraries and frameworks 
+## 📜 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- [Pollinations AI](https://pollinations.ai) for their powerful AI API
+- [IBM Watson](https://www.ibm.com/watson) for Speech-to-Text capabilities
+- [Cloudinary](https://cloudinary.com) for image processing
+
+---
 
 ✨ Made with ❤️ by Pink Pixel 

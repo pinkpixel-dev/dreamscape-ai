@@ -171,10 +171,12 @@ async function onRequestPost2(context) {
     const watsonApiKey = context.env.WATSON_API_KEY;
     const watsonUrl = "https://api.au-syd.speech-to-text.watson.cloud.ibm.com/v1/recognize";
     console.log("Watson API Key available:", !!watsonApiKey);
+    console.log("Environment variables available:", Object.keys(context.env).join(", "));
     if (!watsonApiKey) {
       return new Response(JSON.stringify({
         success: false,
-        error: "Missing Watson API Key"
+        error: "Missing Watson API Key in environment variables",
+        availableVars: Object.keys(context.env).length
       }), {
         status: 500,
         headers: {
@@ -208,56 +210,75 @@ async function onRequestPost2(context) {
     watsonUrlWithParams.searchParams.append("model", "en-AU_BroadbandModel");
     watsonUrlWithParams.searchParams.append("smart_formatting", "true");
     console.log("Sending request to Watson API:", watsonUrlWithParams.toString());
-    const watsonResponse = await fetch(watsonUrlWithParams.toString(), {
-      method: "POST",
-      headers: watsonHeaders,
-      body: audioData
-    });
-    if (!watsonResponse.ok) {
-      const errorText = await watsonResponse.text();
-      console.log("Watson API error:", watsonResponse.status, errorText);
-      if (watsonResponse.status === 400) {
+    try {
+      const watsonResponse = await fetch(watsonUrlWithParams.toString(), {
+        method: "POST",
+        headers: watsonHeaders,
+        body: audioData
+      });
+      if (!watsonResponse.ok) {
+        const errorText = await watsonResponse.text();
+        console.log("Watson API error:", watsonResponse.status, errorText);
+        if (watsonResponse.status === 400) {
+          return new Response(JSON.stringify({
+            success: true,
+            results: { results: [] }
+            // Return empty results rather than error
+          }), {
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+            }
+          });
+        }
         return new Response(JSON.stringify({
-          success: true,
-          results: { results: [] }
-          // Return empty results rather than error
+          success: false,
+          error: `Watson API error: ${watsonResponse.status}`,
+          details: errorText
         }), {
+          status: 200,
+          // Return 200 status but with error flag in response body
           headers: {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*"
           }
         });
       }
+      const transcriptionResult = await watsonResponse.json();
+      console.log("Watson API success, returning results");
+      return new Response(JSON.stringify({
+        success: true,
+        results: transcriptionResult
+      }), {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        }
+      });
+    } catch (fetchError) {
+      console.error("Fetch error when calling Watson API:", fetchError);
       return new Response(JSON.stringify({
         success: false,
-        error: `Watson API error: ${watsonResponse.status}`,
-        details: errorText
+        error: "Error connecting to Watson API",
+        details: fetchError.message
       }), {
-        status: watsonResponse.status,
+        status: 200,
+        // Return 200 instead of 500 to avoid triggering CORS issues
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*"
         }
       });
     }
-    const transcriptionResult = await watsonResponse.json();
-    console.log("Watson API success, returning results");
-    return new Response(JSON.stringify({
-      success: true,
-      results: transcriptionResult
-    }), {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-      }
-    });
   } catch (error) {
     console.error("Error in speech-to-text function:", error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      stack: error.stack
     }), {
-      status: 500,
+      status: 200,
+      // Return 200 instead of 500 to avoid triggering CORS issues
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*"
