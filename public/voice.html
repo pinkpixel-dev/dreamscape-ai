@@ -12,7 +12,8 @@
     <!-- Watson Speech SDK -->
     <script src="https://cdn.jsdelivr.net/npm/ibm-watson@7.1.2/dist/speech-to-text.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.1/dist/socket.io.js"></script>
-    <script src="js/personalities.js"></script>
+    <script src="js/personality-score.js"></script>
+    <script src="js/personalities.js" type="module"></script>
     <style>
         /* Voice-specific styles */
         .app-container {
@@ -2320,8 +2321,8 @@ Summarize the above conversation in a paragraph. Don't use phrases like "the con
                 chatHistory = [];
                 chatSummary = "";
                 
-                // Initialize the personality dropdown
-                initPersonalitySystem();
+                // The initPersonalitySystem function will be called from an import script
+                // No need to call it directly here anymore
             });
         });
 
@@ -2411,6 +2412,18 @@ Summarize the above conversation in a paragraph. Don't use phrases like "the con
             
             return notification;
         }
+    </script>
+    <script type="module">
+        import { initPersonalitySystem, getPersonalityPrompt } from './js/personalities.js';
+        
+        // Make functions globally available
+        window.initPersonalitySystem = initPersonalitySystem;
+        window.getPersonalityPrompt = getPersonalityPrompt;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initPersonalitySystem();
+        });
     </script>
 </body>
 </html> 

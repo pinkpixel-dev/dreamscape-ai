@@ -15,7 +15,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/watson-speech.min.js"></script>
     <script src="js/personality-score.js"></script>
-    <script src="js/personalities.js"></script>
+    <script src="js/personalities.js" type="module"></script>
     <style>
         /* Chat-specific styles */
         .content {
@@ -2909,11 +2909,23 @@ Summarize the above conversation in a paragraph. Don't use phrases like "the con
                 chatHistory = [];
                 chatSummary = "";
                 
-                // Initialize the personality dropdown
-                initPersonalitySystem();
+                // The initPersonalitySystem function will be called from an import script
+                // No need to call it directly here anymore
             });
         });
     </script>
-    <script src="js/personalities.js"></script>
+    <script src="js/personalities.js" type="module"></script>
+    <script type="module">
+        import { initPersonalitySystem, getPersonalityPrompt } from './js/personalities.js';
+        
+        // Make functions globally available
+        window.initPersonalitySystem = initPersonalitySystem;
+        window.getPersonalityPrompt = getPersonalityPrompt;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initPersonalitySystem();
+        });
+    </script>
 </body>
 </html> 
