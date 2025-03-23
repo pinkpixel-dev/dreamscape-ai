@@ -1,5 +1,14 @@
 # Dreamscape AI - Changelog
 
+## v1.0.3 - 2024-06-19
+
+### 🔧 Technical Improvements
+- Updated conversation summarization in chat.html and voice.html to use POST endpoint instead of GET URL
+- Fixed issue with long conversations exceeding URL length limits when generating summaries
+- Added better error handling and response parsing for summarization API calls
+- Implemented standardized request structure with temperature and token limit controls
+- Added fallback handling for different response formats (text or completion fields)
+
 ## v1.0.1 - 2023-05-21
 
 ### 🐛 Bug Fixes

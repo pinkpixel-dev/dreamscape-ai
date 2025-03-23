@@ -15,6 +15,7 @@ A versatile AI-powered creative studio for generating, enhancing, and transformi
   - 20+ model options including GPT-4o, Llama 3.3, DeepSeek and more
   - Personality system to customize AI behavior
   - Voice input with Watson Speech-to-Text API
+  - Improved conversation handling for extended interactions
 
 - **Voice Assistant**: Natural voice conversations with AI
   - Text-to-Speech with multiple voice options

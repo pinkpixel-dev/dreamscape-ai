@@ -2292,18 +2292,30 @@ ${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
 Summarize the above conversation in a paragraph. Don't use phrases like "the conversation is about" or "the user and assistant discussed". Just provide the summary directly.`;
                     
                     console.log("Summary prompt created, sending to API...");
-                    const encodedSummaryPrompt = encodeURIComponent(summaryPrompt);
-                    const summaryUrl = `https://text.pollinations.ai/${encodedSummaryPrompt}?model=${SUMMARY_MODEL}`;
+                    
+                    // Use POST endpoint instead of GET to handle longer conversations
+                    const summaryRequestBody = {
+                        model: SUMMARY_MODEL,
+                        prompt: summaryPrompt,
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    };
                     
                     console.log(`Sending summary request to model: ${SUMMARY_MODEL}`);
-                    const response = await fetch(summaryUrl);
+                    const response = await fetch('https://text.pollinations.ai/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(summaryRequestBody)
+                    });
                     
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     
-                    const summaryText = await response.text();
-                    chatSummary = summaryText.trim();
+                    const summaryData = await response.json();
+                    chatSummary = summaryData.text || summaryData.completion || '';
                     
                     console.log("Generated summary:", chatSummary);
                     console.log("Summary length:", chatSummary.length, "characters");
