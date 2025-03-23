@@ -2,12 +2,16 @@
 
 ## v1.0.3 - 2024-06-19
 
+### 🐛 Bug Fixes
+- Fixed 400 error in conversation summarization by updating to the correct API message format
+- Fixed response handling to properly parse text responses from the POST endpoint
+
 ### 🔧 Technical Improvements
 - Updated conversation summarization in chat.html and voice.html to use POST endpoint instead of GET URL
 - Fixed issue with long conversations exceeding URL length limits when generating summaries
 - Added better error handling and response parsing for summarization API calls
 - Implemented standardized request structure with temperature and token limit controls
-- Added fallback handling for different response formats (text or completion fields)
+- Converted summarization prompts to use the messages array format for better compatibility
 
 ## v1.0.1 - 2023-05-21
 

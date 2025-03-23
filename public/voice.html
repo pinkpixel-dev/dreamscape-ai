@@ -2296,7 +2296,16 @@ Summarize the above conversation in a paragraph. Don't use phrases like "the con
                     // Use POST endpoint instead of GET to handle longer conversations
                     const summaryRequestBody = {
                         model: SUMMARY_MODEL,
-                        prompt: summaryPrompt,
+                        messages: [
+                            { 
+                                role: "system", 
+                                content: "You are a summarization assistant. Provide a concise summary of the following conversation. Focus on key points, questions, and topics discussed. The summary should be useful as context for continuing the conversation."
+                            },
+                            {
+                                role: "user",
+                                content: `Summarize this conversation concisely, capturing key points and important context. Don't use phrases like "the conversation is about" or "the user and assistant discussed". Just provide the summary directly:\n\n${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}`
+                            }
+                        ],
                         temperature: 0.7,
                         max_tokens: 1000
                     };
@@ -2314,8 +2323,9 @@ Summarize the above conversation in a paragraph. Don't use phrases like "the con
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     
-                    const summaryData = await response.json();
-                    chatSummary = summaryData.text || summaryData.completion || '';
+                    // Handle the response - for POST requests to root path, it returns plain text
+                    const summaryText = await response.text();
+                    chatSummary = summaryText.trim();
                     
                     console.log("Generated summary:", chatSummary);
                     console.log("Summary length:", chatSummary.length, "characters");
