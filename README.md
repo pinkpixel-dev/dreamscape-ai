@@ -4,6 +4,17 @@ A versatile AI-powered creative studio for generating, enhancing, and transformi
 
 ## 🌟 Features
 
+### 🧠 AI Research & Knowledge
+- **Research Tool**: Generate comprehensive research documents on any topic
+  - Multi-service web scraping with advanced content extraction
+  - Tiered research depth options (Quick, Extended, Deep) 
+  - Specialized content extraction for documentation sites and GitHub repositories
+  - Document generation with proper markdown formatting and source citations
+  - Automated document generation with minimal user input
+  - Sources list with categorization and prioritization
+  - Copy to clipboard or download functionality for research documents
+  - Fallback content generation for failed scraping attempts
+
 ### 🎨 Image Generation & Enhancement
 - **AI Image Generation**: Create images from text descriptions
 - **Image Enhancement**: Upscale and improve image quality
@@ -40,12 +51,14 @@ The application will automatically fall back to IBM Watson for speech recognitio
 - **Voice Recognition**: IBM Watson Speech-to-Text API
 - **Text-to-Speech**: Web Speech API
 - **AI Models**: Pollinations AI API
+- **Web Scraping**: Multi-service approach with ScraperAPI, ScrapingAnt, PhantomJS Cloud, and Firecrawl
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - IBM Watson Speech-to-Text API Key (for voice functionality)
 - Cloudinary account (for image processing)
+- Scraping service API keys (for research functionality)
 
 ### Local Development
 1. Clone this repository
@@ -55,7 +68,11 @@ npx wrangler pages dev . --compatibility-date=2023-03-21 --port=8123 \
 --binding WATSON_API_KEY=your_key \
 --binding CLOUDINARY_CLOUD_NAME=your_cloud_name \
 --binding CLOUDINARY_API_KEY=your_api_key \
---binding CLOUDINARY_API_SECRET=your_api_secret
+--binding CLOUDINARY_API_SECRET=your_api_secret \
+--binding FIRECRAWL_API_KEY=your_key \
+--binding SCRAPERAI_API_KEY=your_key \
+--binding SCRAPINGANT_API_KEY=your_key \
+--binding PHANTOMJSCLOUD_API_KEY=your_key
 ```
 
 ### Using the App
@@ -67,6 +84,11 @@ npx wrangler pages dev . --compatibility-date=2023-03-21 --port=8123 \
 - **Voice Assistant**: Access the voice interface at `/public/voice.html`
   - Speak naturally with the AI assistant
   - Try different voice models for varied responses
+- **Research Tool**: Access the research tool at `/public/research.html`
+  - Enter a research topic to generate a comprehensive document
+  - Select research tier (quick, extended, deep) for varying levels of detail
+  - View sources used in the research
+  - Download or copy generated documents
 
 ## 📦 Deployment
 
@@ -83,8 +105,19 @@ Refer to [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions usi
    - Sign up at [Cloudinary](https://cloudinary.com)
    - Get your cloud name, API key, and API secret from your dashboard
 
+3. **Web Scraping Services**
+   - [ScraperAPI](https://www.scraperapi.com/) - Free plan available
+   - [ScrapingAnt](https://scrapingant.com/) - Free plan available
+   - [PhantomJS Cloud](https://phantomjscloud.com/) - Free plan available
+   - [Firecrawl](https://firecrawl.dev/) - Free tier available
+
 ## 🔮 Planned Features
 
+- Enhanced research capabilities:
+  - Image integration in research documents
+  - Improved document formatting
+  - Resizable document viewer
+  - Improved conversational research flow
 - Web search capabilities
 - Video generation
 - Music generation
@@ -93,10 +126,11 @@ Refer to [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions usi
 ## 📝 Recent Updates
 
 We've made several improvements in the latest version:
-- Fixed voice recognition issues on deployed environments
-- Enhanced chat interface to prevent duplicate messages
-- Improved Watson API response times
-- Added better feedback during voice processing
+- Added research tool with comprehensive document generation
+- Simplified research interface for better user experience
+- Fixed scraping service integration issues
+- Enhanced document display and source attribution
+- Modularized code structure for better maintainability
 
 See [CHANGELOG.md](CHANGELOG.md) for a complete history of changes.
 
@@ -109,6 +143,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Pollinations AI](https://pollinations.ai) for their powerful AI API
 - [IBM Watson](https://www.ibm.com/watson) for Speech-to-Text capabilities
 - [Cloudinary](https://cloudinary.com) for image processing
+- Various web scraping services for research capabilities
 
 ---
 

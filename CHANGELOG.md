@@ -1,5 +1,57 @@
 # Dreamscape AI - Changelog
 
+## v1.1.1 - 2024-06-26
+
+### ✨ Improvements
+- **Research Tool UI**: Simplified the research interface
+  - Streamlined the UI by hiding redundant input elements
+  - Fixed HTML/CSS issues for better user experience
+  - Improved ID matching between HTML elements and JavaScript functions
+  - Enhanced research document display with proper sidebar toggle
+  - Fixed document viewer controls (copy and download)
+
+### 🐛 Bug Fixes
+- Fixed inconsistencies between HTML element IDs and JavaScript references
+- Resolved UI event handler connections for form submissions
+- Corrected document sidebar display and toggle functionality
+- Fixed sources display in the sidebar
+- Added missing event listeners for research form submission
+
+### 🔧 Technical Improvements
+- Restructured the research module system
+  - Created modular components for different functionalities
+  - Implemented document-generation.js for document formatting
+  - Added query-variation.js for search term enhancement
+  - Created research-core.js for main research functionality
+  - Added ui-handlers.js for user interface interactions
+- Fixed JavaScript module import/export structure
+- Enhanced code organization by properly separating concerns
+
+## v1.1.0 - 2024-06-25
+
+### ✨ New Features
+- **Research Tool**: Added a new AI-powered research tool capable of generating comprehensive documents on any topic
+  - Multi-service web scraping with PhantomJS Cloud, ScraperAPI, ScrapingAnt, and FireCrawl
+  - Tiered research options (Quick, Extended, Deep) for different research depths
+  - Specialized content extraction for documentation sites and GitHub repositories
+  - Conversational research interface with clarifying questions
+  - Document generation with proper formatting and source citations
+  - Synthetic content generation for failed scraping attempts
+  - Progress indicators and visual feedback during research process
+
+### 🐛 Bug Fixes
+- Fixed PhantomJS Cloud API integration with proper v2 API request structure
+- Improved error handling in multi-scrape API to prevent null URL errors
+- Enhanced web scraping functionality with specialized extractors for different site types
+- Fixed research.js syntax errors around try-catch blocks
+
+### 🔧 Technical Improvements
+- Implemented a cascading fallback mechanism for web scraping to ensure reliability
+- Added intelligent fallback content generation based on URL patterns
+- Enhanced conversation handling with limited clarification rounds
+- Improved UI feedback with progress bars and status updates
+- Implemented specialized pattern-recognition for documentation sites like OpenWebUI
+
 ## v1.0.3 - 2024-06-19
 
 ### 🐛 Bug Fixes
