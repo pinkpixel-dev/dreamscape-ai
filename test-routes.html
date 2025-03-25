@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Route Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #333; }
+        button { margin: 5px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #45a049; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; white-space: pre-wrap; }
+        .endpoint { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>API Route Test</h1>
+    <p>Test the different API routes to verify they are working correctly</p>
+
+    <div class="endpoint">
+        <h3>PhantomJS Scrape</h3>
+        <button onclick="testEndpoint('/api/phantom-scrape')">Test PhantomJS</button>
+    </div>
+
+    <div class="endpoint">
+        <h3>ScraperAPI</h3>
+        <button onclick="testEndpoint('/api/scraperapi')">Test ScraperAPI</button>
+    </div>
+
+    <div class="endpoint">
+        <h3>ScrapingAnt</h3>
+        <button onclick="testEndpoint('/api/scrapingant')">Test ScrapingAnt</button>
+    </div>
+
+    <div class="endpoint">
+        <h3>FireCrawl</h3>
+        <button onclick="testEndpoint('/api/firecrawl')">Test FireCrawl</button>
+    </div>
+
+    <div class="endpoint">
+        <h3>Multi-Scrape</h3>
+        <button onclick="testEndpoint('/api/multi-scrape')">Test Multi-Scrape</button>
+    </div>
+
+    <div id="result">Results will appear here...</div>
+
+    <script>
+        async function testEndpoint(endpoint) {
+            document.getElementById('result').innerHTML = 'Testing ' + endpoint + '...';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: 'https://example.com',
+                        renderJs: true
+                    })
+                });
+                
+                const data = await response.text();
+                document.getElementById('result').innerHTML = 
+                    `<span class="${response.ok ? 'success' : 'error'}">Status: ${response.status} ${response.statusText}</span>\n\n` +
+                    data;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html> 

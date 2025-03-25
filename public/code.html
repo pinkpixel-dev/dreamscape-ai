@@ -1,0 +1,2943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Dreamscape AI - Text Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/enhance.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    
+    <!-- Watson Speech SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/ibm-watson@7.1.2/dist/speech-to-text.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.1/dist/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/watson-speech.min.js"></script>
+    <script src="js/personality-score.js"></script>
+    <script src="js/personalities.js" type="module"></script>
+    <style>
+        /* Chat-specific styles */
+        .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 30px 30px 30px; /* Increased top padding */
+            height: 100%;
+            overflow-y: auto;
+            width: 100%;
+        }
+        
+        .page-header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 30px;
+            text-align: center; /* Center the title */
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            min-width: 800px;
+            max-width: 1200px;
+            background: rgba(30, 15, 50, 0.15);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            margin: 0 auto;
+        }
+
+        .sidebar-content {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            max-height: 60vh;
+            min-height: 600px; /* Added minimum height to match voice.html */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 12px; /* Consistent rounding on all messages */
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(50, 30, 80, 0.3);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            color: var(--text-light);
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 15px;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 10px;
+            background: rgba(20, 10, 30, 0.3);
+            color: var(--text-white);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 16px;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        .send-button {
+            padding: 0 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        /* Update the voice button style to match voice.html */
+        .voice-button {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .voice-button.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-button.recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .image-upload-button {
+            width: 50px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-upload-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .voice-model-selector, .text-model-selector {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(30, 15, 50, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 14px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        /* Remove audio-related CSS styles */
+        .play-audio-button, .audio-message, .help-text {
+            display: none;
+        }
+
+        /* Loading/typing animation */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: rgba(157, 78, 221, 0.7);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.5);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .voice-status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 5px;
+        }
+
+        .voice-status-indicator.active {
+            background-color: #10b981;
+            box-shadow: 0 0 5px #10b981;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        .voice-status-indicator.error {
+            background-color: #ef4444;
+            box-shadow: 0 0 5px #ef4444;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .microphone-test-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 12px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .microphone-test-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+        
+        .microphone-test-btn .mic-icon {
+            margin-right: 8px;
+            position: relative;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #ccc;
+            transition: background-color 0.3s ease;
+        }
+        
+        .microphone-test-btn.active .mic-icon {
+            background-color: #10b981;
+            box-shadow: 0 0 5px #10b981;
+            animation: pulse-green 1.5s infinite;
+        }
+        
+        .volume-bars-container {
+            display: none;
+            height: 20px;
+            margin-top: 10px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+        }
+        
+        .volume-bar {
+            width: 4px;
+            height: 3px;
+            background: linear-gradient(to top, #10b981, #8b5cf6);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+        
+        @keyframes pulse-volume {
+            0%, 100% {
+                height: var(--min-height, 3px);
+            }
+            50% {
+                height: var(--max-height, 20px);
+            }
+        }
+
+        .debug-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            font-family: monospace;
+            overflow: auto;
+            max-height: 80px;
+        }
+
+        /* Add styles for twinkling and shooting stars */
+        .star-extra-bright {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes subtle-twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background animations -->
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="moon-container">
+        <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon" style="filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));">
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
+                <span>Creative Studio✨</span>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📋 Navigation</p>
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="generate.html" class="nav-link">🌌 Generate Images</a>
+                <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
+                <a href="artistic.html" class="nav-link">🎨 Artistic Effects</a>
+                <a href="chat.html" class="nav-link active">💬 Text Chat</a>
+                <a href="voice.html" class="nav-link">🎤 Voice Assistant</a>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🤖 Text Model</p>
+                <div class="control-group">
+                    <label for="text-model">Select Text Model</label>
+                    <select id="text-model" class="text-model-selector">
+                        <option value="loading">Loading models...</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="personality">AI Personality</label>
+                    <select id="personality" class="personality-selector">
+                        <!-- Options will be populated by personalities.js -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🎤 Voice Settings</p>
+                <div class="control-group">
+                    <label for="mic-device-select">Microphone</label>
+                    <select id="mic-device-select" style="width: 100%; margin-bottom: 5px;">
+                        <option value="">Loading devices...</option>
+                    </select>
+                    <button id="refresh-mics" class="refresh-button" style="margin-top: 5px; font-size: 12px; padding: 5px; background: rgba(157, 78, 221, 0.2); border: none; border-radius: 4px; color: var(--text-light); cursor: pointer; width: 100%;">
+                        🔄 Refresh Microphone List
+                    </button>
+                </div>
+                <div class="control-group">
+                    <label for="speech-engine">Recognition Engine</label>
+                    <select id="speech-engine" style="margin-bottom: 10px;">
+                        <option value="web-speech">Web Speech API</option>
+                        <option value="watson">Watson API</option>
+                    </select>
+                </div>
+                <span class="sidebar-label" style="display: flex; align-items: center; margin-top: 5px;">
+                    Status: <span id="mic-status-text" style="margin-left: 5px; margin-right: 5px;">Not initialized</span>
+                    <span class="voice-status-indicator" id="mic-status-indicator"></span>
+                </span>
+                <button id="test-microphone" class="microphone-test-btn">
+                    <span class="mic-icon"></span>
+                    Test Microphone
+                </button>
+                <div id="volume-visualization" class="volume-bars-container">
+                    <!-- Volume bars will be added dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="page-header">
+                <h1>Dreamscape AI Chat 💬</h1>
+                <p>Interact with AI using text. Ask questions, get creative ideas, and have a conversation.</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Removed redundant text since title is now Dreamscape AI Chat -->
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai-message">
+                        Hello! Chat with me using text or voice.
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <button id="voice-button" class="voice-button">🎤</button>
+                    <textarea id="chat-input" class="chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                    <button id="image-upload-button" class="image-upload-button" title="Upload an image">🖼️</button>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+                    <button id="send-button" class="send-button">Send</button>
+                </div>
+
+                <!-- Preview of uploaded image -->
+                <div id="image-preview-container" style="display: none;">
+                    <div style="position: relative; display: inline-block; margin-top: 10px;">
+                        <img id="image-preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid rgba(157, 78, 221, 0.3);" />
+                        <button id="remove-image" style="position: absolute; top: -8px; right: -8px; background-color: rgba(30, 15, 50, 0.8); color: white; border: 1px solid rgba(157, 78, 221, 0.5); border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let chatHistory = []; // Add chat history array to store messages
+        let chatSummary = ""; // Variable to store the current summary
+        let summarizationInProgress = false; // Flag to prevent multiple summarization requests
+        const MAX_MESSAGES_BEFORE_SUMMARY = 2; // Generate summary after every interaction (user + AI)
+        const SUMMARY_MODEL = "openai"; // Use GPT-4o-mini for summarization
+
+        // Wait for the DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const voiceButton = document.getElementById('voice-button');
+            const textModelSelect = document.getElementById('text-model');
+            const micStatusText = document.getElementById('mic-status-text');
+            const micStatusIndicator = document.getElementById('mic-status-indicator');
+            const testMicrophoneBtn = document.getElementById('test-microphone');
+            const micDeviceSelect = document.getElementById('mic-device-select');
+            const refreshMicsBtn = document.getElementById('refresh-mics');
+            const imageUploadButton = document.getElementById('image-upload-button');
+            const imageUploadInput = document.getElementById('image-upload');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const removeImageButton = document.getElementById('remove-image');
+            
+            // Track currently uploaded image
+            let currentUploadedImage = null;
+            
+            // Initialize twinkling stars and shooting stars
+            initializeStarBackground();
+            
+            // Voice recognition variables - make sure these are properly initialized
+            let isRecording = false;
+            let recognition = null;
+            let finalTranscript = '';
+            let recognitionTimeout = null;
+            let textModels = [];
+            let tempMessageId = null;
+            let audioDevices = []; // Store available audio devices
+            
+            // Add global variables to better track state
+            let recognitionActive = false;
+            let restartingRecognition = false;
+            
+            // Flag to determine which speech recognition to use (Web Speech or Watson)
+            let useWatson = false; // Set to false to use Web Speech API by default, true to use Watson
+            let watsonStream = null;
+            
+            // Add Watson speech recognition variables
+            let audioContext = null;
+            let inputNode = null;
+            let processorNode = null;
+            let audioChunks = [];
+            let speechTranscript = '';
+            
+            // Track Watson API requests
+            let pendingWatsonRequests = 0;
+            let watsonLastResponseTime = 0;
+            let watsonMaxWaitTime = 5000; // 5 seconds max wait
+
+            // Voice button click handler 
+            voiceButton.addEventListener('click', function() {
+                console.log('Voice button clicked, current state:', isRecording ? 'recording' : 'not recording');
+                
+                if (isRecording) {
+                    console.log('Stopping recording...');
+                    
+                    // Set a flag indicating we're waiting for final transcripts
+                    // This prevents double-sending in the speech recognition onend handler
+                    window.waitingForTranscripts = true;
+                    
+                    // First stop recording to finalize any pending transcripts
+                    stopSpeechRecognition();
+                    
+                    // Reset timer if it exists
+                    if (window.watsonCheckTimer) {
+                        clearTimeout(window.watsonCheckTimer);
+                    }
+                    
+                    // Only process Watson if we're using Watson
+                    if (useWatson) {
+                        // Increase the maximum wait time to ensure we catch all responses
+                        watsonMaxWaitTime = 5000; // 5 seconds max wait
+                        
+                        // Instead of a fixed delay, use a function that checks for pending requests
+                        function checkWatsonComplete() {
+                            console.log(`Checking Watson status: ${pendingWatsonRequests} pending requests, last response was ${Date.now() - watsonLastResponseTime}ms ago`);
+                            
+                            // If there are no pending requests and it's been at least 500ms since the last response
+                            // OR if it's been more than our maximum wait time since the last response
+                            if ((pendingWatsonRequests === 0 && Date.now() - watsonLastResponseTime > 800) || 
+                                (Date.now() - watsonLastResponseTime > watsonMaxWaitTime)) {
+                                
+                                // All requests are done or we've waited too long
+                                window.waitingForTranscripts = false;
+                                
+                                console.log('Watson processing complete, sending transcript:', finalTranscript);
+                                
+                                // Send the transcript if we have one
+                                if (finalTranscript && finalTranscript.trim()) {
+                                    const messageText = finalTranscript.trim();
+                                    console.log('Sending transcribed message directly:', messageText);
+                                    
+                                    // IMPORTANT: Don't add the message here since sendMessage will do it
+                                    // Remove this line to prevent duplicate messages
+                                    // addMessage(messageText, true);
+                                    
+                                    // Send to Pollinations
+                                    sendMessage(messageText);
+                                    
+                                    // Clear the transcript
+                                    speechTranscript = '';
+                                    finalTranscript = '';
+                                }
+                                
+                                // Always make the input visible again after processing
+                                chatInput.value = '';
+                                chatInput.style.display = '';
+                                micStatusText.textContent = "Ready";
+                                micStatusIndicator.classList.remove('active');
+                            } else {
+                                // We're still waiting, check again in 500ms (increased from 300ms)
+                                console.log('Still waiting for Watson responses...');
+                                window.watsonCheckTimer = setTimeout(checkWatsonComplete, 500);
+                            }
+                        }
+                        
+                        // Start checking after 1500ms initial delay (increased from 1000ms)
+                        // to ensure all responses are captured
+                        window.watsonCheckTimer = setTimeout(checkWatsonComplete, 1500);
+                    } else {
+                        // We're using Web Speech API - let the onend handler take care of sending
+                        // The transcript will be processed in the handleRecognitionEnd function
+                        console.log('Using Web Speech API, transcript will be handled by recognition.onend handler');
+                        
+                        // IMPORTANT: Do NOT clear the waitingForTranscripts flag with a timeout
+                        // Instead, we'll set it to false immediately to ensure handleRecognitionEnd
+                        // will process and send the transcript automatically
+                        window.waitingForTranscripts = false;
+                        
+                        // Update UI status to show processing
+                        micStatusText.textContent = "Processing speech...";
+                        
+                        // We don't need to do anything else here as the handleRecognitionEnd 
+                        // function will handle sending the transcript and resetting the UI
+                    }
+                    
+                } else {
+                    console.log('Starting recording...');
+                    // Start fresh recording
+                    speechTranscript = '';
+                    finalTranscript = '';
+                    pendingWatsonRequests = 0;
+                    watsonLastResponseTime = 0;
+                    
+                    // Clear any waiting flag from previous recordings
+                    window.waitingForTranscripts = false;
+                    
+                    startSpeechRecognition();
+                    
+                    // Hide the text input while recording
+                    chatInput.style.display = 'none';
+                }
+            });
+            
+            // Start speech recognition - ensure isRecording flag is set correctly
+            function startSpeechRecognition() {
+                // Stop any existing recognition
+                if (recognition) {
+                    try {
+                        recognition.stop();
+                    } catch (e) {
+                        console.error("Error stopping recognition:", e);
+                    }
+                }
+                
+                console.log('Starting speech recognition...');
+                
+                // Clear any existing text
+                finalTranscript = '';
+                speechTranscript = '';
+                
+                const selectedEngine = document.getElementById('speech-engine').value;
+                useWatson = selectedEngine === 'watson';
+                
+                // Update state variables - IMPORTANT for click-to-stop functionality
+                isRecording = true;
+                recognitionActive = true;
+                
+                // Update UI
+                voiceButton.classList.add('active', 'recording');
+                micStatusText.textContent = 'Recording...';
+                micStatusIndicator.classList.add('active');
+                
+                if (useWatson) {
+                    setupWatsonRecognition();
+                } else {
+                    setupWebSpeechRecognition();
+                }
+            }
+            
+            // Stop speech recognition - ensure isRecording flag is set correctly
+            function stopSpeechRecognition() {
+                console.log('Stopping speech recognition...');
+                
+                if (recognition) {
+                    try {
+                        recognition.stop();
+                    } catch (e) {
+                        console.error("Error stopping recognition:", e);
+                    }
+                }
+                
+                if (useWatson && watsonStream) {
+                    try {
+                        watsonStream.getTracks().forEach(track => track.stop());
+                        watsonStream = null;
+                    } catch (e) {
+                        console.error("Error closing Watson stream:", e);
+                    }
+                }
+                
+                // Clean up audio resources
+                if (window.audioStream) {
+                    window.audioStream.getTracks().forEach(track => track.stop());
+                    window.audioStream = null;
+                }
+                
+                // Cleanup audio context and processor
+                if (audioContext) {
+                    if (processorNode) {
+                        processorNode.onaudioprocess = null;
+                        processorNode.disconnect();
+                        processorNode = null;
+                    }
+                    
+                    if (inputNode) {
+                        inputNode.disconnect();
+                        inputNode = null;
+                    }
+                    
+                    if (audioContext.state !== 'closed') {
+                        try {
+                            audioContext.close();
+                        } catch (e) {
+                            console.error(`Error closing audio context: ${e.message}`);
+                        }
+                    }
+                    
+                    audioContext = null;
+                }
+                
+                // Process any remaining audio chunks if Watson
+                if (useWatson && audioChunks && audioChunks.length > 0) {
+                    sendAudioToWatson(audioChunks);
+                    audioChunks = [];
+                }
+                
+                // Update UI state
+                isRecording = false;
+                recognitionActive = false;
+                voiceButton.classList.remove('active', 'recording');
+                micStatusText.textContent = "Processing...";
+                micStatusIndicator.classList.add('active');
+                
+                console.log('Recording stopped, isRecording set to:', isRecording);
+            }
+            
+            // Fetch available text models from the API
+            fetch('https://text.pollinations.ai/models')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Raw models data:", data);
+                    
+                    // Check the structure of the first model to understand the API response
+                    if (data.length > 0) {
+                        console.log("First model structure:", JSON.stringify(data[0]));
+                    }
+                    
+                    // Filter out models that should not be displayed
+                    const excludeModels = [
+                        'unity', 'midijourney', 'rtist', 'searchgpt', 'llamalight', 
+                        'llamaguard', 'sur', 'sur-mistral', 'llama-scaleway', 'openai-audio'
+                    ];
+                    
+                    // Handle both array of objects with 'id' property and array of strings
+                    const filteredModels = Array.isArray(data) 
+                        ? data.filter(model => {
+                            const modelId = typeof model === 'object' ? (model.id || model.name) : model;
+                            const shouldInclude = !excludeModels.includes(modelId);
+                            console.log(`Model ${modelId}: include = ${shouldInclude}`);
+                            return shouldInclude;
+                          })
+                        : [];
+                    
+                    console.log("Filtered models:", filteredModels);
+                    
+                    textModels = filteredModels;
+                    textModelSelect.innerHTML = '';
+                    
+                    // Map for changing display names
+                    const displayNameMap = {
+                        'openai': 'GPT-4o-mini (vision)',
+                        'openai-large': 'GPT-4o (vision)',
+                        'openai-reasoning': 'o3-mini - Advanced Reasoning',
+                        'qwen-coder': 'Qwen 2.5 Coder 32B',
+                        'llama': 'Llama 3.3 70B',
+                        'mistral': 'Mistral Small 3.1 (vision)',
+                        'evil': 'Evil Mode - Experimental',
+                        'deepseek': 'DeepSeek-V3',
+                        'deepseek-r1': 'DeepSeek Distill Qwen 32B',
+                        'deepseek-reasoning': 'DeepSeek R1 - Reasoning',
+                        'deepseek-r1-llama': 'DeepSeek R1 - Llama 70B',
+                        'qwen-reasoning': 'Qwen QWQ 32B - Reasoning',
+                        'phi': 'Phi-4 Instruct',
+                        'llama-vision': 'Llama 3.2 11B (vision)',
+                        'pixtral': 'Pixtral 12B (vision)',
+                        'gemini': 'Gemini 2.0 Flash',
+                        'gemini-thinking': 'Gemini 2.0 Flash Thinking',
+                        'hormoz': 'Hormoz 8b',
+                        'hypnosis-tracy': 'Hypnosis Tracy - Self-Help'
+                    };
+                    
+                    // Debug: Print available model IDs from API
+                    console.log("Available model IDs:", filteredModels.map(model => 
+                        typeof model === 'object' ? (model.id || model.name) : model
+                    ));
+                    
+                    // Sort models to match the expected order in SITE_IMPROVEMENTS.md
+                    const modelOrder = [
+                        'openai', 'openai-large', 'openai-reasoning', 'qwen-coder', 
+                        'llama', 'mistral', 'evil', 'deepseek', 'deepseek-r1', 
+                        'deepseek-reasoning', 'deepseek-r1-llama', 'qwen-reasoning',
+                        'phi', 'llama-vision', 'pixtral', 'gemini', 'gemini-thinking',
+                        'hormoz', 'hypnosis-tracy'
+                    ];
+                    
+                    // Sort the models based on the order in modelOrder
+                    filteredModels.sort((a, b) => {
+                        const idA = typeof a === 'object' ? (a.id || a.name) : a;
+                        const idB = typeof b === 'object' ? (b.id || b.name) : b;
+                        
+                        const indexA = modelOrder.indexOf(idA);
+                        const indexB = modelOrder.indexOf(idB);
+                        
+                        // If both models are in the list, sort by their position
+                        if (indexA !== -1 && indexB !== -1) {
+                            return indexA - indexB;
+                        }
+                        
+                        // If only one model is in the list, prioritize it
+                        if (indexA !== -1) return -1;
+                        if (indexB !== -1) return 1;
+                        
+                        // If neither is in the list, keep original order
+                        return 0;
+                    });
+                    
+                    console.log("Sorted models:", filteredModels.map(model => 
+                        typeof model === 'object' ? (model.id || model.name) : model
+                    ));
+                    
+                    // Clear existing options
+                    textModelSelect.innerHTML = '';
+                    
+                    // Populate the dropdown with available models using new display names
+                    filteredModels.forEach(model => {
+                        const option = document.createElement('option');
+                        const modelId = typeof model === 'object' ? (model.id || model.name) : model;
+                        option.value = modelId;
+                        
+                        // Use the mapped display name if available, otherwise use original name
+                        if (displayNameMap[modelId]) {
+                            option.textContent = displayNameMap[modelId];
+                            console.log(`Mapped model ${modelId} to ${displayNameMap[modelId]}`);
+                        } else {
+                            option.textContent = typeof model === 'object' ? model.name : model;
+                            console.log(`Using original name for ${modelId}`);
+                        }
+                        
+                        textModelSelect.appendChild(option);
+                    });
+                    
+                    // Pre-select GPT-4o (openai-large) as default model when available
+                    const preferredModelId = 'openai-large'; // GPT-4o
+                    const hasPreferredModel = filteredModels.some(model => {
+                        const modelId = typeof model === 'object' ? (model.id || model.name) : model;
+                        return modelId === preferredModelId;
+                    });
+                    
+                    if (hasPreferredModel) {
+                        console.log(`Setting default model to ${preferredModelId} (GPT-4o)`);
+                        textModelSelect.value = preferredModelId;
+                    } else if (filteredModels.length > 0) {
+                        // Fall back to the first model if preferred model isn't available
+                        const firstModelId = typeof filteredModels[0] === 'object' 
+                            ? (filteredModels[0].id || filteredModels[0].name) 
+                            : filteredModels[0];
+                        console.log(`Preferred model not found, using ${firstModelId} as default`);
+                        textModelSelect.value = firstModelId;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching models:', error);
+                    // Provide some default models as fallback with updated display names
+                    textModelSelect.innerHTML = `
+                        <option value="openai-large">GPT-4o (vision)</option>
+                        <option value="openai">GPT-4o-mini (vision)</option>
+                        <option value="qwen-coder">Qwen 2.5 Coder 32B</option>
+                        <option value="llama">Llama 3.3 70B</option>
+                        <option value="mistral">Mistral Small 3.1 (vision)</option>
+                    `;
+                    
+                    // Set default model to GPT-4o
+                    textModelSelect.value = 'openai-large';
+                });
+            
+            // Populate microphone devices dropdown
+            function populateMicrophoneDevices() {
+                debugLog('Loading available microphone devices...');
+                // Clear device list first
+                audioDevices = [];
+                micDeviceSelect.innerHTML = '<option value="">Loading devices...</option>';
+                
+                navigator.mediaDevices.enumerateDevices()
+                    .then(devices => {
+                        // Filter for audio input devices only
+                        const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                        audioDevices = audioInputs;
+                        
+                        debugLog(`Found ${audioInputs.length} audio input devices`);
+                        
+                        if (audioInputs.length === 0) {
+                            micDeviceSelect.innerHTML = '<option value="">No microphones found</option>';
+                            return;
+                        }
+                        
+                        // Clear and populate the dropdown
+                        micDeviceSelect.innerHTML = '';
+                        
+                        // Add a default option
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = "";
+                        defaultOption.textContent = "Default Microphone";
+                        defaultOption.selected = true; // Make system default the default selection
+                        micDeviceSelect.appendChild(defaultOption);
+                        
+                        // Add each device as an option
+                        audioInputs.forEach((device, index) => {
+                            const option = document.createElement('option');
+                            option.value = device.deviceId;
+                            
+                            // Get a user-friendly name
+                            let label = device.label || `Microphone ${index + 1}`;
+                            
+                            // Highlight the system default device
+                            if (label.includes('Default') || label.includes('Communications')) {
+                                label += ' (System Default)';
+                            }
+                            
+                            option.textContent = label;
+                            micDeviceSelect.appendChild(option);
+                            
+                            debugLog(`Device ${index}: ${label} (ID: ${device.deviceId.substring(0, 8)}...)`);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error enumerating devices:', err);
+                        micDeviceSelect.innerHTML = '<option value="">Error loading devices</option>';
+                        debugLog(`Device enumeration error: ${err.message}`);
+                    });
+            }
+            
+            // Request microphone permission and populate devices on page load
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    // Stop the stream immediately, we just needed permission
+                    stream.getTracks().forEach(track => track.stop());
+                    // Now get the device list
+                    populateMicrophoneDevices();
+                })
+                .catch(err => {
+                    console.error('Error getting microphone permission:', err);
+                    micDeviceSelect.innerHTML = '<option value="">Permission denied</option>';
+                    micStatusText.textContent = "No permission";
+                    micStatusIndicator.classList.add('error');
+                    debugLog(`Microphone permission error: ${err.message}`);
+                });
+            
+            // Initialize the speech recognition engine dropdown
+            const speechEngineSelect = document.getElementById('speech-engine');
+            
+            if (speechEngineSelect) {
+                debugLog('Found speech recognition engine dropdown');
+                
+                // Set default to Web Speech API
+                speechEngineSelect.value = 'web-speech';
+                useWatson = false; // Default to Web Speech API
+                
+                speechEngineSelect.addEventListener('change', function() {
+                    // Update the speech recognition engine based on selection
+                    if (this.value === 'watson') {
+                        useWatson = true;
+                        debugLog('Switched to Watson API');
+                    } else {
+                        useWatson = false;
+                        debugLog('Switched to Web Speech API');
+                    }
+                });
+            } else {
+                debugLog('Warning: Speech recognition engine dropdown not found in the DOM');
+            }
+            
+            // Listen for device selection changes
+            micDeviceSelect.addEventListener('change', function() {
+                const selectedDeviceId = this.value;
+                const selectedDevice = selectedDeviceId ? audioDevices.find(d => d.deviceId === selectedDeviceId) : null;
+                
+                if (selectedDeviceId) {
+                    debugLog(`Microphone changed to: ${selectedDevice ? selectedDevice.label : selectedDeviceId}`);
+                } else {
+                    debugLog('Microphone set to browser default');
+                }
+                
+                // Test the selected microphone automatically when changed
+                if (selectedDevice) {
+                    // Stop any active recognition first
+                    if (recognitionActive) {
+                        stopBasicRecognition();
+                    }
+                    
+                    // Optional: Auto-test the microphone when changed
+                    // setTimeout(() => testMicrophoneBtn.click(), 500);
+                }
+                });
+            
+            // Handle image upload button click
+            imageUploadButton.addEventListener('click', function() {
+                imageUploadInput.click();
+            });
+            
+            // Handle image upload
+            imageUploadInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    
+                    // Check if file is an image
+                    if (!file.type.match('image.*')) {
+                        alert('Please select an image file');
+                        return;
+                    }
+                    
+                    // Check if file size is less than 10MB
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('Image size should be less than 10MB');
+                        return;
+                    }
+                    
+                    // Store file for later upload
+                    currentUploadedImage = file;
+                    
+                    // Preview image
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreviewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Handle remove image button click
+            removeImageButton.addEventListener('click', function() {
+                currentUploadedImage = null;
+                imagePreviewContainer.style.display = 'none';
+                imageUploadInput.value = '';
+            });
+
+            // Add message to the chat
+            function addMessage(text, isUser = false, imageUrl = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+                
+                // If there's an image, add it first
+                if (imageUrl) {
+                    const imageElement = document.createElement('img');
+                    imageElement.src = imageUrl;
+                    imageElement.style.maxWidth = '100%';
+                    imageElement.style.maxHeight = '300px';
+                    imageElement.style.borderRadius = '8px';
+                    imageElement.style.marginBottom = '10px';
+                    messageDiv.appendChild(imageElement);
+                    
+                    // Add a line break
+                    messageDiv.appendChild(document.createElement('br'));
+                }
+                
+                messageDiv.appendChild(document.createTextNode(text));
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Add message to chat history
+                chatHistory.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: text
+                });
+                
+                // Check if we need to generate a summary
+                if (!summarizationInProgress && 
+                    (chatHistory.length >= MAX_MESSAGES_BEFORE_SUMMARY && 
+                     chatHistory.length % MAX_MESSAGES_BEFORE_SUMMARY === 0)) {
+                    generateSummary();
+                }
+            }
+            
+            // Generate a summary of the conversation
+            async function generateSummary() {
+                if (summarizationInProgress || chatHistory.length < 2) return;
+                
+                summarizationInProgress = true;
+                console.log(`Starting summarization process. Current chat history has ${chatHistory.length} messages.`);
+                
+                try {
+                    console.log("Generating conversation summary...");
+                    
+                    // Use POST endpoint instead of GET to handle longer conversations
+                    const summaryRequestBody = {
+                        model: SUMMARY_MODEL,
+                        messages: [
+                            { 
+                                role: "system", 
+                                content: "You are a summarization assistant. Provide a concise summary of the following conversation. Focus on key points, questions, and topics discussed. The summary should be useful as context for continuing the conversation."
+                            },
+                            {
+                                role: "user",
+                                content: `Summarize this conversation concisely, capturing key points and important context. Don't use phrases like "the conversation is about" or "the user and assistant discussed". Just provide the summary directly:\n\n${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}`
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    };
+                    
+                    console.log(`Sending summary request to model: ${SUMMARY_MODEL}`);
+                    const response = await fetch('https://text.pollinations.ai/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(summaryRequestBody)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    // Handle the response - for POST requests to root path, it returns plain text
+                    const summaryText = await response.text();
+                    chatSummary = summaryText.trim();
+                    
+                    console.log("Generated summary:", chatSummary);
+                    console.log("Summary length:", chatSummary.length, "characters");
+                } catch (error) {
+                    console.error("Error generating summary:", error);
+                    // If summary generation fails, we can continue without it
+                } finally {
+                    summarizationInProgress = false;
+                    console.log("Summarization process completed");
+                }
+            }
+            
+            // Show typing indicator
+            function showTypingIndicator() {
+                const indicator = document.createElement('div');
+                indicator.className = 'message ai-message typing-indicator';
+                indicator.id = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    indicator.appendChild(dot);
+                }
+                
+                chatMessages.appendChild(indicator);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Remove typing indicator
+            function removeTypingIndicator() {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+            
+            // Send message to the API and get response
+            async function sendMessage(text) {
+                // Only show typing indicator, don't add user message yet
+                showTypingIndicator();
+                
+                try {
+                    // Get selected model or use default if not available
+                    const modelId = textModelSelect.value || 'gpt-4o';
+                    
+                    // Check if it's a vision-capable model
+                    const visionModels = ['openai', 'openai-large', 'mistral', 'llama-vision', 'pixtral'];
+                    const isVisionModel = visionModels.includes(modelId);
+                    
+                    // Get selected personality
+                    const personality = document.getElementById('personality').value;
+                    let systemPrompt = '';
+                    
+                    // Set system prompt based on selected personality
+                    systemPrompt = getPersonalityPrompt(personality);
+                    
+                    // Include the conversation summary in the system prompt if available
+                    if (chatSummary) {
+                        if (systemPrompt) {
+                            systemPrompt = `${systemPrompt}\n\nContext from previous conversation: ${chatSummary}\n\nContinue the conversation based on this context.`;
+                        } else {
+                            systemPrompt = `Context from previous conversation: ${chatSummary}\n\nContinue the conversation based on this context.`;
+                        }
+                    }
+                    
+                    // Format the full prompt with system message first, then user message
+                    let fullPrompt = text;
+                    if (systemPrompt) {
+                        fullPrompt = `system: ${systemPrompt}\n\nuser: ${text}`;
+                    }
+                    
+                    // Handle image upload if present and using a vision model
+                    let imageBase64 = null;
+                    let imageUrl = null;
+                    
+                    // Add the user message to chat - ONLY ONCE
+                    if (currentUploadedImage && isVisionModel) {
+                        try {
+                            // Convert image to base64
+                            imageBase64 = await readFileAsBase64(currentUploadedImage);
+                            
+                            // For displaying in chat
+                            imageUrl = URL.createObjectURL(currentUploadedImage);
+                            
+                            // Add image preview to the user's message (WITH image)
+                            addMessage(text, true, imageUrl);
+                            
+                            // Clear the image upload after sending
+                            currentUploadedImage = null;
+                            imagePreviewContainer.style.display = 'none';
+                            imageUploadInput.value = '';
+                        } catch (error) {
+                            console.error('Error processing image:', error);
+                            // Fallback to text-only message
+                            addMessage(text, true);
+                        }
+                    } else {
+                        // Regular text message (WITHOUT image)
+                        addMessage(text, true);
+                    }
+                    
+                    // Construct URL with system prompt if selected
+                    let url = '';
+                    let requestOptions = {};
+                    
+                    if (imageBase64 && isVisionModel) {
+                        // Use POST endpoint for image + text
+                        url = 'https://text.pollinations.ai/';
+                        
+                        // Create request body with text, image and optional system prompt
+                        const requestBody = {
+                            messages: [
+                                { 
+                                    role: 'user', 
+                                    content: [
+                                        { type: "text", text: text },
+                                        { 
+                                            type: "image_url", 
+                                            image_url: {
+                                                url: `data:image/jpeg;base64,${imageBase64}`
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            model: modelId
+                        };
+                        
+                        // Add system message if we have a system prompt
+                        if (systemPrompt) {
+                            requestBody.messages.unshift({
+                                role: 'system',
+                                content: systemPrompt
+                            });
+                        }
+                        
+                        requestOptions = {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(requestBody)
+                        };
+                        
+                        console.log("Sending vision request with image and text");
+                        console.log("Using system prompt:", systemPrompt ? "Yes" : "No");
+                        console.log("Using model:", modelId);
+                    } else {
+                        // Use standard GET endpoint for text-only with encoded fullPrompt
+                        const encodedFullPrompt = encodeURIComponent(fullPrompt);
+                        url = `https://text.pollinations.ai/${encodedFullPrompt}`;
+                        
+                        requestOptions = {
+                            method: 'GET'
+                        };
+                        
+                        console.log("Sending request to:", url);
+                        console.log("Original text:", text);
+                        console.log("Using personality:", personality);
+                        console.log("System prompt:", systemPrompt);
+                        
+                        if (chatSummary) {
+                            console.log("Including conversation summary in the prompt");
+                        }
+                    }
+                    
+                    // Send the request
+                    const response = await fetch(url, requestOptions);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("API Error Response:", errorText);
+                        throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
+                    }
+                    
+                    const responseData = await response.text();
+                    
+                    removeTypingIndicator();
+                    console.log("Response received:", responseData);
+                    
+                    // Add AI response
+                    addMessage(responseData, false);
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    removeTypingIndicator();
+                    addMessage(`Sorry, there was an error processing your request: ${error.message}. Please try again with a shorter message or different model.`, false);
+                }
+            }
+            
+            // Handle send button click
+            sendButton.addEventListener('click', () => {
+                const text = chatInput.value.trim();
+                if (text) {
+                    // We'll let sendMessage() add the message to the chat
+                    chatInput.value = '';
+                    sendMessage(text);
+                }
+            });
+            
+            // Handle Enter key press (Shift+Enter for new line)
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendButton.click();
+                }
+            });
+            
+            // Setup Watson Recognition
+            function setupWatsonRecognition() {
+                console.log(`Starting Watson speech recognition...`);
+                finalTranscript = '';
+                
+                try {
+                    // Get the selected device ID
+                    const selectedDeviceId = micDeviceSelect.value;
+                    
+                    // Configure audio constraints based on selected device
+                    const audioConstraints = {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    };
+                    
+                    // Add deviceId constraint if a device is selected
+                    if (selectedDeviceId) {
+                        audioConstraints.deviceId = { exact: selectedDeviceId };
+                    }
+                    
+                    // First, get microphone stream
+                    navigator.mediaDevices.getUserMedia({ audio: audioConstraints })
+                        .then(stream => {
+                            // Store the stream
+                            watsonStream = stream;
+                            
+                            // Update UI
+                            isRecording = true;
+                            recognitionActive = true;
+                            voiceButton.classList.add('active', 'recording');
+                            micStatusText.textContent = 'Recording...';
+                            micStatusIndicator.classList.add('active');
+                            
+                            console.log('Microphone stream acquired, setting up Watson...');
+                            
+                            // Create an audio context
+                            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            inputNode = audioContext.createMediaStreamSource(stream);
+                            
+                            // Create a processor node for the audio
+                            processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+                            
+                            // Connect nodes
+                            inputNode.connect(processorNode);
+                            processorNode.connect(audioContext.destination);
+                            
+                            // Sample rate for Watson (must be 16000Hz)
+                            const WATSON_SAMPLE_RATE = 16000;
+                            const ORIGINAL_SAMPLE_RATE = audioContext.sampleRate;
+                            const DOWNSAMPLE_RATIO = ORIGINAL_SAMPLE_RATE / WATSON_SAMPLE_RATE;
+                            
+                            console.log(`Original sample rate: ${ORIGINAL_SAMPLE_RATE}Hz, downsampling to ${WATSON_SAMPLE_RATE}Hz`);
+                            
+                            // Create a buffer to collect audio samples
+                            audioChunks = [];
+                            
+                            // Process audio in chunks
+                            processorNode.onaudioprocess = function(event) {
+                                if (!recognitionActive) return;
+                                
+                                // Get audio samples from the input channel
+                                const inputData = event.inputBuffer.getChannelData(0);
+                                
+                                // Check if audio contains meaningful signal (not silence)
+                                let sum = 0;
+                                for (let i = 0; i < inputData.length; i++) {
+                                    sum += Math.abs(inputData[i]);
+                                }
+                                const average = sum / inputData.length;
+                                
+                                // Downsample to 16000 Hz by picking every Nth sample
+                                const downsampledLength = Math.floor(inputData.length / DOWNSAMPLE_RATIO);
+                                const downsampledData = new Float32Array(downsampledLength);
+                                
+                                for (let i = 0; i < downsampledLength; i++) {
+                                    // Pick every Nth sample (simple downsampling)
+                                    const originalIndex = Math.floor(i * DOWNSAMPLE_RATIO);
+                                    downsampledData[i] = inputData[originalIndex];
+                                }
+                                
+                                // Convert downsampled data to 16-bit PCM (what Watson expects)
+                                const pcmBuffer = new Int16Array(downsampledLength);
+                                
+                                // Use little-endian (which is what Watson expects)
+                                for (let i = 0; i < downsampledLength; i++) {
+                                    // Convert float32 to int16 with proper scaling and clamping
+                                    const scaled = Math.max(-1, Math.min(1, downsampledData[i]));
+                                    // Use little-endian format (which is standard for PCM)
+                                    pcmBuffer[i] = Math.floor(scaled * 32767);
+                                }
+                                
+                                // Save this chunk - only if it's not just silence
+                                audioChunks.push(pcmBuffer);
+                                
+                                // Every 5 chunks (about 500ms of audio), send to Watson
+                                if (audioChunks.length >= 5) {
+                                    sendAudioToWatson(audioChunks);
+                                    audioChunks = []; // Reset chunks
+                                }
+                            };
+                            
+                            // Save the processor for later cleanup
+                            window.watsonProcessor = processorNode;
+                            
+                            // Timeout for "no speech detected"
+                            if (recognitionTimeout) {
+                                clearTimeout(recognitionTimeout);
+                            }
+                            
+                            recognitionTimeout = setTimeout(function() {
+                                if (recognitionActive && finalTranscript === '') {
+                                    console.log('No speech detected after timeout');
+                                    stopSpeechRecognition();
+                                }
+                            }, 10000);
+                            
+                            console.log('Watson recognition started');
+                        })
+                        .catch(error => {
+                            console.error(`Error accessing microphone: ${error.message}`);
+                            micStatusText.textContent = `Error: ${error.message}`;
+                            micStatusIndicator.classList.add('error');
+                            recognitionActive = false;
+                            isRecording = false;
+                            voiceButton.classList.remove('active', 'recording');
+                        });
+                } catch (error) {
+                    console.error(`Error setting up Watson recognition: ${error.message}`);
+                    micStatusText.textContent = `Error: ${error.message}`;
+                    micStatusIndicator.classList.add('error');
+                    recognitionActive = false;
+                    isRecording = false;
+                    voiceButton.classList.remove('active', 'recording');
+                }
+            }
+            
+            // Function to send audio chunks to Watson - fixed transcript accumulation
+            function sendAudioToWatson(audioChunks) {
+                if ((!recognitionActive && !window.waitingForTranscripts) || audioChunks.length === 0) return;
+                
+                try {
+                    // Combine all chunks into one buffer
+                    const totalLength = audioChunks.reduce((length, chunk) => length + chunk.length, 0);
+                    
+                    // Don't send if there's no meaningful audio data
+                    if (totalLength === 0) {
+                        console.log("No audio data to send");
+                        return;
+                    }
+                    
+                    const combinedBuffer = new Int16Array(totalLength);
+                    
+                    let offset = 0;
+                    for (const chunk of audioChunks) {
+                        combinedBuffer.set(chunk, offset);
+                        offset += chunk.length;
+                    }
+                    
+                    // Create a properly formatted audio blob
+                    const audioBlob = new Blob([combinedBuffer.buffer], { 
+                        type: 'audio/l16; rate=16000; channels=1'
+                    });
+                    
+                    // Log the size of the audio data
+                    console.log(`[Speech] Sending audio to Watson: ${audioBlob.size} bytes`);
+                    
+                    // Determine the API URL based on the current location
+                    const apiUrl = new URL('/api/speech-to-text', window.location.origin).href;
+                    console.log(`[Speech] Sending audio to API: ${apiUrl}`);
+                    
+                    // Increment the pending requests counter before sending
+                    pendingWatsonRequests++;
+                    const thisRequestId = Date.now(); // Generate a unique ID for this request
+                    console.log(`[Request ${thisRequestId}] Sending Watson request (${pendingWatsonRequests} pending)`);
+                    
+                    // Send to our backend proxy instead of directly to Watson
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'audio/l16; rate=16000; channels=1',
+                            'Accept': 'application/json'
+                        },
+                        body: audioBlob
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 400) {
+                                console.log(`[Request ${thisRequestId}] Watson API Bad Request (400): This might be due to silence or invalid audio format`);
+                                // Don't treat this as fatal - just continue
+                                return { success: true, results: { results: [] } };
+                            } else if (response.status === 403) {
+                                throw new Error(`API access forbidden (403): Check API keys and permissions`);
+                            } else {
+                                throw new Error(`API error: ${response.status}`);
+                            }
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Update the last response time
+                        watsonLastResponseTime = Date.now();
+                        
+                        // Decrement the pending requests counter
+                        pendingWatsonRequests--;
+                        console.log(`[Request ${thisRequestId}] Watson response received (${pendingWatsonRequests} pending)`);
+                        
+                        console.log(`[Speech] Watson response: ${JSON.stringify(data)}`);
+                        
+                        // Check if we got successful results with actual content
+                        if (data.success && data.results && data.results.results && data.results.results.length > 0) {
+                            // Process transcripts
+                            for (const result of data.results.results) {
+                                if (result.final) {
+                                    // It's a final result
+                                    const transcript = result.alternatives[0].transcript;
+                                    console.log(`[Speech] Watson final transcript: "${transcript}"`);
+                                    
+                                    // FIXED: Add to final transcript - properly concatenate without extra spaces
+                                    if (finalTranscript.length === 0) {
+                                        finalTranscript = transcript.trim();
+                                    } else {
+                                        finalTranscript += ' ' + transcript.trim();
+                                    }
+                                    
+                                    // Store in the separate speech transcript variable - FIXED
+                                    speechTranscript = finalTranscript;
+                                    console.log(`[Speech] Updated speech transcript: "${speechTranscript}"`);
+                                } else {
+                                    // Interim result
+                                    const transcript = result.alternatives[0].transcript;
+                                    console.log(`[Speech] Watson interim transcript: "${transcript}"`);
+                                }
+                            }
+                        } else if (data.error) {
+                            console.error(`[Request ${thisRequestId}] Watson API error: ${data.error}`);
+                        } else if (data.success && (!data.results || !data.results.results || data.results.results.length === 0)) {
+                            // This is not an error - just no speech detected in this chunk
+                            console.log(`[Speech] Watson processed audio but found no speech`);
+                        }
+                    })
+                    .catch(error => {
+                        // Update the last response time
+                        watsonLastResponseTime = Date.now();
+                        
+                        // Decrement the pending requests counter
+                        pendingWatsonRequests--;
+                        console.log(`[Request ${thisRequestId}] Watson request failed (${pendingWatsonRequests} pending)`);
+                        
+                        // Log the error and display to user
+                        console.error(`[Request ${thisRequestId}] API error: ${error.message}`);
+                        
+                        // Only show persistent errors to the user
+                        if (error.message.includes('403')) {
+                            micStatusText.textContent = "API access denied";
+                            micStatusIndicator.classList.add('error');
+                            // Stop recording since we have a fatal error
+                            if (recognitionActive) {
+                                stopSpeechRecognition();
+                            }
+                        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                            micStatusText.textContent = "Network error";
+                            micStatusIndicator.classList.add('error');
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error processing audio chunks:", error);
+                }
+            }
+            
+            // Improved Web Speech API setup
+            function setupWebSpeechRecognition() {
+                // Existing Web Speech API code...
+                console.log('Starting Web Speech recognition...');
+                
+                // Check if the browser supports speech recognition
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    console.error('Speech recognition not supported in this browser. Try Chrome, Edge, or Safari.');
+                    micStatusText.textContent = 'Not supported';
+                    micStatusIndicator.classList.add('error');
+                    
+                    // Show notification about browser support
+                    showNotification('Web Speech API not supported', 
+                        'Your browser does not support speech recognition. For best results, please use Google Chrome, Microsoft Edge, or Safari 14.1+.', 
+                        'warning', 10000);
+                    
+                    return;
+                }
+                
+                // If there's an existing recognition instance, clean it up first
+                if (recognition) {
+                    try {
+                        recognition.onend = null; // Remove previous handler
+                        recognition.onresult = null;
+                        recognition.onerror = null;
+                        recognition.abort();
+                        recognition = null;
+                        console.log('Cleaned up previous recognition instance');
+                    } catch (e) {
+                        console.warn('Error cleaning up previous recognition instance:', e);
+                    }
+                }
+                
+                // Create the recognition object
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                
+                // Configure recognition settings
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+                
+                // Set language to English
+                recognition.lang = 'en-US';
+                
+                // Handle results
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                            console.log('Final transcript updated:', finalTranscript);
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    
+                    // Update speech transcript for sending later
+                    speechTranscript = finalTranscript.trim();
+                    
+                    console.log(`Final: "${finalTranscript}"`);
+                    console.log(`Interim: "${interimTranscript}"`);
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    
+                    // Update status based on error type
+                    switch(event.error) {
+                        case 'not-allowed':
+                        case 'service-not-allowed':
+                            micStatusText.textContent = 'Permission denied';
+                            // Show notification about permission
+                            showNotification('Microphone permission required', 
+                                'Please allow microphone access to use speech recognition.', 
+                                'error', 8000);
+                            break;
+                            
+                        case 'no-speech':
+                            micStatusText.textContent = 'No speech detected';
+                            break;
+                            
+                        case 'network':
+                            micStatusText.textContent = 'Network error';
+                            break;
+                            
+                        default:
+                            micStatusText.textContent = `Error: ${event.error}`;
+                    }
+                    
+                    micStatusIndicator.classList.add('error');
+                    
+                    // Handle no-speech error with a prompt
+                    if (event.error === 'no-speech') {
+                        console.log('No speech detected');
+                        // Don't immediately stop on no-speech errors
+                        return;
+                    }
+                    
+                    recognitionActive = false;
+                    stopSpeechRecognition();
+                };
+                
+                recognition.onend = function() {
+                    console.log('Speech recognition ended');
+                    
+                    // If this wasn't triggered by our stop function and we're still recording
+                    if (recognitionActive && !restartingRecognition) {
+                        // Chrome has a timeLimit (about 60s) - need to restart recognition
+                        restartingRecognition = true;
+                        console.log('Restarting recognition due to timeout...');
+                        
+                        setTimeout(() => {
+                            if (recognitionActive) {
+                                try {
+                                    recognition.start();
+                                    console.log('Recognition restarted after timeout');
+                                    restartingRecognition = false;
+                                } catch (e) {
+                                    console.error('Failed to restart recognition:', e);
+                                    restartingRecognition = false;
+                                    recognitionActive = false;
+                                    
+                                    // Try to recreate the recognition object
+                                    setTimeout(() => {
+                                        if (isRecording) {
+                                            console.log('Recreating recognition object');
+                                            setupWebSpeechRecognition();
+                                        }
+                                    }, 500);
+                                }
+                            } else {
+                                restartingRecognition = false;
+                            }
+                        }, 300);
+                    }
+                };
+                
+                try {
+                    recognition.start();
+                    console.log('Web Speech recognition started');
+                    
+                    // Add a class to indicate active speech recognition
+                    document.body.classList.add('webspeech-active');
+                } catch (e) {
+                    console.error('Error starting speech recognition:', e);
+                    micStatusText.textContent = `Error: ${e.message}`;
+                    micStatusIndicator.classList.add('error');
+                    recognitionActive = false;
+                    
+                    // Show a dialog with the error information
+                    showNotification('Speech Recognition Error', 
+                        `There was an error starting speech recognition: ${e.message}. Please try again.`, 
+                        'error', 8000);
+                    
+                    document.body.classList.remove('webspeech-active');
+                }
+            }
+            
+            // Helper function to show notifications to the user
+            function showNotification(title, message, type = 'info', duration = 5000) {
+                // Check if we already have a notification container
+                let notificationContainer = document.getElementById('notification-container');
+                
+                if (!notificationContainer) {
+                    // Create a container for notifications if it doesn't exist
+                    notificationContainer = document.createElement('div');
+                    notificationContainer.id = 'notification-container';
+                    notificationContainer.style.position = 'fixed';
+                    notificationContainer.style.top = '10px';
+                    notificationContainer.style.right = '10px';
+                    notificationContainer.style.zIndex = '9999';
+                    document.body.appendChild(notificationContainer);
+                }
+                
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.style.backgroundColor = type === 'error' ? '#f44336' : 
+                                                    type === 'warning' ? '#ff9800' : '#4CAF50';
+                notification.style.color = 'white';
+                notification.style.padding = '15px';
+                notification.style.marginBottom = '10px';
+                notification.style.borderRadius = '5px';
+                notification.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+                notification.style.minWidth = '250px';
+                notification.style.maxWidth = '400px';
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                
+                // Add title if provided
+                if (title) {
+                    const titleElement = document.createElement('div');
+                    titleElement.style.fontWeight = 'bold';
+                    titleElement.style.marginBottom = '5px';
+                    titleElement.textContent = title;
+                    notification.appendChild(titleElement);
+                }
+                
+                // Add message
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                notification.appendChild(messageElement);
+                
+                // Add close button
+                const closeButton = document.createElement('span');
+                closeButton.innerHTML = '&times;';
+                closeButton.style.position = 'absolute';
+                closeButton.style.top = '5px';
+                closeButton.style.right = '10px';
+                closeButton.style.cursor = 'pointer';
+                closeButton.style.fontSize = '20px';
+                closeButton.onclick = function() {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                };
+                notification.appendChild(closeButton);
+                notification.style.position = 'relative';
+                
+                // Add to container
+                notificationContainer.appendChild(notification);
+                
+                // Show with animation
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                }, 10);
+                
+                // Auto remove after duration
+                if (duration > 0) {
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }, duration);
+                }
+                
+                return notification;
+            }
+            
+            // Handle sending the message to the API
+            function sendMessageToAPI(message) {
+                if (!message.trim()) return;
+                
+                // Existing code for sending message to API...
+                sendMessage(message); // This calls your existing API sending function
+            }
+            
+            // Add a debug div to the UI for realtime feedback
+            const debugContainer = document.createElement('div');
+            debugContainer.id = 'speech-debug';
+            debugContainer.style = 'display: none;'; // Always keep it hidden
+            document.body.appendChild(debugContainer);
+            
+            // Debug log function (console only)
+            function debugLog(message) {
+                console.log(`[Speech] ${message}`);
+            }
+            
+            // Function to start basic speech recognition
+            function startBasicRecognition() {
+                try {
+                    // Clear previous text
+                    chatInput.value = '';
+                    finalTranscript = '';
+                    
+                    // Make sure the input is hidden
+                    chatInput.style.display = 'none';
+                    
+                    debugLog('Creating new SpeechRecognition instance');
+                    // Create a new recognition instance
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    
+                    // Get the selected device ID
+                    const selectedDeviceId = micDeviceSelect.value;
+                    const selectedDevice = selectedDeviceId ? audioDevices.find(d => d.deviceId === selectedDeviceId) : null;
+                    
+                    if (selectedDeviceId) {
+                        debugLog(`Using selected microphone: ${selectedDevice ? selectedDevice.label : selectedDeviceId}`);
+                    } else {
+                        debugLog('Using default microphone');
+                    }
+                    
+                    // Try to ensure microphone is ready
+                    let microphoneReady = false;
+                    
+                    // First check if we have a successful stream from the microphone test
+                    if (window.lastSuccessfulAudioStream && window.lastSuccessfulAudioContext) {
+                        debugLog('Using existing successful audio stream from microphone test');
+                        microphoneReady = true;
+                        
+                        // Make sure the audio context is running
+                        if (window.lastSuccessfulAudioContext.state === 'suspended') {
+                            window.lastSuccessfulAudioContext.resume().then(() => {
+                                debugLog('Resumed existing audio context');
+                            }).catch(e => {
+                                debugLog(`Failed to resume audio context: ${e.message}`);
+                            });
+                        }
+                    } 
+                    
+                    // If we don't have a successful stream yet, initialize one
+                    if (!microphoneReady) {
+                        try {
+                            debugLog('Initializing audio context to ensure microphone is active');
+                            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            
+                            // Try to initialize the audio input with the selected device
+                            if (selectedDeviceId) {
+                                navigator.mediaDevices.getUserMedia({ 
+                                    audio: { 
+                                        deviceId: { exact: selectedDeviceId },
+                                        echoCancellation: true,
+                                        noiseSuppression: true,
+                                        autoGainControl: true
+                                    } 
+                                })
+                                .then(stream => {
+                                    debugLog('Successfully initialized selected microphone');
+                                    // Keep this stream active for recognition
+                                    window.lastSuccessfulAudioStream = stream;
+                                    window.lastSuccessfulAudioContext = audioContext;
+                                })
+                                .catch(err => {
+                                    debugLog(`Error initializing selected mic: ${err.message}. Falling back to default.`);
+                                });
+                            }
+                            
+                            // Resume audio context if it's suspended
+                            if (audioContext.state === 'suspended') {
+                                audioContext.resume().then(() => {
+                                    debugLog('Audio context resumed successfully');
+                                }).catch(e => {
+                                    debugLog(`Error resuming audio context: ${e.message}`);
+                                });
+                            }
+                        } catch (e) {
+                            debugLog(`Audio context initialization error (non-critical): ${e.message}`);
+                        }
+                    }
+                    
+                    // Configure basic settings
+                    recognition.lang = 'en-US';
+                    recognition.interimResults = true; // Changed to true to get partial results
+                    recognition.continuous = false; // Changed to false for reliability (true can cause issues)
+                    recognition.maxAlternatives = 3; // Get the most likely result
+                    
+                    debugLog(`Recognition configured: lang=${recognition.lang}, continuous=${recognition.continuous}, interimResults=${recognition.interimResults}`);
+                    
+                    // Event: When recognition results are available
+                    recognition.onresult = function(event) {
+                        debugLog(`Got results: ${event.results.length} result sets`);
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const result = event.results[i];
+                            debugLog(`Result ${i}: isFinal=${result.isFinal}`);
+                            
+                            if (result.isFinal) {
+                                const transcript = result[0].transcript;
+                                const confidence = result[0].confidence;
+                                debugLog(`Final transcript: "${transcript}" (confidence: ${Math.round(confidence * 100)}%)`);
+                                
+                                finalTranscript += transcript;
+                                
+                                // We'll store the transcript for later use, but don't show it in the input field
+                                // This prevents the user from thinking they need to click send
+                                // Update the display but keep it hidden
+                                const displayText = finalTranscript.trim();
+                                chatInput.value = displayText;
+                                chatInput.dispatchEvent(new Event('input'));
+                                
+                                // Show alternatives if available
+                                if (result.length > 1) {
+                                    debugLog(`Alternatives:`);
+                                    for (let j = 1; j < result.length; j++) {
+                                        debugLog(`  ${j}: "${result[j].transcript}" (confidence: ${Math.round(result[j].confidence * 100)}%)`);
+                                    }
+                                }
+                            } else {
+                                // For interim results
+                                const transcript = result[0].transcript;
+                                debugLog(`Interim: "${transcript}"`);
+                                
+                                // Update but keep hidden
+                                chatInput.value = finalTranscript + transcript;
+                                chatInput.dispatchEvent(new Event('input'));
+                            }
+                        }
+                    };
+                    
+                    // Event: When recognition detects speech start
+                    recognition.onspeechstart = function() {
+                        debugLog('Speech detected! Recording audio...');
+                        isRecording = true;
+                        
+                        // Clear any pending no-speech timeouts
+                        if (recognitionTimeout) {
+                            clearTimeout(recognitionTimeout);
+                        }
+                        
+                        // Update UI to show active recording
+                        voiceButton.classList.add('active', 'recording'); // Add BOTH classes for animation
+                        micStatusText.textContent = 'Recording...';
+                        micStatusIndicator.classList.add('active');
+                    };
+                    
+                    // Event: When recognition doesn't detect speech
+                    recognition.onspeechend = function() {
+                        debugLog('Speech ended');
+                        // Don't stop recognition here - let onend handle it
+                    };
+                    
+                    // Event: When recognition has an error
+                    recognition.onerror = function(event) {
+                        debugLog(`Error: ${event.error}, details: ${event.message || 'No details'}`);
+                        debugLog(`User agent: ${navigator.userAgent}`);
+                        debugLog(`Permissions state: ${navigator.permissions ? 'Available' : 'Not available'}`);
+                        
+                        // Try to get permission state if available
+                        if (navigator.permissions) {
+                            navigator.permissions.query({name:'microphone'})
+                                .then(function(permissionStatus) {
+                                    debugLog(`Microphone permission: ${permissionStatus.state}`);
+                                })
+                                .catch(function(error) {
+                                    debugLog(`Permission check error: ${error.message}`);
+                                });
+                        }
+                        
+                        if (event.error === 'no-speech') {
+                            debugLog('No speech detected within timeout period');
+                            // We'll handle this specially
+                            handleNoSpeech();
+                        } else if (event.error === 'audio-capture') {
+                            showErrorMessage("❌ No microphone detected. Please check your microphone.");
+                        } else if (event.error === 'not-allowed') {
+                            showErrorMessage("❌ Microphone permission denied. Please allow microphone access.");
+                        } else if (event.error === 'aborted') {
+                            debugLog('Recognition aborted');
+                            // This is normal when stopping
+                        } else {
+                            showErrorMessage(`❌ Speech recognition error: ${event.error}`);
+                        }
+                        
+                        // Update recognition state
+                        recognitionActive = false;
+                        
+                        // Only stop if we're not restarting
+                        if (!restartingRecognition) {
+                            stopBasicRecognition();
+                        }
+                    };
+                    
+                    // Event: When recognition ends (for any reason)
+                    recognition.onend = function() {
+                        debugLog('Recognition ended');
+                        
+                        // If we're restarting, don't process the transcript yet
+                        if (restartingRecognition) {
+                            debugLog('Restarting recognition...');
+                            restartingRecognition = false;
+                            setTimeout(() => {
+                                try {
+                                    recognition.start();
+                                } catch (e) {
+                                    debugLog(`Error restarting: ${e.message}`);
+                                    recognitionActive = false;
+                                    resetSpeechUI();
+                                }
+                            }, 100);
+                            return;
+                        }
+                        
+                        // Always ensure handleRecognitionEnd is called to process any text
+                        recognitionActive = false;
+                            handleRecognitionEnd();
+                    };
+                    
+                    // Clear any previous transcript
+                    finalTranscript = '';
+                    
+                    // Set a flag to indicate recognition is active
+                    isRecording = true;
+                    recognitionActive = true;
+                    restartingRecognition = false;
+                    
+                    // Update UI to indicate recording state
+                    resetSpeechUI();
+                    voiceButton.classList.add('active', 'recording'); // Add BOTH classes for animation
+                    micStatusText.textContent = 'Listening...';
+                    micStatusIndicator.classList.add('active');
+                    
+                    // Start recognition
+                    debugLog('Starting recognition');
+                    recognition.start();
+                    
+                    // Set a timeout to check if we've detected any speech
+                    // This helps when the browser doesn't fire the no-speech error
+                    if (recognitionTimeout) {
+                        clearTimeout(recognitionTimeout);
+                    }
+                    
+                    recognitionTimeout = setTimeout(function() {
+                        if (recognitionActive && finalTranscript === '') {
+                            debugLog('No speech detected after timeout');
+                            handleNoSpeech();
+                        }
+                    }, 10000); // Increased from 7000 to 10000 (10 seconds) to give more time for detection
+                    
+                    return true;
+                } catch (error) {
+                    debugLog(`Error setting up recognition: ${error.message}`);
+                    showErrorMessage(`❌ Could not start speech recognition: ${error.message}`);
+                    recognitionActive = false;
+                    resetSpeechUI();
+                    return false;
+                }
+            }
+            
+            // Handle the case when no speech is detected
+            function handleNoSpeech() {
+                debugLog('Handling no speech case');
+                
+                // Check if we had any speech
+                if (finalTranscript === '') {
+                    showErrorMessage("❌ No speech detected. Please try again.");
+                    
+                    // Update UI
+                    resetSpeechUI();
+                    
+                    // Mark recognition as inactive
+                    recognitionActive = false;
+                    
+                    // Option to retry recognition
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'retry-speech-btn';
+                    retryBtn.textContent = 'Try Again';
+                    retryBtn.style = 'background: #8b5cf6; color: white; border: none; border-radius: 4px; padding: 5px 10px; margin-left: 10px; cursor: pointer;';
+                    
+                    // Find the error message and append the button
+                    const latestMessage = document.querySelector('.message.system-message:last-child .message-text p');
+                    if (latestMessage) {
+                        latestMessage.appendChild(retryBtn);
+                        
+                        // Add click event to retry
+                        retryBtn.addEventListener('click', function() {
+                            debugLog('Retry button clicked');
+                            startBasicRecognition();
+                            this.remove();
+                        });
+                    }
+                }
+            }
+            
+            // Handle the end of a recognition session
+            function handleRecognitionEnd() {
+                debugLog('Handling recognition end');
+                
+                // Clean up
+                clearTimeout(recognitionTimeout);
+                isRecording = false;
+                recognitionActive = false;
+                
+                // Reset UI
+                resetSpeechUI();
+                
+                // Process the transcript if we have one
+                if (finalTranscript.trim() !== '') {
+                    debugLog(`Final transcript: "${finalTranscript}"`);
+                    
+                    // Check if we're already in the process of sending from the voice button handler
+                    // This will be true for Watson but false for Web Speech API
+                    if (window.waitingForTranscripts) {
+                        debugLog('Already processing transcript through voice button handler, skipping duplicate send');
+                        return;
+                    }
+                    
+                    // Add the recognized text to chat and send automatically
+                    const recognizedText = finalTranscript.trim();
+                    debugLog('Automatically sending message: ' + recognizedText);
+                    
+                    // Make sure the text appears in the input box momentarily for visual feedback
+                    chatInput.value = recognizedText;
+                    chatInput.style.display = '';
+                    
+                    // Send after a very short delay to allow the UI to update
+                    setTimeout(() => {
+                        // Clear the input and send the message
+                        chatInput.value = '';
+                        sendMessage(recognizedText);
+                    }, 100);
+                } else {
+                    debugLog('No final transcript available');
+                    // Ensure the input is visible even if no transcript
+                    chatInput.style.display = '';
+                }
+            }
+            
+            // Function to stop speech recognition
+            function stopBasicRecognition() {
+                debugLog('Stopping recognition');
+                
+                // Clear timeout
+                if (recognitionTimeout) {
+                    clearTimeout(recognitionTimeout);
+                }
+                
+                // If recognition is active, stop it
+                if (recognition) {
+                    try {
+                        if (recognitionActive) {
+                            recognition.stop();
+                            debugLog('Recognition stopped');
+                        }
+                    } catch (error) {
+                        debugLog(`Error stopping recognition: ${error.message}`);
+                    }
+                }
+                
+                // Reset UI and state
+                recognitionActive = false;
+                resetSpeechUI();
+                
+                // Show the chat input again
+                chatInput.style.display = '';
+                
+                // handleRecognitionEnd will be called by the recognition.onend event
+                // and will handle sending the message, so we don't need to do it here
+            }
+            
+            // Function to reset the UI after speech recognition
+            function resetSpeechUI() {
+                isRecording = false;
+                voiceButton.classList.remove('active', 'recording');
+                voiceButton.textContent = '🎤';
+                micStatusText.textContent = "Ready";
+                micStatusIndicator.classList.remove('active');
+                
+                // Show the chat input again if it was hidden
+                chatInput.style.display = '';
+            }
+            
+            // Helper function to show error messages
+            function showErrorMessage(message) {
+                chatMessages.innerHTML += `
+                    <div class="message system-message">
+                        <div class="message-content">
+                            <div class="message-text">
+                                <p>${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Initialize mic status
+            micStatusText.textContent = "Ready";
+            
+            // Click outside to stop listening
+            document.addEventListener('click', function(event) {
+                if (recognitionActive && event.target !== voiceButton && !voiceButton.contains(event.target)) {
+                    debugLog('Click outside detected: Stopping recognition');
+                    
+                    // Save transcript before stopping
+                    const currentTranscript = finalTranscript.trim();
+                    const hasTranscript = currentTranscript !== '';
+                    
+                    if (useWatson) {
+                        stopWatsonRecognition();
+                    } else {
+                        stopBasicRecognition();
+                        
+                        // For Web Speech API, ensure we handle any transcript after stopping
+                        if (hasTranscript) {
+                            debugLog('Processing saved transcript after click-outside stop');
+                            setTimeout(() => {
+                                if (!finalTranscript.trim() && currentTranscript) {
+                                    // Use the saved transcript if it was cleared
+                                    finalTranscript = currentTranscript;
+                                }
+                                handleRecognitionEnd();
+                            }, 500);
+                        }
+                    }
+                }
+            });
+            
+            // ----- WATSON SPEECH RECOGNITION IMPLEMENTATION -----
+            
+            // Function to start Watson speech recognition
+            function startWatsonRecognition() {
+                // Don't start if already active
+                if (recognitionActive) {
+                    debugLog('Recognition already active, not starting again');
+                    return false;
+                }
+                
+                // Clear previous text
+                chatInput.value = '';
+                finalTranscript = '';
+                
+                // Make sure the input is hidden
+                chatInput.style.display = 'none';
+                
+                debugLog(`Starting Watson speech recognition...`);
+                
+                try {
+                    // Get the selected device ID
+                    const selectedDeviceId = micDeviceSelect.value;
+                    const selectedDevice = selectedDeviceId ? audioDevices.find(d => d.deviceId === selectedDeviceId) : null;
+                    
+                    if (selectedDeviceId) {
+                        debugLog(`Using selected microphone: ${selectedDevice ? selectedDevice.label : selectedDeviceId}`);
+                    } else {
+                        debugLog('Using default microphone');
+                    }
+                    
+                    // Configure audio constraints based on selected device
+                    const audioConstraints = {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    };
+                    
+                    // Add deviceId constraint if a device is selected
+                    if (selectedDeviceId) {
+                        audioConstraints.deviceId = { exact: selectedDeviceId };
+                    }
+                    
+                    // First, get microphone stream
+                    navigator.mediaDevices.getUserMedia({ audio: audioConstraints })
+                        .then(stream => {
+                            // Store the stream
+                            watsonStream = stream;
+                            
+                            // Update UI
+                            isRecording = true;
+                            recognitionActive = true;
+                            voiceButton.classList.add('active', 'recording');
+                            micStatusText.textContent = 'Recording...';
+                            micStatusIndicator.classList.add('active');
+                            
+                            debugLog('Microphone stream acquired, setting up Watson...');
+                            
+                            // Create an audio context
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    inputNode = audioContext.createMediaStreamSource(stream);
+                            
+                            // Create a processor node for the audio
+                            processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+                            
+                            // Connect nodes
+                            inputNode.connect(processorNode);
+                            processorNode.connect(audioContext.destination);
+                            
+                            // Sample rate for Watson (must be 16000Hz)
+                            const WATSON_SAMPLE_RATE = 16000;
+                            const ORIGINAL_SAMPLE_RATE = audioContext.sampleRate;
+                            const DOWNSAMPLE_RATIO = ORIGINAL_SAMPLE_RATE / WATSON_SAMPLE_RATE;
+                            
+                            debugLog(`Original sample rate: ${ORIGINAL_SAMPLE_RATE}Hz, downsampling to ${WATSON_SAMPLE_RATE}Hz`);
+                            
+                            // Create a buffer to collect audio samples
+                            audioChunks = [];
+                            
+                            // Process audio in chunks
+                            processorNode.onaudioprocess = function(event) {
+                                if (!recognitionActive) return;
+                                
+                                // Get audio samples from the input channel
+                                const inputData = event.inputBuffer.getChannelData(0);
+                                
+                                // Check if audio contains meaningful signal (not silence)
+                                let sum = 0;
+                                for (let i = 0; i < inputData.length; i++) {
+                                    sum += Math.abs(inputData[i]);
+                                }
+                                const average = sum / inputData.length;
+                                
+                                // Downsample to 16000 Hz by picking every Nth sample
+                                // This is a simple but not ideal downsampling approach
+                                const downsampledLength = Math.floor(inputData.length / DOWNSAMPLE_RATIO);
+                                const downsampledData = new Float32Array(downsampledLength);
+                                
+                                for (let i = 0; i < downsampledLength; i++) {
+                                    // Pick every Nth sample (simple downsampling)
+                                    const originalIndex = Math.floor(i * DOWNSAMPLE_RATIO);
+                                    downsampledData[i] = inputData[originalIndex];
+                                }
+                                
+                                // Convert downsampled data to 16-bit PCM (what Watson expects)
+                                const pcmBuffer = new Int16Array(downsampledLength);
+                                
+                                // Use little-endian (which is what Watson expects)
+                                for (let i = 0; i < downsampledLength; i++) {
+                                    // Convert float32 to int16 with proper scaling and clamping
+                                    const scaled = Math.max(-1, Math.min(1, downsampledData[i]));
+                                    // Use little-endian format (which is standard for PCM)
+                                    pcmBuffer[i] = Math.floor(scaled * 32767);
+                                }
+                                
+                                // Save this chunk - send all audio, not just above threshold
+                                audioChunks.push(pcmBuffer);
+                                
+                                // Every 5 chunks (about 500ms of audio), send to Watson
+                                if (audioChunks.length >= 5) {
+                                    sendAudioToWatson(audioChunks);
+                                    audioChunks = []; // Reset chunks
+                                }
+                            };
+                            
+                            // Save the processor for later cleanup
+                            window.watsonProcessor = processorNode;
+                            
+                            // Timeout for "no speech detected"
+                            if (recognitionTimeout) {
+                                clearTimeout(recognitionTimeout);
+                            }
+                            
+                            recognitionTimeout = setTimeout(function() {
+                                if (recognitionActive && finalTranscript === '') {
+                                    debugLog('No speech detected after timeout');
+                                    stopWatsonRecognition();
+                                    handleNoSpeech();
+                                }
+                            }, 10000);
+                            
+                            debugLog('Watson recognition started');
+                        })
+                        .catch(error => {
+                            debugLog(`Error accessing microphone: ${error.message}`);
+                            showErrorMessage(`❌ Could not access microphone: ${error.message}`);
+                            resetSpeechUI();
+                            recognitionActive = false;
+                        });
+                    
+                    return true;
+                } catch (error) {
+                    debugLog(`Error setting up Watson recognition: ${error.message}`);
+                    showErrorMessage(`❌ Could not start speech recognition: ${error.message}`);
+                    resetSpeechUI();
+                    recognitionActive = false;
+                    return false;
+                }
+            }
+            
+            // Function to send audio chunks to Watson
+            function sendAudioToWatson(audioChunks) {
+                if (!recognitionActive || audioChunks.length === 0) return;
+                
+                // Combine all chunks into one buffer
+                const totalLength = audioChunks.reduce((length, chunk) => length + chunk.length, 0);
+                const combinedBuffer = new Int16Array(totalLength);
+                
+                let offset = 0;
+                for (const chunk of audioChunks) {
+                    combinedBuffer.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                
+                // Create a properly formatted audio blob
+                // Use audio/l16 MIME type with proper Watson format
+                const audioBlob = new Blob([combinedBuffer.buffer], { 
+                    type: 'audio/l16; rate=16000; channels=1' // Format exactly as Watson expects it
+                });
+                
+                // Log the size of the audio data
+                debugLog(`Sending audio to Watson: ${audioBlob.size} bytes`);
+                
+                // Determine the API URL based on the current location
+                const apiUrl = new URL('/api/speech-to-text', window.location.origin).href;
+                debugLog(`Sending audio to API: ${apiUrl}`);
+                
+                // Track this request
+                pendingWatsonRequests++;
+                
+                // Send to our backend proxy instead of directly to Watson
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'audio/l16; rate=16000; channels=1' // Exact format Watson expects it
+                    },
+                    body: audioBlob // Send the raw audio blob
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    debugLog(`Watson response: ${JSON.stringify(data)}`);
+                    
+                    // Check if we got successful results with actual content
+                    if (data.success && data.results && data.results.results && data.results.results.length > 0) {
+                        // Process transcripts
+                        for (const result of data.results.results) {
+                            if (result.final) {
+                                // It's a final result
+                                const transcript = result.alternatives[0].transcript;
+                                debugLog(`Watson final transcript: "${transcript}"`);
+                                
+                                // Add to final transcript
+                                finalTranscript += ' ' + transcript;
+                                
+                                // Record the time of the last Watson response
+                                watsonLastResponseTime = Date.now();
+                                
+                                // Don't update the input field - we'll show the transcript later
+                            } else {
+                                // Interim result
+                                const transcript = result.alternatives[0].transcript;
+                                debugLog(`Watson interim transcript: "${transcript}"`);
+                                
+                                // Don't update the input field - we'll show the transcript later
+                            }
+                        }
+                        
+                        // Track that we got a response
+                        pendingWatsonRequests--;
+                        pendingWatsonRequests = Math.max(0, pendingWatsonRequests); // Ensure we don't go negative
+                        watsonLastResponseTime = Date.now();
+                    } else if (data.error) {
+                        debugLog(`Watson API error: ${data.error}`);
+                        pendingWatsonRequests--;
+                        pendingWatsonRequests = Math.max(0, pendingWatsonRequests);
+                        watsonLastResponseTime = Date.now();
+                    } else if (data.success && (!data.results || !data.results.results || data.results.results.length === 0)) {
+                        // This is not an error - just no speech detected in this chunk
+                        debugLog("Watson processed audio but found no speech");
+                        pendingWatsonRequests--;
+                        pendingWatsonRequests = Math.max(0, pendingWatsonRequests);
+                        watsonLastResponseTime = Date.now();
+                    }
+                })
+                .catch(error => {
+                    // Only log the error to console, don't display to user
+                    debugLog(`API error: ${error.message}`);
+                });
+            }
+            
+            // Function to stop Watson speech recognition
+            function stopWatsonRecognition() {
+                debugLog('Stopping Watson recognition');
+                
+                // Clear timeout
+                if (recognitionTimeout) {
+                    clearTimeout(recognitionTimeout);
+                }
+                
+                // Stop the audio processing
+                if (window.watsonProcessor) {
+                    window.watsonProcessor.disconnect();
+                    window.watsonProcessor = null;
+                }
+                
+                // Stop the microphone stream
+                if (watsonStream) {
+                    watsonStream.getTracks().forEach(track => track.stop());
+                    watsonStream = null;
+                }
+                
+                // Update state
+                recognitionActive = false;
+                resetSpeechUI();
+                
+                // Don't show chat input yet - that will be handled by the voice button handler
+                // after all transcripts are processed
+                
+                // Don't auto-send messages here. The voice button handler will process the transcript
+                // and send the message after all Watson responses are received
+                
+                // Just log the transcript for debug purposes
+                if (finalTranscript.trim() !== '') {
+                    debugLog(`Final transcript collected: "${finalTranscript.trim()}"`);
+                } else {
+                    debugLog('No transcript collected yet');
+                }
+            }
+            
+            // ----- END WATSON SPEECH RECOGNITION -----
+            
+            // Refresh microphones button
+            refreshMicsBtn.addEventListener('click', function() {
+                populateMicrophoneDevices();
+            });
+            
+            // Create volume bars
+            const volumeVisualization = document.getElementById('volume-visualization');
+            for (let i = 0; i < 10; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'volume-bar';
+                volumeVisualization.appendChild(bar);
+            }
+            
+            // Test microphone button
+            testMicrophoneBtn.addEventListener('click', function() {
+                if (window.micTestActive) {
+                    // Stop the test
+                    stopMicrophoneTest();
+                    return;
+                }
+                
+                // Start the test
+                testMicrophoneBtn.classList.add('active');
+                testMicrophoneBtn.innerHTML = '<span class="mic-icon"></span>Stop Test';
+                micStatusText.textContent = "Testing...";
+                micStatusIndicator.classList.add('active');
+                
+                // Display volume container
+                volumeVisualization.style.display = 'flex';
+                
+                // Start audio context for visualization
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Get the selected device ID
+                const selectedDeviceId = micDeviceSelect.value;
+                const audioConstraints = {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                };
+                
+                // Add deviceId constraint if a device is selected
+                if (selectedDeviceId) {
+                    audioConstraints.deviceId = { exact: selectedDeviceId };
+                }
+                
+                navigator.mediaDevices.getUserMedia({ audio: audioConstraints })
+                    .then(stream => {
+                        // Store the stream for later cleanup
+                        window.micTestStream = stream;
+                        window.micTestActive = true;
+                        
+                        // Store the successful stream so we can reuse it for speech recognition
+                        window.lastSuccessfulAudioStream = stream;
+                        window.lastSuccessfulAudioContext = audioContext;
+                        
+                        // Create analyzer
+                        const analyzer = audioContext.createAnalyser();
+                        analyzer.fftSize = 256;
+                        const bufferLength = analyzer.frequencyBinCount;
+                        const dataArray = new Uint8Array(bufferLength);
+                        
+                        // Connect the stream to the analyzer
+                        const source = audioContext.createMediaStreamSource(stream);
+                        source.connect(analyzer);
+                        
+                        // Update the volume visualization
+                        function updateVisualization() {
+                            if (!window.micTestActive) return;
+                            
+                            analyzer.getByteFrequencyData(dataArray);
+                            
+                            // Calculate volume level (average of frequency data)
+                            let sum = 0;
+                            for (let i = 0; i < bufferLength; i++) {
+                                sum += dataArray[i];
+                            }
+                            const average = sum / bufferLength;
+                            
+                            // Scale to 0-100
+                            const volume = Math.min(100, Math.max(0, average * 1.5));
+                            
+                            // Update the volume bars
+                            const bars = volumeVisualization.querySelectorAll('.volume-bar');
+                            const totalBars = bars.length;
+                            
+                            bars.forEach((bar, index) => {
+                                const threshold = (index / totalBars) * 100;
+                                if (volume >= threshold) {
+                                    const heightPercent = Math.min(100, volume - threshold + 20);
+                                    const height = (heightPercent / 100) * 20;
+                                    bar.style.height = `${Math.max(3, height)}px`;
+                                } else {
+                                    bar.style.height = '3px';
+                                }
+                            });
+                            
+                            // Update UI based on volume
+                            if (volume > 10) {
+                                micStatusText.textContent = "Microphone working!";
+                                micStatusIndicator.classList.add('active');
+                            } else {
+                                micStatusText.textContent = "No sound detected";
+                                // Keep the indicator active to show we're still testing
+                            }
+                            
+                            // Schedule the next update
+                            requestAnimationFrame(updateVisualization);
+                        }
+                        
+                        // Start visualization
+                        updateVisualization();
+                    })
+                    .catch(err => {
+                        console.error('Error testing microphone:', err);
+                        micStatusText.textContent = "Error: " + err.message;
+                        micStatusIndicator.classList.add('error');
+                        testMicrophoneBtn.classList.remove('active');
+                        testMicrophoneBtn.innerHTML = '<span class="mic-icon"></span>Test Microphone';
+                        window.micTestActive = false;
+                        volumeVisualization.style.display = 'none';
+                    });
+            });
+            
+            // Function to stop microphone test
+            function stopMicrophoneTest() {
+                if (window.micTestStream) {
+                    window.micTestStream.getTracks().forEach(track => track.stop());
+                    window.micTestStream = null;
+                }
+                
+                window.micTestActive = false;
+                testMicrophoneBtn.classList.remove('active');
+                testMicrophoneBtn.innerHTML = '<span class="mic-icon"></span>Test Microphone';
+                micStatusText.textContent = "Ready";
+                micStatusIndicator.classList.remove('active', 'error');
+                volumeVisualization.style.display = 'none';
+            }
+            
+            // Function to start speech recognition based on selected engine
+            function startSpeechRecognition() {
+                debugLog('Starting speech recognition with selected engine');
+                if (useWatson) {
+                    return startWatsonRecognition();
+                } else {
+                    return startBasicRecognition();
+                }
+            }
+
+            // Initialize the background star animations
+            function initializeStarBackground() {
+                // Make sure twinkling container is ready
+                const twinklingContainer = document.querySelector('.twinkling');
+                if (!twinklingContainer) return;
+                
+                // Set proper styles
+                twinklingContainer.style.zIndex = '1';
+                twinklingContainer.style.position = 'fixed';
+                
+                // Create 25 extra bright stars
+                for (let i = 0; i < 25; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star-extra-bright';
+                    
+                    // Size between 2-4px
+                    const size = Math.floor(Math.random() * 3) + 2;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Random position
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    star.style.left = `${x}%`;
+                    star.style.top = `${y}%`;
+                    
+                    // Subtle glow
+                    star.style.boxShadow = `0 0 ${size*2}px ${size}px rgba(255, 255, 255, 0.6)`;
+                    
+                    // Twinkling animation
+                    const animationDuration = Math.random() * 3 + 3;
+                    star.style.animation = `subtle-twinkle ${animationDuration}s infinite ease-in-out`;
+                    star.style.animationDelay = `${Math.random() * 5}s`;
+                    
+                    twinklingContainer.appendChild(star);
+                }
+                
+                // Create shooting stars periodically
+                setInterval(() => {
+                    createShootingStar(twinklingContainer);
+                }, 8000); // New shooting star every 8 seconds
+                
+                // Create initial shooting stars
+                setTimeout(() => createShootingStar(twinklingContainer), 1000);
+                setTimeout(() => createShootingStar(twinklingContainer), 4000);
+            }
+            
+            // Create a shooting star
+            function createShootingStar(container) {
+                const star = document.createElement('div');
+                star.classList.add('shooting-star');
+                
+                // Random position at top portion of the screen
+                const x = Math.random() * 70 + 10; // 10-80% of viewport width
+                const y = Math.random() * 30 + 5; // 5-35% of viewport height
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                
+                // Set styles for shooting star
+                star.style.position = 'absolute';
+                star.style.height = '1px';
+                star.style.width = '0';
+                star.style.background = 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%)';
+                star.style.transformOrigin = '0 0';
+                star.style.boxShadow = '0 0 5px 1px rgba(255, 255, 255, 0.4)';
+                star.style.zIndex = '1';
+                star.style.opacity = '0';
+                
+                // Set animation
+                star.style.animation = 'shooting 10s linear';
+                
+                // Add to container
+                container.appendChild(star);
+                
+                // Remove after animation finishes
+                setTimeout(() => {
+                    if (star && star.parentNode) {
+                        star.remove();
+                    }
+                }, 10000);
+                
+                return star;
+            }
+            
+            // Add shooting star animation keyframes
+            const styleSheet = document.createElement('style');
+            styleSheet.type = 'text/css';
+            styleSheet.innerText = `
+                @keyframes shooting {
+                    0% {
+                        transform: translateX(0) translateY(0) rotate(215deg);
+                        opacity: 0;
+                        width: 0;
+                    }
+                    0.1% {
+                        opacity: 0.6;
+                        width: 50px;
+                    }
+                    5% {
+                        width: 150px;
+                        opacity: 0.6;
+                    }
+                    10% {
+                        transform: translateX(300px) translateY(300px) rotate(215deg);
+                        opacity: 0;
+                        width: 0;
+                    }
+                    100% {
+                        transform: translateX(300px) translateY(300px) rotate(215deg);
+                        opacity: 0;
+                        width: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(styleSheet);
+
+            // Function to read file as base64
+            function readFileAsBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        // Get base64 string without the prefix
+                        const base64String = reader.result.split(',')[1];
+                        resolve(base64String);
+                    };
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Reset chat history and summary when the page is loaded or refreshed
+            window.addEventListener('load', function() {
+                chatHistory = [];
+                chatSummary = "";
+                
+                // The initPersonalitySystem function will be called from an import script
+                // No need to call it directly here anymore
+            });
+        });
+    </script>
+    <script src="js/personalities.js" type="module"></script>
+    <script type="module">
+        import { initPersonalitySystem, getPersonalityPrompt } from './js/personalities.js';
+        
+        // Make functions globally available
+        window.initPersonalitySystem = initPersonalitySystem;
+        window.getPersonalityPrompt = getPersonalityPrompt;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initPersonalitySystem();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollinations API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #6941c6;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #6941c6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #5730a3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #6941c6;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .error {
+            border-left-color: #e53e3e;
+            background-color: #fff5f5;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom-color: white;
+            position: relative;
+            top: 1px;
+            font-weight: 600;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(105, 65, 198, 0.3);
+            border-radius: 50%;
+            border-top-color: #6941c6;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Pollinations API Test</h1>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="searchgpt">SearchGPT</div>
+        <div class="tab" data-tab="text">Text Generation</div>
+        <div class="tab" data-tab="image">Image Generation</div>
+    </div>
+    
+    <div class="tab-content active" id="searchgpt-tab">
+        <div class="container">
+            <h2>Test SearchGPT API</h2>
+            <div>
+                <label for="search-query">Search Query</label>
+                <input type="text" id="search-query" value="latest advances in artificial intelligence">
+                
+                <label for="search-seed">Random Seed (optional)</label>
+                <input type="number" id="search-seed" value="42">
+                
+                <button id="search-direct-btn">Test Direct API</button>
+                <button id="search-proxy-btn">Test Proxy API</button>
+            </div>
+            
+            <div id="search-result" class="result">Results will appear here</div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="text-tab">
+        <div class="container">
+            <h2>Test Text Generation API</h2>
+            <div>
+                <label for="text-model">Model</label>
+                <select id="text-model">
+                    <option value="openai">openai (GPT-4o-mini)</option>
+                    <option value="openai-large">openai-large (GPT-4o)</option>
+                    <option value="openai-reasoning">openai-reasoning (o3-mini)</option>
+                    <option value="mistral">mistral</option>
+                    <option value="llama">llama</option>
+                </select>
+                
+                <label for="text-prompt">User Prompt</label>
+                <textarea id="text-prompt" rows="3">Write a short poem about artificial intelligence.</textarea>
+                
+                <label for="text-system">System Prompt (optional)</label>
+                <textarea id="text-system" rows="2">You are a helpful AI assistant that responds with creative, well-crafted content.</textarea>
+                
+                <button id="text-direct-btn">Test Direct API</button>
+                <button id="text-proxy-btn">Test Proxy API</button>
+            </div>
+            
+            <div id="text-result" class="result">Results will appear here</div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="image-tab">
+        <div class="container">
+            <h2>Test Image Generation API</h2>
+            <div>
+                <label for="image-prompt">Image Prompt</label>
+                <textarea id="image-prompt" rows="3">A futuristic city with flying cars and neon lights, digital art.</textarea>
+                
+                <label for="image-model">Model</label>
+                <select id="image-model">
+                    <option value="flux">flux (default)</option>
+                    <option value="turbo">turbo (sdxl)</option>
+                </select>
+                
+                <label for="image-width">Width</label>
+                <input type="number" id="image-width" value="1024" min="256" max="2048" step="64">
+                
+                <label for="image-height">Height</label>
+                <input type="number" id="image-height" value="1024" min="256" max="2048" step="64">
+                
+                <label for="image-seed">Random Seed (optional)</label>
+                <input type="number" id="image-seed" value="42">
+                
+                <div>
+                    <input type="checkbox" id="image-nologo" checked>
+                    <label for="image-nologo" style="display:inline">Hide Logo</label>
+                </div>
+                
+                <button id="image-generate-btn">Generate Image</button>
+            </div>
+            
+            <div id="image-result" class="result">
+                Image will appear here
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+        
+        // SearchGPT Testing
+        document.getElementById('search-direct-btn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('search-result');
+            const query = document.getElementById('search-query').value;
+            const seed = document.getElementById('search-seed').value;
+            
+            resultDiv.innerHTML = 'Loading... <div class="loading"></div>';
+            resultDiv.classList.remove('error');
+            
+            try {
+                const encodedQuery = encodeURIComponent(query);
+                const url = `https://text.pollinations.ai/${encodedQuery}?model=searchgpt&seed=${seed}&json=true`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.classList.add('error');
+            }
+        });
+        
+        document.getElementById('search-proxy-btn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('search-result');
+            const query = document.getElementById('search-query').value;
+            
+            resultDiv.innerHTML = 'Loading... <div class="loading"></div>';
+            resultDiv.classList.remove('error');
+            
+            try {
+                const response = await fetch('/api/pollinations-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.classList.add('error');
+            }
+        });
+        
+        // Text Generation Testing
+        document.getElementById('text-direct-btn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('text-result');
+            const model = document.getElementById('text-model').value;
+            const prompt = document.getElementById('text-prompt').value;
+            const system = document.getElementById('text-system').value;
+            
+            resultDiv.innerHTML = 'Loading... <div class="loading"></div>';
+            resultDiv.classList.remove('error');
+            
+            try {
+                // Use the GET endpoint, which is more reliable for direct testing
+                const encodedPrompt = encodeURIComponent(prompt);
+                let apiUrl = `https://text.pollinations.ai/${encodedPrompt}?model=${model}`;
+                
+                // Add system prompt as a parameter if provided
+                if (system) {
+                    const encodedSystem = encodeURIComponent(system);
+                    apiUrl += `&system=${encodedSystem}`;
+                }
+                
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+                
+                // Check if the response is JSON or plain text
+                const contentType = response.headers.get('content-type') || '';
+                const isJson = contentType.includes('application/json');
+                
+                let displayText = '';
+                
+                if (isJson) {
+                    const data = await response.json();
+                    displayText = JSON.stringify(data, null, 2);
+                } else {
+                    // Handle plain text response
+                    const text = await response.text();
+                    displayText = text;
+                }
+                
+                resultDiv.textContent = displayText;
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.classList.add('error');
+            }
+        });
+        
+        document.getElementById('text-proxy-btn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('text-result');
+            const model = document.getElementById('text-model').value;
+            const prompt = document.getElementById('text-prompt').value;
+            const system = document.getElementById('text-system').value;
+            
+            resultDiv.innerHTML = 'Loading... <div class="loading"></div>';
+            resultDiv.classList.remove('error');
+            
+            try {
+                const response = await fetch('/api/pollinations-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        prompt: prompt,
+                        system: system
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.classList.add('error');
+            }
+        });
+        
+        // Image Generation Testing
+        document.getElementById('image-generate-btn').addEventListener('click', () => {
+            const resultDiv = document.getElementById('image-result');
+            const prompt = document.getElementById('image-prompt').value;
+            const model = document.getElementById('image-model').value;
+            const width = document.getElementById('image-width').value;
+            const height = document.getElementById('image-height').value;
+            const seed = document.getElementById('image-seed').value;
+            const nologo = document.getElementById('image-nologo').checked;
+            
+            resultDiv.innerHTML = 'Generating image... <div class="loading"></div>';
+            
+            try {
+                const encodedPrompt = encodeURIComponent(prompt);
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=${nologo}&model=${model}`;
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '4px';
+                img.style.marginTop = '10px';
+                
+                img.onload = () => {
+                    resultDiv.innerHTML = `
+                        <p>Image generated successfully:</p>
+                        <code>${imageUrl}</code>
+                    `;
+                    resultDiv.appendChild(img);
+                };
+                
+                img.onerror = () => {
+                    resultDiv.innerHTML = 'Error generating image. Please try again with a different prompt or settings.';
+                    resultDiv.classList.add('error');
+                };
+                
+                img.src = imageUrl;
+                
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Dreamscape AI - Deep Research</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/enhance.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    
+    <!-- External scripts - using CDN versions only -->
+    <script src="https://cdn.jsdelivr.net/npm/ibm-watson@7.1.2/dist/speech-to-text.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.1/dist/socket.io.js"></script>
+    
+    <!-- Local scripts - Using ES modules -->
+    <script src="js/research.js" type="module"></script>
+    <style>
+        /* Chat-specific styles */
+        .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 30px 30px 30px; /* Increased top padding */
+            height: 100%;
+            overflow-y: auto;
+            width: 100%;
+        }
+        
+        .page-header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 30px;
+            text-align: center; /* Center the title */
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            min-width: 800px;
+            max-width: 1200px;
+            background: rgba(30, 15, 50, 0.15);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            margin: 0 auto;
+        }
+
+        .sidebar-content {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            max-height: 60vh;
+            min-height: 600px; /* Added minimum height to match voice.html */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 12px; /* Consistent rounding on all messages */
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(50, 30, 80, 0.3);
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            color: var(--text-light);
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 15px;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 10px;
+            background: rgba(20, 10, 30, 0.3);
+            color: var(--text-white);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 16px;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        .send-button {
+            padding: 0 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        /* Update the voice button style to match voice.html */
+        .voice-button {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .voice-button.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-button.recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(30, 15, 50, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Quicksand', sans-serif;
+            font-size: 14px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+        }
+
+        /* Remove audio-related CSS styles */
+        .play-audio-button, .audio-message, .help-text {
+            display: none;
+        }
+
+        /* Loading/typing animation */
+        .typing-indicator {
+            display: inline-block;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            animation: dotTyping 1.5s infinite ease-in-out;
+            margin-right: 2px;
+            font-size: 18px;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotTyping {
+            0% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(-5px); opacity: 1; }
+            100% { transform: translateY(0); opacity: 0.3; }
+        }
+
+        .voice-status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 5px;
+        }
+
+        .voice-status-indicator.active {
+            background-color: #10b981;
+            box-shadow: 0 0 5px #10b981;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        .voice-status-indicator.error {
+            background-color: #ef4444;
+            box-shadow: 0 0 5px #ef4444;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .microphone-test-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 12px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .microphone-test-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
+        }
+        
+        .microphone-test-btn .mic-icon {
+            margin-right: 8px;
+            position: relative;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #ccc;
+            transition: background-color 0.3s ease;
+        }
+        
+        .microphone-test-btn.active .mic-icon {
+            background-color: #10b981;
+            box-shadow: 0 0 5px #10b981;
+            animation: pulse-green 1.5s infinite;
+        }
+        
+        .volume-bars-container {
+            display: none;
+            height: 20px;
+            margin-top: 10px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+        }
+        
+        .volume-bar {
+            width: 4px;
+            height: 3px;
+            background: linear-gradient(to top, #10b981, #8b5cf6);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+        
+        @keyframes pulse-volume {
+            0%, 100% {
+                height: var(--min-height, 3px);
+            }
+            50% {
+                height: var(--max-height, 20px);
+            }
+        }
+
+        .debug-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            font-family: monospace;
+            overflow: auto;
+            max-height: 80px;
+        }
+
+        /* Add styles for twinkling and shooting stars */
+        .star-extra-bright {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes subtle-twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        /* Status message styles */
+        .status-message {
+            background: rgba(15, 5, 25, 0.4);
+            border-left: 3px solid var(--primary-color);
+            line-height: 1.6;
+        }
+        
+        /* Document sidebar styles */
+        .document-container-wrapper {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 500px;
+            height: 100vh;
+            background: rgba(20, 10, 30, 0.95);
+            border-left: 1px solid rgba(157, 78, 221, 0.3);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .document-container-wrapper.visible {
+            right: 0;
+        }
+        
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+        }
+        
+        .document-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+        
+        .document-close {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .document-close:hover {
+            color: var(--primary-color);
+        }
+        
+        .document-controls {
+            display: flex;
+            padding: 10px 20px;
+            gap: 10px;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+        }
+        
+        .document-button {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(157, 78, 221, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .document-button:hover {
+            background: rgba(157, 78, 221, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .document-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        
+        .document-container h1, 
+        .document-container h2, 
+        .document-container h3 {
+            color: var(--primary-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .document-container h1 {
+            font-size: 1.8em;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+            padding-bottom: 0.3em;
+        }
+        
+        .document-container h2 {
+            font-size: 1.5em;
+        }
+        
+        .document-container h3 {
+            font-size: 1.2em;
+        }
+        
+        .document-container a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .document-container a:hover {
+            text-decoration: underline;
+        }
+        
+        .document-container code {
+            background: rgba(15, 5, 25, 0.3);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .document-container pre {
+            background: rgba(15, 5, 25, 0.3);
+            padding: 1em;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+        }
+        
+        .document-container blockquote {
+            border-left: 3px solid var(--primary-color);
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background: rgba(157, 78, 221, 0.1);
+            font-style: italic;
+        }
+        
+        .research-toggle-button {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: white;
+            font-size: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 900;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .research-toggle-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Research Options Styles */
+        .research-options {
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            margin-bottom: 15px;
+        }
+
+        .research-options-title {
+            font-size: 16px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .research-option-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .research-option-group label {
+            min-width: 120px;
+            color: var(--text-light);
+        }
+
+        .research-option-input, .research-option-select {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(30, 15, 50, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .research-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+        }
+
+        .research-option-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+        }
+
+        /* Tier info styles */
+        .tier-info {
+            margin-top: 5px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: rgba(157, 78, 221, 0.8);
+            font-style: italic;
+            padding: 0 5px;
+        }
+
+        /* Sources list styles */
+        .sources-container {
+            padding: 15px;
+            margin-top: 10px;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .sources-title {
+            font-size: 16px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .source-type {
+            display: inline-block;
+            margin-left: 8px;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(157, 78, 221, 0.2);
+            color: var(--text-light);
+        }
+
+        /* Research Status Container */
+        .research-status-container {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            padding: 10px !important;
+            background: rgba(15, 5, 25, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            display: none;
+        }
+
+        /* Chat control buttons */
+        .chat-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .control-button {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(157, 78, 221, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .control-button:hover {
+            background: rgba(157, 78, 221, 0.3);
+            transform: translateY(-2px);
+        }
+
+        #progress-container {
+            width: 100%;
+            height: 4px;
+            margin: 10px 0;
+            position: relative;
+            display: none;
+        }
+        
+        #research-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-color), #8a2be2);
+            border-radius: 2px;
+            transition: width 0.5s ease-in-out;
+            box-shadow: 0 0 8px rgba(157, 78, 221, 0.6);
+        }
+        
+        #research-status {
+            font-size: 1.1em;
+            color: var(--primary-color);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Comprehensive summary styles */
+        .comprehensive-summary {
+            border-radius: 12px;
+            padding: 15px;
+            background: rgba(30, 15, 50, 0.2);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            max-width: 100%;
+        }
+        
+        .comprehensive-summary h2 {
+            color: #a991ff;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.4);
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .comprehensive-summary h3 {
+            color: #c5b3ff;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .summary-content {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .summary-content p {
+            margin-bottom: 10px;
+        }
+        
+        .summary-content strong {
+            color: #d19fff;
+        }
+        
+        .summary-footer {
+            border-top: 1px solid rgba(157, 78, 221, 0.3);
+            padding-top: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        /* Scrollbar styling for summary content */
+        .summary-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .summary-content::-webkit-scrollbar-track {
+            background: rgba(30, 15, 50, 0.1);
+            border-radius: 4px;
+        }
+        
+        .summary-content::-webkit-scrollbar-thumb {
+            background: rgba(157, 78, 221, 0.4);
+            border-radius: 4px;
+        }
+        
+        .summary-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(157, 78, 221, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background animations -->
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="moon-container">
+        <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon" style="filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));">
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
+                <span>Creative Studio✨</span>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">📋 Navigation</p>
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="generate.html" class="nav-link">🌌 Generate Images</a>
+                <a href="enhance.html" class="nav-link">✨ Enhance & Resize Images</a>
+                <a href="artistic.html" class="nav-link">🎨 Artistic Effects</a>
+                <a href="chat.html" class="nav-link">💬 Text Chat</a>
+                <a href="voice.html" class="nav-link">🎤 Voice Assistant</a>
+                <a href="research.html" class="nav-link active">🔍 Deep Research</a>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🔍 Research Options</p>
+                <div class="control-group">
+                    <label for="research-tier">Research Tier</label>
+                    <select id="research-tier">
+                        <option value="quick">Quick</option>
+                        <option value="extended">Extended</option>
+                        <option value="deep">Deep</option>
+                    </select>
+                </div>
+                <div class="tier-info" id="tier-info">
+                    Quick research provides a basic overview using 5 top sources.
+                </div>
+                <div class="control-group">
+                    <label for="output-format">Output Format</label>
+                    <select id="output-format">
+                        <option value="markdown">Markdown</option>
+                        <option value="html">HTML</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <input type="checkbox" id="include-images" checked>
+                    <label for="include-images">Include AI Generated Images</label>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <p class="section-title">🎤 Voice Settings</p>
+                <div class="control-group">
+                    <label for="mic-device-select">Microphone</label>
+                    <select id="mic-device-select" style="width: 100%; margin-bottom: 5px;">
+                        <option value="">Loading devices...</option>
+                    </select>
+                    <button id="refresh-mics" class="refresh-button" style="margin-top: 5px; font-size: 12px; padding: 5px; background: rgba(157, 78, 221, 0.2); border: none; border-radius: 4px; color: var(--text-light); cursor: pointer; width: 100%;">
+                        🔄 Refresh Microphone List
+                    </button>
+                </div>
+                <div class="control-group">
+                    <label for="speech-engine">Recognition Engine</label>
+                    <select id="speech-engine" style="margin-bottom: 10px;">
+                        <option value="web-speech">Web Speech API</option>
+                        <option value="watson">Watson API</option>
+                    </select>
+                </div>
+                <span class="sidebar-label" style="display: flex; align-items: center; margin-top: 5px;">
+                    Status: <span id="mic-status-text" style="margin-left: 5px; margin-right: 5px;">Not initialized</span>
+                    <span class="voice-status-indicator" id="mic-status-indicator"></span>
+                </span>
+                <button id="test-microphone" class="microphone-test-btn">
+                    <span class="mic-icon"></span>
+                    Test Microphone
+                </button>
+                <div id="volume-visualization" class="volume-bars-container">
+                    <!-- Volume bars will be added dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="page-header">
+                <h1>Dreamscape Deep Research 🔍</h1>
+                <p>Research any topic and generate comprehensive documents with AI-powered insights</p>
+            </div>
+            
+            <div class="chat-container">
+                <!-- Research Options -->
+                <div class="research-options" style="visibility: hidden; height: 0; margin: 0; padding: 0; overflow: hidden;">
+                    <div class="research-options-title">Research Tools</div>
+                    <div class="research-option-group">
+                        <label for="research-topic">Research Topic</label>
+                        <input type="text" id="research-topic" class="research-option-input" placeholder="Enter a topic to research... (will be prefixed with 'research')">
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button id="start-research-button" class="send-button" style="width: 100%;">Start Research</button>
+                    </div>
+                </div>
+                
+                <!-- Research Status -->
+                <div id="research-status-container" class="research-status-container">
+                    <div id="research-status">Starting research...</div>
+                    </div>
+                
+                <!-- Add the progress bar container right after the research status -->
+                <div id="progress-container">
+                    <div id="research-progress"></div>
+                </div>
+                
+                <div class="chat-messages" id="messages-container">
+                    <div class="message ai-message">
+                        <div class="message-content">
+                        Hello! I'm your research assistant. What topic would you like to explore today? Feel free to ask me about anything you're curious about, and I'll help you research it thoroughly.
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="research-form">
+                <div class="chat-input-container">
+                        <button id="voice-button" class="voice-button" type="button">🎤</button>
+                        <textarea id="research-query" class="chat-input" placeholder="Type your research topic or question here..." rows="3"></textarea>
+                        <button id="send-button" class="send-button" type="submit">Send</button>
+                </div>
+                </form>
+                <div class="chat-controls" style="visibility: hidden; height: 0; margin: 0; padding: 0; overflow: hidden;">
+                    <button id="export-chat-button" class="control-button" title="Save the chat as a markdown file">📤 Export Chat</button>
+                </div>
+            </div>
+            
+            <!-- Research Results - Initially hidden -->
+            <div id="research-results-container" class="research-results-container">
+                <!-- Will be populated dynamically -->
+            </div>
+            
+            <!-- Sources List Container -->
+            <div class="sources-container" id="sources-container" style="display: none;">
+                <div class="sources-title">Sources</div>
+                <div id="sources-list">
+                    <!-- Will be populated with the sources list -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Document Viewer Sidebar -->
+    <div class="document-container-wrapper" id="document-sidebar">
+        <div class="document-header">
+            <h3>Research Document</h3>
+            <button class="document-close" id="close-document-btn">×</button>
+        </div>
+        <div class="document-controls">
+            <button id="copy-document-button" class="document-button">📋 Copy</button>
+            <button id="download-document-button" class="document-button">📥 Download</button>
+        </div>
+        <div class="document-container" id="document-container">
+            <!-- Will be populated with the generated document -->
+        </div>
+    </div>
+    
+    <!-- Toggle Button for Document Sidebar -->
+    <button id="toggle-document-btn" class="research-toggle-button" style="display: none;">📄</button>
+    
+    <!-- Simple initialization script -->
+    <script type="module">
+        // Document interactions for sidebar
+        document.addEventListener('DOMContentLoaded', () => {
+            // Document sidebar toggle functionality
+            const documentSidebar = document.getElementById('document-sidebar');
+            const toggleDocumentBtn = document.getElementById('toggle-document-btn');
+            const closeDocumentBtn = document.getElementById('close-document-btn');
+            
+            if (toggleDocumentBtn) {
+            toggleDocumentBtn.addEventListener('click', () => {
+                documentSidebar.classList.toggle('visible');
+            });
+            }
+            
+            if (closeDocumentBtn) {
+            closeDocumentBtn.addEventListener('click', () => {
+                documentSidebar.classList.remove('visible');
+            });
+            }
+            
+            // Research tier info display
+            const tierSelect = document.getElementById('research-tier');
+            const tierInfo = document.getElementById('tier-info');
+            
+            const tierDescriptions = {
+                'quick': 'Quick research provides a basic overview using 5 top sources.',
+                'extended': 'Extended research explores the topic with 10 diverse sources across two search queries.',
+                'deep': 'Deep research provides comprehensive coverage using 20 sources from multiple perspectives.'
+            };
+            
+            if (tierSelect && tierInfo) {
+                tierSelect.addEventListener('change', () => {
+                    tierInfo.textContent = tierDescriptions[tierSelect.value];
+                });
+            }
+            
+            // Chat export functionality
+            const exportChatButton = document.getElementById('export-chat-button');
+            const messagesContainer = document.getElementById('messages-container');
+            
+            if (exportChatButton && messagesContainer) {
+            exportChatButton.addEventListener('click', () => {
+                // Get all messages
+                    const messages = Array.from(messagesContainer.querySelectorAll('.message'));
+                
+                if (messages.length === 0) {
+                    alert('No messages to export.');
+                    return;
+                }
+                
+                // Format them into text
+                let chatText = '# Dreamscape AI Research Conversation\n\n';
+                
+                messages.forEach(message => {
+                    const isUser = message.classList.contains('user-message');
+                    const prefix = isUser ? '👤 User: ' : '🤖 AI: ';
+                    let content = message.innerHTML;
+                    
+                    // Process HTML content to make it more readable in plain text
+                    content = content.replace(/<br>/g, '\n')
+                                    .replace(/<div.*?>(.*?)<\/div>/g, '\n$1')
+                                    .replace(/<a.*?href="(.*?)".*?>(.*?)<\/a>/g, '$2 ($1)')
+                                    .replace(/<[^>]*>/g, '');
+                    
+                    // Decode HTML entities
+                    content = content.replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>')
+                                    .replace(/&amp;/g, '&')
+                                    .replace(/&quot;/g, '"')
+                                    .replace(/&#039;/g, "'");
+                    
+                    chatText += prefix + content + '\n\n';
+                });
+                
+                // Add export date
+                chatText += `\nExported on ${new Date().toLocaleString()}`;
+                
+                // Create download file
+                const blob = new Blob([chatText], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `research-chat-${Date.now()}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+            }
+        });
+    </script>
+</body>
+</html> 
