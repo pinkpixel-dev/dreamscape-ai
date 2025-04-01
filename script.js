@@ -9,13 +9,16 @@ const seedInputGroup = document.getElementById('seed-input-group');
 const modelSelect = document.getElementById('model');
 const styleSelect = document.getElementById('style');
 const styleDescription = document.getElementById('style-description');
-const noLogoCheckbox = document.getElementById('nologo');
-const privateCheckbox = document.getElementById('private');
 const enhancePromptCheckbox = document.getElementById('enhance-prompt');
 const enhanceDescription = document.getElementById('enhance-description');
 const promptInput = document.getElementById('prompt-input');
 const createButton = document.getElementById('create-button');
 const resultContainer = document.getElementById('result-container');
+// Add lightbox elements
+const lightbox = document.createElement('div');
+lightbox.className = 'lightbox';
+lightbox.style.display = 'none';
+document.body.appendChild(lightbox);
 
 // Added new variable to store the enhanced text from the API
 let apiEnhancedPrompt = '';
@@ -23,6 +26,8 @@ let apiEnhancedPrompt = '';
 let apiFormattedResponse = null;
 // Added new variable to store the artwork title
 let apiArtworkTitle = null;
+// Added variable to store the current image URL for lightbox
+let currentImageUrl = '';
 
 // Global flag to track if stars have been initialized
 window.starsInitialized = false;
@@ -458,9 +463,16 @@ async function generateImage() {
         const seed = randomSeedCheckbox.checked ? Math.floor(Math.random() * 1337) + 1 : seedInput.value;
         const model = modelSelect.value;
         const style = styleSelect.value;
-        const nologo = noLogoCheckbox.checked;
-        const isPrivate = privateCheckbox.checked;
+        // Hardcoded values instead of using checkbox UI controls
+        const nologo = true;
+        const isPrivate = true;
         const shouldEnhancePrompt = enhancePromptCheckbox.checked;
+        
+        // Reset the artwork title when enhance prompt is disabled
+        if (!shouldEnhancePrompt) {
+            apiArtworkTitle = null;
+            apiFormattedResponse = null;
+        }
         
         // Show loading indicator immediately
         showLoading();
@@ -490,59 +502,51 @@ async function generateImage() {
                     // Store the artwork title if available
                     apiArtworkTitle = result.artworkTitle;
                     
-                    if (enhancedText && enhancedText !== prompt) {
-                        // Store the enhanced prompt for display
-                        apiEnhancedPrompt = enhancedText;
-                        // Use the enhanced prompt for image generation
+                    // If we got a good enhanced text
+                    if (enhancedText && enhancedText.length > 0) {
                         processedPrompt = enhancedText;
-                        apiEnhanced = true;
-                        // If we successfully enhanced with the API, don't use Pollinations enhance parameter
-                        usePollinationsEnhance = false;
-                        console.log('Successfully enhanced prompt with API using model:', modelUsed);
+                        apiEnhancedPrompt = enhancedText; // Store the enhanced text
+                        apiEnhanced = true; // Flag for processing
+                        usePollinationsEnhance = false; // Don't use Pollinations enhancement since we have API enhancement
+                        console.log('Successfully enhanced with text API:', enhancedText);
                     } else {
-                        // If API enhancement returned the same prompt, fall back to our manual enhancement
-                        console.log('API enhancement returned unchanged prompt, falling back to manual enhancement');
-                        if (style && style !== 'none') {
-                            processedPrompt = enhancePrompt(prompt, style);
-                        }
-                        // Keep usePollinationsEnhance as is (true only for 'none' style)
+                        // We'll use Pollinations enhancement or style-based enhancement
+                        console.log('No API enhancement - falling back to local enhancement');
                     }
-                } else if (result && result !== prompt) {
-                    // For backward compatibility with string return value
-                    apiEnhancedPrompt = result;
-                    processedPrompt = result;
-                    apiEnhanced = true;
-                    usePollinationsEnhance = false;
-                    console.log('Successfully enhanced prompt with API using default model');
                 } else {
-                    // If API enhancement returned the same prompt, fall back to our manual enhancement
-                    console.log('API enhancement returned unchanged prompt, falling back to manual enhancement');
-                    if (style && style !== 'none') {
-                        processedPrompt = enhancePrompt(prompt, style);
-                    }
-                    // Keep usePollinationsEnhance as is (true only for 'none' style)
+                    console.log('Invalid response from enhancePromptWithAPI, falling back to local enhancement');
                 }
             } catch (error) {
-                console.error('Failed to enhance with API, falling back to manual enhancement:', error);
-                // Fall back to manual enhancement
-                if (style && style !== 'none') {
-                    processedPrompt = enhancePrompt(prompt, style);
-                }
-                // Keep usePollinationsEnhance as is (true only for 'none' style)
+                console.error('Error enhancing prompt with text API:', error);
+                console.log('Falling back to local enhancement');
             }
-        } else if (style && style !== 'none') {
-            // If enhance is not checked but a style is selected, apply style normally
-            processedPrompt = enhancePrompt(prompt, style);
+        } else {
+            // Generate a simple default title for non-enhanced images
+            // Get the first few words of the prompt for the title (up to 5 words)
+            if (!apiArtworkTitle) {
+                const promptWords = prompt.split(' ');
+                const titleWords = promptWords.slice(0, Math.min(5, promptWords.length));
+                let defaultTitle = titleWords.join(' ');
+                
+                // Capitalize first letter of each word
+                defaultTitle = defaultTitle.split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                
+                apiArtworkTitle = defaultTitle;
+            }
         }
         
-        // Log the actual prompt being sent (for debugging)
-        console.log('Sending to Pollinations:', processedPrompt);
-        console.log('Using Pollinations enhancement:', usePollinationsEnhance);
-        console.log('API enhanced prompt used:', apiEnhanced);
-        console.log('Model used for enhancement:', modelUsed);
+        // If we haven't already API enhanced, and we have a style selected, enhance with style
+        if (!apiEnhanced && style && style !== 'none') {
+            processedPrompt = enhancePrompt(prompt, style);
+            console.log('Enhanced with style:', processedPrompt);
+        }
         
-        // Create the URL for the Pollinations API
+        // Encode the processed prompt for the URL
         const encodedPrompt = encodeURIComponent(processedPrompt);
+        
+        // Construct the URL with parameters
         const baseUrl = 'https://image.pollinations.ai/prompt/';
         const params = {
             width,
@@ -551,7 +555,7 @@ async function generateImage() {
             nologo: nologo.toString(),
             private: isPrivate.toString(),
             model,
-            safe: 'true',  // Always enabled for kids version
+            safe: 'false',
             enhance: usePollinationsEnhance.toString()  // Only enhance when appropriate
         };
         
@@ -608,6 +612,9 @@ function showLoading() {
 
 // Display the generated image
 function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
+    // Store the current image URL for download
+    currentImageUrl = imageUrl;
+    
     // Create a new image element
     const img = new Image();
     
@@ -633,7 +640,7 @@ function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
         if (retryButton) {
             retryButton.addEventListener('click', generateImage);
         }
-    }, 30000); // 30 second timeout
+    }, 30000);
     
     // Once the image is loaded, remove the loading indicator and show the image
     img.onload = function() {
@@ -652,9 +659,11 @@ function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
         glowEffect.className = 'glow-effect';
         imageWrapper.appendChild(glowEffect);
         
-        // Add the image
+        // Add the image with click event for lightbox
         img.className = 'generated-image';
         img.alt = prompt;
+        img.style.cursor = 'pointer'; // Add pointer cursor to indicate clickable
+        img.addEventListener('click', () => openLightbox(imageUrl, promptInfo.artworkTitle || prompt));
         imageWrapper.appendChild(img);
         
         // Add the image to the result container
@@ -672,19 +681,62 @@ function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
             resultContainer.appendChild(titleElement);
         }
         
+        // Create button container for download and view buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'button-container';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'center';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.marginTop = '1rem';
+        buttonContainer.style.alignItems = 'center';
+        buttonContainer.style.position = 'relative';
+        
         // Add download button
-        const downloadButton = document.createElement('a');
-        downloadButton.className = 'download-button';
-        downloadButton.innerHTML = '🌟 Download Creation';
-        downloadButton.href = imageUrl;
-        // Include the title in the download filename if available
-        if (promptInfo.artworkTitle) {
-            downloadButton.download = `${promptInfo.artworkTitle.replace(/[^\w\s-]/g, '')}_${seed}.png`;
-        } else {
-            downloadButton.download = `${prompt.substring(0, 30)}_${seed}.png`;
-        }
-        downloadButton.target = '_blank';
-        resultContainer.appendChild(downloadButton);
+        const downloadButton = document.createElement('button');
+        downloadButton.className = 'action-button download-button';
+        // Create a consistent structure for both buttons with spans
+        const downloadSpan = document.createElement('span');
+        downloadSpan.style.display = 'inline-block';
+        downloadSpan.style.position = 'relative';
+        downloadSpan.style.top = '0';
+        downloadSpan.style.height = '16px';
+        downloadSpan.style.lineHeight = '16px';
+        downloadSpan.style.fontSize = '16px';
+        downloadSpan.style.marginRight = '4px';
+        downloadSpan.textContent = '💾';
+        downloadButton.appendChild(downloadSpan);
+        downloadButton.appendChild(document.createTextNode(' Download'));
+        
+        const downloadFilename = promptInfo.artworkTitle 
+            ? `${promptInfo.artworkTitle.replace(/[^\w\s-]/g, '')}_${seed}.png`
+            : `${prompt.substring(0, 30)}_${seed}.png`;
+        
+        downloadButton.addEventListener('click', () => {
+            downloadImage(imageUrl, downloadFilename);
+        });
+        
+        buttonContainer.appendChild(downloadButton);
+        
+        // Add view in lightbox button
+        const viewButton = document.createElement('button');
+        viewButton.className = 'action-button view-button';
+        // Create a consistent structure for both buttons with spans
+        const viewSpan = document.createElement('span');
+        viewSpan.style.display = 'inline-block';
+        viewSpan.style.position = 'relative';
+        viewSpan.style.top = '0';
+        viewSpan.style.height = '16px';
+        viewSpan.style.lineHeight = '16px';
+        viewSpan.style.fontSize = '16px';
+        viewSpan.style.marginRight = '4px';
+        viewSpan.textContent = '🔍';
+        viewButton.appendChild(viewSpan);
+        viewButton.appendChild(document.createTextNode(' View Larger'));
+        
+        viewButton.addEventListener('click', () => openLightbox(imageUrl, promptInfo.artworkTitle || prompt));
+        buttonContainer.appendChild(viewButton);
+        
+        resultContainer.appendChild(buttonContainer);
         
         // Show prompt info
         const selectedStyle = promptInfo.style;
@@ -892,6 +944,91 @@ function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
     // Set the image source to start loading
     console.log('Starting to load image from:', imageUrl);
     img.src = imageUrl;
+}
+
+// Function to download an image
+function downloadImage(imageUrl, filename) {
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    // For cross-origin images, we may need to fetch and create a blob
+    fetch(imageUrl)
+        .then(response => response.blob())
+        .then(blob => {
+            const blobUrl = URL.createObjectURL(blob);
+            link.href = blobUrl;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+            }, 100);
+        })
+        .catch(error => {
+            console.error("Error downloading image:", error);
+            // Fallback to direct download attempt
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+}
+
+// Function to open the lightbox
+function openLightbox(imageUrl, title) {
+    // Create lightbox content with inline styles for the span to ensure consistency
+    lightbox.innerHTML = `
+        <div class="lightbox-content">
+            <span class="lightbox-close">&times;</span>
+            <img src="${imageUrl}" alt="${title}" class="lightbox-image">
+            <div class="lightbox-title">${title}</div>
+            <button class="lightbox-download-btn">
+                <span style="display: inline-block; position: relative; top: 0; height: 16px; line-height: 16px; font-size: 16px; margin-right: 4px;">💾</span> 
+                Download Image
+            </button>
+        </div>
+    `;
+    
+    // Show the lightbox
+    lightbox.style.display = 'flex';
+    
+    // Add event listener to close the lightbox
+    const closeButton = document.querySelector('.lightbox-close');
+    closeButton.addEventListener('click', closeLightbox);
+    
+    // Add event listener to download button
+    const downloadBtn = document.querySelector('.lightbox-download-btn');
+    downloadBtn.addEventListener('click', () => {
+        downloadImage(imageUrl, `${title.replace(/[^\w\s-]/g, '')}.png`);
+    });
+    
+    // Close lightbox when clicking outside the image
+    lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+    
+    // Add ESC key to close lightbox
+    document.addEventListener('keydown', handleLightboxKeydown);
+}
+
+// Function to close the lightbox
+function closeLightbox() {
+    lightbox.style.display = 'none';
+    // Remove ESC key event listener
+    document.removeEventListener('keydown', handleLightboxKeydown);
+}
+
+// Handle keydown events for the lightbox
+function handleLightboxKeydown(e) {
+    if (e.key === 'Escape') {
+        closeLightbox();
+    }
 }
 
 // Modified createStarsV4 function to handle page-specific issues

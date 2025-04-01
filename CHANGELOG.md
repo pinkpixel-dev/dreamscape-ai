@@ -1,5 +1,31 @@
 # Dreamscape AI - Changelog
 
+## v1.1.2 - 2024-07-01
+
+### ✨ New Features
+- **Image Lightbox**: Added a fullscreen lightbox view for generated images
+  - Click on generated images to view in a distraction-free fullscreen mode
+  - Added "View Larger" button for easier access to the lightbox
+  - Added ESC key and click-outside support to close the lightbox
+
+### 🔄 Improvements
+- **Download Functionality**: Enhanced image download capabilities
+  - Added direct download button for generated images
+  - Fixed download functionality to save directly to the user's device
+  - Added download button in the lightbox view
+  - Implemented consistent naming scheme using image titles
+
+- **UI Refinements**:
+  - Simplified UI by removing unnecessary settings (nologo and private)
+  - Hardcoded optimal settings for image generation (watermark removal and privacy)
+  - Improved button alignment and consistent styling
+  - Added automatic title generation for non-enhanced images
+
+### 🐛 Bug Fixes
+- Fixed issue with image titles persisting when enhancement is turned off
+- Fixed button alignment inconsistencies
+- Fixed emoji rendering differences between buttons
+
 ## v1.1.1 - 2024-06-26
 
 ### ✨ Improvements

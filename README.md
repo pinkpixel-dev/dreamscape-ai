@@ -126,11 +126,12 @@ Refer to [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions usi
 ## 📝 Recent Updates
 
 We've made several improvements in the latest version:
-- Added research tool with comprehensive document generation
-- Simplified research interface for better user experience
-- Fixed scraping service integration issues
-- Enhanced document display and source attribution
-- Modularized code structure for better maintainability
+- Added fullscreen lightbox view for generated images
+- Enhanced image download capabilities with direct download buttons
+- Simplified the UI by removing redundant settings
+- Added automatic title generation for all images
+- Improved button alignment and styling for better user experience
+- Fixed various UI inconsistencies
 
 See [CHANGELOG.md](CHANGELOG.md) for a complete history of changes.
 
