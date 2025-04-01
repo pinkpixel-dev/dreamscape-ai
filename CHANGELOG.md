@@ -1,5 +1,20 @@
 # Dreamscape AI - Changelog
 
+## v1.1.3 - 2024-07-12
+
+### 🔄 Improvements
+- **Enhanced UI Experience**:
+  - Added fullscreen lightbox for better image viewing
+  - Added direct download button for generated images
+  - Improved button alignment and styling consistency
+  - Simplified settings by hardcoding optimal values for nologo and private options
+
+### 🐛 Bug Fixes
+- Fixed image title persistence issue when toggling enhancement
+- Fixed inconsistent button styling and alignment
+- Fixed emoji rendering consistency across buttons
+- Added default titles for non-enhanced images
+
 ## v1.1.2 - 2024-07-01
 
 ### ✨ New Features
