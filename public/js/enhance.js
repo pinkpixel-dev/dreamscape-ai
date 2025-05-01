@@ -1,6 +1,100 @@
+// Initialize Cloudinary Upload Widget
+let myWidget = null;
+
+// Widget configuration
+const widgetConfig = {
+    cloudName: 'dwa9nkpyq',
+    uploadPreset: 'ml_default',
+    sources: ['local', 'url', 'camera'],
+    multiple: false,
+    maxFiles: 1,
+    styles: {
+        palette: {
+            window: "#000000",
+            sourceBg: "#000000",
+            windowBorder: "#8E9FBF",
+            tabIcon: "#FFFFFF",
+            inactiveTabIcon: "#8E9FBF",
+            menuIcons: "#2AD9FF",
+            link: "#08C0FF",
+            action: "#336BFF",
+            inProgress: "#00BFFF",
+            complete: "#33ff00",
+            error: "#EA2727",
+            textDark: "#000000",
+            textLight: "#FFFFFF"
+        }
+    }
+};
+
+// Function to initialize the widget
+function initializeWidget() {
+    console.log('Initializing Cloudinary widget...');
+    if (typeof cloudinary !== 'undefined') {
+        console.log('Cloudinary found, creating widget...');
+        myWidget = cloudinary.createUploadWidget(widgetConfig, (error, result) => {
+            if (!error && result && result.event === "success") {
+                console.log('Upload successful:', result.info);
+                displayPreview(result.info.secure_url);
+                document.getElementById('enhance-button').disabled = false;
+            }
+        });
+        console.log('Widget created:', myWidget ? 'success' : 'failed');
+    } else {
+        console.error('Cloudinary not found');
+    }
+}
+
+// Listen for Cloudinary loaded event
+window.addEventListener('cloudinaryLoaded', () => {
+    console.log('Cloudinary loaded event received');
+    initializeWidget();
+});
+
+// Also try to initialize immediately in case the script is already loaded
+console.log('Checking for Cloudinary:', typeof cloudinary);
+if (typeof cloudinary !== 'undefined') {
+    console.log('Cloudinary already loaded, initializing widget');
+    initializeWidget();
+}
+
+// Function to prevent default drag and drop behavior
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// Function to handle file drops
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
+}
+
+// Function to handle files
+function handleFiles(files) {
+    if (files.length > 0) {
+        const file = files[0];
+        if (!file.type.match('image.*')) {
+            alert('Please upload an image file');
+            return;
+        }
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            displayPreview(e.target.result);
+            document.getElementById('enhance-button').disabled = false;
+        };
+        
+        reader.readAsDataURL(file);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded - enhance.js');
+    
     // DOM Elements
-    const uploadArea = document.getElementById('upload-area');
     const uploadContent = document.getElementById('upload-content');
     const fileInput = document.getElementById('file-input');
     const previewContainer = document.getElementById('preview-container');
@@ -26,6 +120,46 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <p class="loading-text">Enhancing your image with AI magic...</p>
     `;
+
+    function highlight(e) {
+        if (uploadArea) {
+            uploadArea.classList.add('highlight');
+        }
+    }
+
+    function unhighlight(e) {
+        if (uploadArea) {
+            uploadArea.classList.remove('highlight');
+        }
+    }
+
+    function displayPreview(src) {
+        if (uploadContent && previewContainer && previewImage) {
+            uploadContent.style.display = 'none';
+            previewContainer.style.display = 'flex';
+            previewImage.src = src;
+            
+            if (!document.getElementById('remove-preview')) {
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove Image';
+                removeButton.className = 'remove-button';
+                removeButton.id = 'remove-preview';
+                removeButton.onclick = resetUpload;
+                previewContainer.appendChild(removeButton);
+            }
+        }
+    }
+
+    function resetUpload() {
+        if (uploadContent && previewContainer && previewImage && fileInput && enhanceButton && resultContainer) {
+            uploadContent.style.display = 'block';
+            previewContainer.style.display = 'none';
+            previewImage.src = '';
+            fileInput.value = '';
+            enhanceButton.disabled = true;
+            resultContainer.style.display = 'none';
+        }
+    }
     
     // Image enhancement controls - get all the slider elements
     const saturationControl = document.getElementById('saturation-control');
@@ -46,48 +180,153 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Initialize the prompt with the default value
-    enhancementPrompt.value = defaultPrompts["enhance"];
+    if (enhancementPrompt) {
+        enhancementPrompt.value = defaultPrompts["enhance"];
+    }
 
     // Event listeners for the enhancement type selection
     document.querySelectorAll('input[name="enhancement-type"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             const promptType = e.target.value;
-            enhancementPrompt.value = defaultPrompts[promptType] || '';
-      });
+            if (enhancementPrompt) {
+                enhancementPrompt.value = defaultPrompts[promptType] || '';
+            }
+        });
     });
     
     // Toggle custom seed input visibility
-    customSeed.addEventListener('change', () => {
-        seedValue.parentElement.style.display = customSeed.checked ? 'block' : 'none';
-    });
+    if (customSeed && seedValue) {
+        customSeed.addEventListener('change', () => {
+            const parent = seedValue.parentElement;
+            if (parent) {
+                parent.style.display = customSeed.checked ? 'block' : 'none';
+            }
+        });
+    }
 
     // Drag and drop functionality
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-    });
+    if (uploadArea) {
+        // Setup drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        // Highlight events
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Drop handling
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        // Click handling for Cloudinary widget
+        uploadArea.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Upload area clicked');
+
+            if (!myWidget && typeof cloudinary !== 'undefined') {
+                console.log('Widget not initialized, trying to initialize...');
+                initializeWidget();
+            }
+
+            if (myWidget) {
+                console.log('Opening widget...');
+                try {
+                    await myWidget.open();
+                } catch (error) {
+                    console.error('Error opening widget:', error);
+                }
+            } else {
+                console.error('Cloudinary widget not available');
+            }
+        });
     }
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, highlight, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight() {
-        uploadArea.classList.add('highlight');
+    // File upload handling
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
     }
 
-    function unhighlight() {
-        uploadArea.classList.remove('highlight');
-    }
+    // Enhancement process
+    if (enhanceButton) {
+        enhanceButton.addEventListener('click', async () => {
+            if (!previewImage || !previewImage.src) {
+                alert('Please upload an image first');
+                return;
+            }
 
-    uploadArea.addEventListener('drop', handleDrop, false);
+            // Get enhancement options
+            const sizeOption = outputSizeSelect ? outputSizeSelect.value.split('x') : ['1024', '1024'];
+            const width = parseInt(sizeOption[0]);
+            const height = parseInt(sizeOption[1]);
+            
+            // Get slider values for enhancements
+            const saturation = saturationControl ? parseInt(saturationControl.value) : 0;
+            const contrast = contrastControl ? parseInt(contrastControl.value) : 0;
+            const brightness = brightnessControl ? parseInt(brightnessControl.value) : 0;
+            const sharpness = sharpnessControl ? parseInt(sharpnessControl.value) : 0;
+            const vignette = vignetteControl ? parseInt(vignetteControl.value) : 0;
+            const blur = blurControl ? parseInt(blurControl.value) : 0;
+
+            // Show loading overlay
+            if (uploadArea) {
+                uploadArea.appendChild(loadingOverlay);
+            }
+            if (enhanceButton) {
+                enhanceButton.disabled = true;
+            }
+
+            try {
+                // Process image with Cloudinary
+                const enhancedImageUrl = await enhanceImageWithCloudinary(
+                    previewImage.src,
+                    width,
+                    height,
+                    saturation,
+                    contrast,
+                    brightness,
+                    sharpness,
+                    vignette,
+                    blur
+                );
+
+                // Display results
+                if (resultContainer && originalImage && enhancedImage) {
+                    resultContainer.style.display = 'block';
+                    originalImage.src = previewImage.src;
+                    enhancedImage.src = enhancedImageUrl;
+                    
+                    // Enable download button
+                    if (downloadButton) {
+                        downloadButton.onclick = () => {
+                            downloadImage(enhancedImageUrl, 'enhanced-image.jpg');
+                        };
+                    }
+                    
+                    // Scroll to results
+                    resultContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (error) {
+                console.error('Enhancement failed:', error);
+                alert('Image enhancement failed. Please try again.');
+            } finally {
+                // Remove loading overlay
+                if (loadingOverlay.parentElement) {
+                    loadingOverlay.parentElement.removeChild(loadingOverlay);
+                }
+                if (enhanceButton) {
+                    enhanceButton.disabled = false;
+                }
+            }
+        });
+    }
 
     function handleDrop(e) {
         const dt = e.dataTransfer;
@@ -100,9 +339,32 @@ document.addEventListener('DOMContentLoaded', () => {
         handleFiles(this.files);
     });
 
-    uploadArea.addEventListener('click', () => {
-        fileInput.click();
-    });
+    // Set up click handler for the upload area
+    const uploadArea = document.getElementById('upload-area');
+    if (uploadArea) {
+        uploadArea.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Upload area clicked');
+
+            // If widget isn't initialized yet, try to initialize it
+            if (!myWidget && typeof cloudinary !== 'undefined') {
+                console.log('Widget not initialized, trying to initialize...');
+                initializeWidget();
+            }
+
+            if (myWidget) {
+                console.log('Opening widget...');
+                try {
+                    await myWidget.open();
+                } catch (error) {
+                    console.error('Error opening widget:', error);
+                }
+            } else {
+                console.error('Cloudinary widget not available');
+            }
+        });
+    }
 
     function handleFiles(files) {
         if (files.length > 0) {

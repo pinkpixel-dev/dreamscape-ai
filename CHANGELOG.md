@@ -1,6 +1,34 @@
 # Dreamscape AI - Changelog
 
-## v1.1.3 - 2024-07-12
+## v1.1.4 - May 1, 2025
+
+### 🐛 Bug Fixes
+- Fixed Cloudinary upload widget in enhance page
+  - Added proper widget initialization
+  - Restored image upload functionality
+  - Fixed upload area click handling
+- Fixed script.js errors on enhance page
+  - Added null checks for DOM elements
+  - Improved cross-page compatibility
+  - Prevented TypeError from missing elements
+- Fixed TypeError in research tool when handling URLs
+  - Added proper type checking for URL objects
+  - Improved URL string handling in source categorization
+  - Better fallback handling for invalid URL formats
+
+### 📚 Documentation
+- Added comprehensive technical overview in OVERVIEW.md
+  - Detailed architecture documentation
+  - Component relationships
+  - Technical stack information
+  - Security and performance considerations
+- Added CONTRIBUTING.md with detailed guidelines
+  - Development setup instructions
+  - Code standards and conventions
+  - Pull request process
+  - Testing requirements
+
+## v1.1.3 - July 12, 2024
 
 ### 🔄 Improvements
 - **Enhanced UI Experience**:
@@ -15,7 +43,7 @@
 - Fixed emoji rendering consistency across buttons
 - Added default titles for non-enhanced images
 
-## v1.1.2 - 2024-07-01
+## v1.1.2 - July 1, 2024
 
 ### ✨ New Features
 - **Image Lightbox**: Added a fullscreen lightbox view for generated images
@@ -41,7 +69,7 @@
 - Fixed button alignment inconsistencies
 - Fixed emoji rendering differences between buttons
 
-## v1.1.1 - 2024-06-26
+## v1.1.1 - June 26, 2024
 
 ### ✨ Improvements
 - **Research Tool UI**: Simplified the research interface
@@ -68,7 +96,7 @@
 - Fixed JavaScript module import/export structure
 - Enhanced code organization by properly separating concerns
 
-## v1.1.0 - 2024-06-25
+## v1.1.0 - June 25, 2024
 
 ### ✨ New Features
 - **Research Tool**: Added a new AI-powered research tool capable of generating comprehensive documents on any topic
@@ -93,7 +121,7 @@
 - Improved UI feedback with progress bars and status updates
 - Implemented specialized pattern-recognition for documentation sites like OpenWebUI
 
-## v1.0.3 - 2024-06-19
+## v1.0.3 - June 19, 2024
 
 ### 🐛 Bug Fixes
 - Fixed 400 error in conversation summarization by updating to the correct API message format
@@ -106,39 +134,33 @@
 - Implemented standardized request structure with temperature and token limit controls
 - Converted summarization prompts to use the messages array format for better compatibility
 
-## v1.0.1 - 2023-05-21
+## v1.0.2 - June 5, 2024
 
 ### 🐛 Bug Fixes
-- Fixed issue with speech recognition in the voice.html page where transcripts were detected but not sent to Pollinations API
-- Fixed double message display issue in chat.html by ensuring messages are only added once
-- Improved timing for Watson API responses by increasing wait times from 3000ms to 5000ms
-- Ensured consistency between send button and voice button handlers
+- Fixed Web Speech API functionality in both chat.html and voice.html
+- Fixed issue with chat.html sending duplicate messages to Pollinations API
+- Fixed bug in chat.html where Web Speech API wasn't automatically sending transcripts to Pollinations
+- Added improved error handling and browser compatibility detection for speech recognition
+- Enhanced user feedback with notification system for microphone permission issues
+- Implemented better recovery from speech recognition timeouts and errors
+- Added visual indicators for speech recognition status
 
 ### ✨ Improvements
-- Added proper AI response handling in voice.html with fetch to Pollinations API
-- Updated voice interface to provide better feedback during processing
+- Moved the AI Personality selector to its own dedicated section above Voice Settings in the sidebar
+- Detailed browser compatibility messages for speech recognition failures
+- Cleanup of speech recognition resources to prevent memory leaks
+- Automatic recovery from unexpected speech recognition stops
+- Enhanced logging for debugging speech recognition issues
+- Added momentary display of transcribed text in input field for better visual feedback
 
-## v1.0.0 - 2023-04-15
-
-### 🚀 Initial Release
-- AI image generation with Pollinations API
-- Image gallery with Cloudinary integration
-- Voice-to-text using IBM Watson Speech to Text API
-- Responsive design with dark mode support
-- Multiple voice options for text-to-speech
-- Animated background with shooting stars effect
-- Support for image uploads and AI transformations
-
-✨ Made with ❤️ by Pink Pixel
-
-## v1.0.0 (2024-03-22)
+## v1.1.0 - March 22, 2024
 
 ### ✨ New Features
 
 #### Text Chat Interface (`chat.html`)
 - Added multiple AI model options with improved naming conventions:
   - GPT-4o-mini (vision)
-  - GPT-4o (vision) 
+  - GPT-4o (vision)
   - o3-mini - Advanced Reasoning
   - Qwen 2.5 Coder 32B
   - Llama 3.3 70B
@@ -158,7 +180,7 @@
   - Hormoz 8b
   - Hypnosis Tracy - Self-help
 - Added personality system for different chat experiences
-- Added image upload capability for vision models 
+- Added image upload capability for vision models
 - Improved microphone functionality with the Watson Speech-to-Text API
 - Added microphone testing feature with visual indicators
 - Fixed and enhanced background animations (twinkling stars, shooting stars)
@@ -180,7 +202,6 @@
 - Continued support for generate.html (original image generation page)
 
 ### 🛠️ Bug Fixes
-
 - Fixed issue with microphone button for Watson Speech-to-Text API
 - Fixed duplicate message display in chat interface
 - Fixed timing issues with Watson API responses
@@ -188,13 +209,34 @@
 - Optimized response wait times for better user experience
 
 ### 🔧 Technical Changes
-
 - Updated styling and UI consistency across all pages
 - Improved deployment script for Cloudflare Pages
 - Added documentation for local development and deployment
 
-## Planned Features
+## v1.0.1 - May 21, 2023
 
+### 🐛 Bug Fixes
+- Fixed issue with speech recognition in the voice.html page where transcripts were detected but not sent to Pollinations API
+- Fixed double message display issue in chat.html by ensuring messages are only added once
+- Improved timing for Watson API responses by increasing wait times from 3000ms to 5000ms
+- Ensured consistency between send button and voice button handlers
+
+### ✨ Improvements
+- Added proper AI response handling in voice.html with fetch to Pollinations API
+- Updated voice interface to provide better feedback during processing
+
+## v1.0.0 - April 15, 2023
+
+### 🚀 Initial Release
+- AI image generation with Pollinations API
+- Image gallery with Cloudinary integration
+- Voice-to-text using IBM Watson Speech to Text API
+- Responsive design with dark mode support
+- Multiple voice options for text-to-speech
+- Animated background with shooting stars effect
+- Support for image uploads and AI transformations
+
+## Planned Features
 - Web Search functionality
 - Video Generation capabilities
 - Music Generation
@@ -202,23 +244,4 @@
 
 ---
 
-✨ Made with ❤️ by Pink Pixel 
-
-## v1.0.2 - 2024-06-05
-
-### 🐛 Bug Fixes
-- Fixed Web Speech API functionality in both chat.html and voice.html
-- Fixed issue with chat.html sending duplicate messages to Pollinations API
-- Fixed bug in chat.html where Web Speech API wasn't automatically sending transcripts to Pollinations
-- Added improved error handling and browser compatibility detection for speech recognition
-- Enhanced user feedback with notification system for microphone permission issues
-- Implemented better recovery from speech recognition timeouts and errors
-- Added visual indicators for speech recognition status
-
-### ✨ Improvements
-- Moved the AI Personality selector to its own dedicated section above Voice Settings in the sidebar
-- Detailed browser compatibility messages for speech recognition failures
-- Cleanup of speech recognition resources to prevent memory leaks
-- Automatic recovery from unexpected speech recognition stops
-- Enhanced logging for debugging speech recognition issues
-- Added momentary display of transcribed text in input field for better visual feedback
+✨ Made with ❤️ by Pink Pixel

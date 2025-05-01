@@ -34,46 +34,60 @@ window.starsInitialized = false;
 
 // Initialize the application
 function initApp() {
-    // Setup event listeners
-    widthSlider.addEventListener('input', () => {
-        widthValue.textContent = widthSlider.value;
-    });
+    // Setup event listeners with null checks
+    if (widthSlider && widthValue) {
+        widthSlider.addEventListener('input', () => {
+            widthValue.textContent = widthSlider.value;
+        });
+    }
     
-    heightSlider.addEventListener('input', () => {
-        heightValue.textContent = heightSlider.value;
-    });
+    if (heightSlider && heightValue) {
+        heightSlider.addEventListener('input', () => {
+            heightValue.textContent = heightSlider.value;
+        });
+    }
     
-    randomSeedCheckbox.addEventListener('change', () => {
-        seedInput.disabled = randomSeedCheckbox.checked;
-        if (randomSeedCheckbox.checked) {
-            seedInput.value = Math.floor(Math.random() * 1337) + 1;
-        }
-    });
+    if (randomSeedCheckbox && seedInput) {
+        randomSeedCheckbox.addEventListener('change', () => {
+            seedInput.disabled = randomSeedCheckbox.checked;
+            if (randomSeedCheckbox.checked) {
+                seedInput.value = Math.floor(Math.random() * 1337) + 1;
+            }
+        });
+    }
     
-    // Toggle enhance description visibility
-    enhanceDescription.style.opacity = enhancePromptCheckbox.checked ? '0.8' : '0';
-    enhancePromptCheckbox.addEventListener('change', () => {
+    // Toggle enhance description visibility if elements exist
+    if (enhanceDescription && enhancePromptCheckbox) {
         enhanceDescription.style.opacity = enhancePromptCheckbox.checked ? '0.8' : '0';
-    });
+        enhancePromptCheckbox.addEventListener('change', () => {
+            enhanceDescription.style.opacity = enhancePromptCheckbox.checked ? '0.8' : '0';
+        });
+    }
     
-    // Fetch available models from Pollinations
-    fetchAvailableModels();
+    // Fetch available models if modelSelect exists
+    if (modelSelect) {
+        fetchAvailableModels();
+    }
     
-    // Populate style options from the styles.js file
-    populateStyles();
+    // Populate style options if styleSelect exists
+    if (styleSelect) {
+        populateStyles();
+        // Add style change listener
+        styleSelect.addEventListener('change', updateStyleDescription);
+    }
     
-    // Set up the image generation
-    createButton.addEventListener('click', generateImage);
+    // Set up image generation if elements exist
+    if (createButton) {
+        createButton.addEventListener('click', generateImage);
+    }
     
-    // Also trigger image generation on Enter key when the prompt input is focused
-    promptInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            generateImage();
-        }
-    });
-    
-    // Add style change listener
-    styleSelect.addEventListener('change', updateStyleDescription);
+    if (promptInput) {
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                generateImage();
+            }
+        });
+    }
 }
 
 // Fetch available models from Pollinations API

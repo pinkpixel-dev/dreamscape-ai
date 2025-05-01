@@ -133,7 +133,12 @@ function categorizeSources(sources) {
     return sources.map(source => {
         let maxPriority = 0;
         let type = 'other';
-        const urlString = source.url ? source.url.toLowerCase() : '';
+        // Ensure url is a string and handle various url formats
+        const urlString = typeof source.url === 'string'
+            ? source.url.toLowerCase()
+            : typeof source.url === 'object' && source.url.href
+                ? source.url.href.toLowerCase()
+                : '';
 
         for (const [sourceType, meta] of Object.entries(sourceTypes)) {
             if (meta.patterns.some(pattern => urlString.includes(pattern))) {

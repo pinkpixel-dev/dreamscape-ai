@@ -9,8 +9,15 @@
     <link rel="stylesheet" href="css/enhance.css">
     <link rel="stylesheet" href="css/cloudinary.css">
     <link rel="icon" type="image/png" href="../favicon.png">
-    <!-- Add Cloudinary SDK directly -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <!-- Add Cloudinary SDK with onload handler -->
+    <script>
+        function onCloudinaryLoaded() {
+            console.log('Cloudinary script loaded successfully');
+            // Dispatch a custom event that our code can listen for
+            window.dispatchEvent(new Event('cloudinaryLoaded'));
+        }
+    </script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript" onload="onCloudinaryLoaded()"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/url-polyfill/1.1.12/url-polyfill.min.js"></script>
 </head>
 <body>
