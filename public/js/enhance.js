@@ -1,62 +1,8 @@
-// Initialize Cloudinary Upload Widget
-let myWidget = null;
+// This file contains enhancement functionality for the enhance.html page
+// The Cloudinary widget initialization is now handled directly in the HTML file
 
-// Widget configuration
-const widgetConfig = {
-    cloudName: 'dwa9nkpyq',
-    uploadPreset: 'ml_default',
-    sources: ['local', 'url', 'camera'],
-    multiple: false,
-    maxFiles: 1,
-    styles: {
-        palette: {
-            window: "#000000",
-            sourceBg: "#000000",
-            windowBorder: "#8E9FBF",
-            tabIcon: "#FFFFFF",
-            inactiveTabIcon: "#8E9FBF",
-            menuIcons: "#2AD9FF",
-            link: "#08C0FF",
-            action: "#336BFF",
-            inProgress: "#00BFFF",
-            complete: "#33ff00",
-            error: "#EA2727",
-            textDark: "#000000",
-            textLight: "#FFFFFF"
-        }
-    }
-};
-
-// Function to initialize the widget
-function initializeWidget() {
-    console.log('Initializing Cloudinary widget...');
-    if (typeof cloudinary !== 'undefined') {
-        console.log('Cloudinary found, creating widget...');
-        myWidget = cloudinary.createUploadWidget(widgetConfig, (error, result) => {
-            if (!error && result && result.event === "success") {
-                console.log('Upload successful:', result.info);
-                displayPreview(result.info.secure_url);
-                document.getElementById('enhance-button').disabled = false;
-            }
-        });
-        console.log('Widget created:', myWidget ? 'success' : 'failed');
-    } else {
-        console.error('Cloudinary not found');
-    }
-}
-
-// Listen for Cloudinary loaded event
-window.addEventListener('cloudinaryLoaded', () => {
-    console.log('Cloudinary loaded event received');
-    initializeWidget();
-});
-
-// Also try to initialize immediately in case the script is already loaded
-console.log('Checking for Cloudinary:', typeof cloudinary);
-if (typeof cloudinary !== 'undefined') {
-    console.log('Cloudinary already loaded, initializing widget');
-    initializeWidget();
-}
+// Note: We're keeping this file for compatibility with any code that might reference it,
+// but the widget initialization has been moved to inline scripts in the HTML files.
 
 // Function to prevent default drag and drop behavior
 function preventDefaults(e) {
@@ -79,21 +25,21 @@ function handleFiles(files) {
             alert('Please upload an image file');
             return;
         }
-        
+
         const reader = new FileReader();
-        
+
         reader.onload = function(e) {
             displayPreview(e.target.result);
             document.getElementById('enhance-button').disabled = false;
         };
-        
+
         reader.readAsDataURL(file);
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded - enhance.js');
-    
+
     // DOM Elements
     const uploadContent = document.getElementById('upload-content');
     const fileInput = document.getElementById('file-input');
@@ -138,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadContent.style.display = 'none';
             previewContainer.style.display = 'flex';
             previewImage.src = src;
-            
+
             if (!document.getElementById('remove-preview')) {
                 const removeButton = document.createElement('button');
                 removeButton.textContent = 'Remove Image';
@@ -160,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resultContainer.style.display = 'none';
         }
     }
-    
+
     // Image enhancement controls - get all the slider elements
     const saturationControl = document.getElementById('saturation-control');
     const contrastControl = document.getElementById('contrast-control');
@@ -193,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-    
+
     // Toggle custom seed input visibility
     if (customSeed && seedValue) {
         customSeed.addEventListener('change', () => {
@@ -266,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const sizeOption = outputSizeSelect ? outputSizeSelect.value.split('x') : ['1024', '1024'];
             const width = parseInt(sizeOption[0]);
             const height = parseInt(sizeOption[1]);
-            
+
             // Get slider values for enhancements
             const saturation = saturationControl ? parseInt(saturationControl.value) : 0;
             const contrast = contrastControl ? parseInt(contrastControl.value) : 0;
@@ -302,14 +248,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     resultContainer.style.display = 'block';
                     originalImage.src = previewImage.src;
                     enhancedImage.src = enhancedImageUrl;
-                    
+
                     // Enable download button
                     if (downloadButton) {
                         downloadButton.onclick = () => {
                             downloadImage(enhancedImageUrl, 'enhanced-image.jpg');
                         };
                     }
-                    
+
                     // Scroll to results
                     resultContainer.scrollIntoView({ behavior: 'smooth' });
                 }
@@ -373,14 +319,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Please upload an image file');
                 return;
             }
-            
+
             const reader = new FileReader();
-            
+
             reader.onload = function(e) {
                 displayPreview(e.target.result);
                 enhanceButton.disabled = false;
             };
-            
+
             reader.readAsDataURL(file);
         }
     }
@@ -389,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadContent.style.display = 'none';
         previewContainer.style.display = 'flex';
         previewImage.src = src;
-        
+
         // Add remove button if it doesn't exist
         if (!document.getElementById('remove-preview')) {
             const removeButton = document.createElement('button');
@@ -421,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sizeOption = outputSizeSelect.value.split('x');
         const width = parseInt(sizeOption[0]);
         const height = parseInt(sizeOption[1]);
-        
+
         // Get slider values for enhancements
         const saturation = saturationControl ? parseInt(saturationControl.value) : 0;
         const contrast = contrastControl ? parseInt(contrastControl.value) : 0;
@@ -452,12 +398,12 @@ document.addEventListener('DOMContentLoaded', () => {
             resultContainer.style.display = 'block';
             originalImage.src = previewImage.src;
             enhancedImage.src = enhancedImageUrl;
-            
+
             // Enable download button
             downloadButton.onclick = () => {
                 downloadImage(enhancedImageUrl, 'enhanced-image.jpg');
             };
-            
+
             // Scroll to results
             resultContainer.scrollIntoView({ behavior: 'smooth' });
         } catch (error) {
@@ -488,59 +434,59 @@ document.addEventListener('DOMContentLoaded', () => {
     async function enhanceImageWithCloudinary(imageDataUrl, width, height, saturation, contrast, brightness, sharpness, vignette, blur) {
         // For demonstration purposes, we're simulating the Cloudinary integration
         // In a real application, you'd upload the image to Cloudinary first using their API
-        
+
         // Your Cloudinary credentials
         const cloudName = 'dwa9nkpyq';
-        
+
         // Build transformation parameters with chaining
         let transformations = [];
-        
+
         // Add resize transformation
         transformations.push(`w_${width},h_${height},c_fill`);
-        
+
         // Add enhancements if values are non-zero
         if (saturation !== 0) {
             transformations.push(`e_saturation:${saturation}`);
         }
-        
+
         if (contrast !== 0) {
             transformations.push(`e_contrast:${contrast}`);
         }
-        
+
         if (brightness !== 0) {
             transformations.push(`e_brightness:${brightness}`);
         }
-        
+
         if (sharpness > 0) {
             transformations.push(`e_sharpen:${sharpness}`);
         }
-        
+
         if (vignette > 0) {
             transformations.push(`e_vignette:${vignette}`);
         }
-        
+
         if (blur > 0) {
             transformations.push(`e_blur:${blur}`);
         }
-        
+
         // Add auto-quality and format optimizations
         transformations.push('q_auto');
         transformations.push('f_auto');
-        
+
         // Add watermark removal if selected
         if (removeWatermark && removeWatermark.checked) {
             transformations.push('fl_nologo');
         }
-        
+
         // In a real implementation, we would:
         // 1. Upload the image to Cloudinary using their upload API
         // 2. Get the public_id of the uploaded image
         // 3. Construct a URL with the transformations
-        
+
         // For demo purposes, just returning the original image
         // In production, you'd return something like:
         // return `https://res.cloudinary.com/${cloudName}/image/upload/${transformations.join('/')}/your_uploaded_image_id`;
-        
+
         // Simulate enhanced image for demonstration
         console.log('Applied transformations:', transformations.join('/'));
         return imageDataUrl;

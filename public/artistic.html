@@ -9,9 +9,205 @@
     <link rel="stylesheet" href="css/enhance.css">
     <link rel="stylesheet" href="css/cloudinary.css">
     <link rel="icon" type="image/png" href="../favicon.png">
-    <!-- Add Cloudinary SDK directly -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <!-- Add Cloudinary SDK with onload handler -->
+    <script>
+        function onCloudinaryLoaded() {
+            console.log('Cloudinary script loaded successfully');
+            // Dispatch a custom event that our code can listen for
+            window.dispatchEvent(new Event('cloudinaryLoaded'));
+        }
+    </script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript" onload="onCloudinaryLoaded()"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/url-polyfill/1.1.12/url-polyfill.min.js"></script>
+
+    <!-- Initialize Cloudinary widget -->
+    <script>
+        // Initialize widget when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking for Cloudinary...');
+            initCloudinaryWidget();
+        });
+
+        // Also initialize when Cloudinary is loaded
+        window.addEventListener('cloudinaryLoaded', function() {
+            console.log('Cloudinary loaded event received');
+            initCloudinaryWidget();
+        });
+
+        // Global widget variable
+        let uploadWidget = null;
+
+        // Function to show error messages
+        function showErrorMessage(message) {
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.left = '50%';
+            errorDiv.style.transform = 'translateX(-50%)';
+            errorDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            errorDiv.style.color = '#ff5555';
+            errorDiv.style.padding = '15px 20px';
+            errorDiv.style.borderRadius = '8px';
+            errorDiv.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+            errorDiv.style.zIndex = '1000';
+            errorDiv.style.maxWidth = '80%';
+            errorDiv.style.textAlign = 'center';
+
+            errorDiv.innerHTML = `
+                <div style="margin-bottom:8px;font-weight:bold;">⚠️ Error</div>
+                <div>${message}</div>
+                <div style="margin-top:10px;font-size:12px;opacity:0.7">Tap to dismiss</div>
+            `;
+
+            // Add click listener to dismiss
+            errorDiv.addEventListener('click', () => {
+                if (document.body.contains(errorDiv)) {
+                    document.body.removeChild(errorDiv);
+                }
+            });
+
+            // Auto dismiss after 8 seconds
+            document.body.appendChild(errorDiv);
+            setTimeout(() => {
+                if (document.body.contains(errorDiv)) {
+                    document.body.removeChild(errorDiv);
+                }
+            }, 8000);
+        }
+
+        // Widget initialization function
+        function initCloudinaryWidget() {
+            if (typeof cloudinary !== 'undefined' && !uploadWidget) {
+                console.log('Initializing Cloudinary widget...');
+
+                // Function to generate signature via our server endpoint
+                const generateSignature = function(callback, paramsToSign) {
+                    fetch('/cloudinary-signature', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ params_to_sign: paramsToSign })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.signature) {
+                            callback(data.signature);
+                        } else {
+                            console.error('Signature generation failed:', data.error);
+                            showErrorMessage('Failed to generate upload signature');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error calling signature endpoint:', error);
+                        showErrorMessage('Failed to generate upload signature');
+                    });
+                };
+
+                // Create the widget with minimal configuration
+                uploadWidget = cloudinary.createUploadWidget({
+                    cloudName: 'dwa9nkpyq',
+                    apiKey: '887549877845179',
+                    uploadSignature: generateSignature,
+                    sources: ['local', 'url', 'camera'],
+                    multiple: false,
+                    maxFiles: 1,
+                    cropping: false,
+                    showAdvancedOptions: false,
+                    showUploadMoreButton: false,
+                    singleUploadAutoClose: true,
+                    styles: {
+                        palette: {
+                            window: "#000000",
+                            sourceBg: "#000000",
+                            windowBorder: "#8E9FBF",
+                            tabIcon: "#FFFFFF",
+                            inactiveTabIcon: "#8E9FBF",
+                            menuIcons: "#2AD9FF",
+                            link: "#08C0FF",
+                            action: "#336BFF",
+                            inProgress: "#00BFFF",
+                            complete: "#33ff00",
+                            error: "#EA2727",
+                            textDark: "#000000",
+                            textLight: "#FFFFFF"
+                        }
+                    }
+                }, (error, result) => {
+                    if (error) {
+                        console.error('Cloudinary widget error:', error);
+                        // Display error message to user
+                        showErrorMessage('Upload error: ' + (error.message || 'Failed to upload image'));
+                        return;
+                    }
+
+                    // Handle different widget events
+                    if (!result) return;
+
+                    console.log('Widget event:', result.event);
+
+                    // Handle upload error event
+                    if (result.event === "upload-error") {
+                        console.error('Upload error:', result.error);
+                        showErrorMessage('Upload error: ' + (result.error?.message || 'Failed to upload image'));
+                        return;
+                    }
+
+                    // Handle successful upload
+                    if (result.event === "success") {
+                        console.log('Upload successful:', result.info);
+
+                        // Display the uploaded image
+                        const uploadArea = document.getElementById('upload-area');
+                        const resultContainer = document.getElementById('result-container');
+
+                        if (uploadArea && resultContainer) {
+                            // Hide upload area
+                            uploadArea.style.display = 'none';
+
+                            // Show result container
+                            resultContainer.style.display = 'block';
+
+                            // Set original image
+                            const originalImageDisplay = document.getElementById('original-image-display');
+                            if (originalImageDisplay) {
+                                originalImageDisplay.innerHTML = '';
+                                const img = document.createElement('img');
+                                img.src = result.info.secure_url;
+                                img.alt = 'Original Image';
+                                img.className = 'preview-img';
+                                originalImageDisplay.appendChild(img);
+                            }
+
+                            // Enable apply effect button
+                            const applyEffectButton = document.getElementById('apply-effect-button');
+                            if (applyEffectButton) {
+                                applyEffectButton.disabled = false;
+                            }
+                        }
+                    }
+                });
+
+                console.log('Widget created successfully');
+
+                // Set up click handler for upload area
+                const uploadArea = document.getElementById('upload-area');
+                if (uploadArea) {
+                    uploadArea.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Upload area clicked, opening widget...');
+                        if (uploadWidget) {
+                            uploadWidget.open();
+                        } else {
+                            console.error('Widget not initialized yet');
+                        }
+                    });
+                }
+            } else {
+                console.log('Cloudinary not available yet or widget already initialized');
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="stars"></div>
@@ -19,14 +215,14 @@
     <div class="moon-container">
         <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon" style="filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));">
     </div>
-    
+
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
                 <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
                 <span>Creative Studio✨</span>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">📋 Navigation</p>
                 <a href="../index.html" class="nav-link">🏠 Home</a>
@@ -36,7 +232,7 @@
                 <a href="chat.html" class="nav-link">💬 Text Chat</a>
                 <a href="voice.html" class="nav-link">🎤 Voice Assistant</a>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🎨 Effect Type</p>
                 <div class="control-group">
@@ -56,7 +252,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="sidebar-section" id="artistic-controls">
                 <p class="section-title">🖌️ Artistic Filters</p>
                 <div class="control-group">
@@ -93,7 +289,7 @@
                     <input type="range" id="pixelate-strength" min="5" max="50" value="20">
                 </div>
             </div>
-            
+
             <div class="sidebar-section" id="cartoon-controls" style="display: none;">
                 <p class="section-title">🎭 Cartoonify</p>
                 <div class="control-group slider-control">
@@ -115,7 +311,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="sidebar-section" id="painting-controls" style="display: none;">
                 <p class="section-title">🎨 Painting Styles</p>
                 <div class="control-group">
@@ -139,7 +335,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🖼️ Output Size</p>
                 <div class="control-group">
@@ -150,7 +346,7 @@
                         <option value="preset">Preset Dimensions</option>
                     </select>
                 </div>
-                
+
                 <!-- Custom width and height sliders -->
                 <div id="custom-size-controls">
                     <div class="control-group slider-control">
@@ -168,7 +364,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <!-- Preset dimensions dropdown, hidden initially if custom is selected -->
                 <div id="preset-size-controls" style="display: none;">
                     <div class="control-group">
@@ -183,7 +379,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🛠️ Settings</p>
                 <div class="control-group">
@@ -203,7 +399,7 @@
                     <input type="number" id="seed-value" min="1" max="999999" value="42">
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">ℹ️ About</p>
                 <div class="control-group enhance-description">
@@ -212,7 +408,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="main-content">
             <div class="title-container">
                 <div class="title-wrapper">
@@ -220,7 +416,7 @@
                 </div>
                 <p class="subtitle-text">Transform your images with creative artistic styles</p>
             </div>
-            
+
             <div class="content-area">
                 <div class="upload-area" id="upload-area">
                     <div id="upload-content">
@@ -230,7 +426,7 @@
                         <input type="file" id="file-input" accept="image/*" style="display: none;">
                     </div>
                 </div>
-                
+
                 <div class="result-container" id="result-container" style="display: none;">
                     <div class="image-comparison">
                         <div class="original-image">
@@ -254,16 +450,225 @@
             </div>
         </div>
     </div>
-    
+
     <script src="js/cloudinary-api.js"></script>
     <script src="../styles.js"></script>
     <script src="../script.js"></script>
-    
+
+    <!-- Handle button functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get button elements
+            const applyEffectButton = document.getElementById('apply-effect-button');
+            const downloadButton = document.getElementById('download-button');
+            const resetButton = document.getElementById('reset-button');
+
+            // Variables to store image data
+            let originalImageUrl = null;
+            let artisticImageUrl = null;
+
+            // Handle apply effect button click
+            if (applyEffectButton) {
+                applyEffectButton.addEventListener('click', function() {
+                    // Get the original image element
+                    const originalImageDisplay = document.getElementById('original-image-display');
+                    const enhancedImageDisplay = document.getElementById('enhanced-image-display');
+
+                    if (originalImageDisplay && originalImageDisplay.querySelector('img')) {
+                        // Show loading state
+                        applyEffectButton.disabled = true;
+                        applyEffectButton.textContent = '⏳ Processing...';
+
+                        // Get the original image URL
+                        originalImageUrl = originalImageDisplay.querySelector('img').src;
+
+                        // Get effect type
+                        const effectType = document.querySelector('input[name="effect-type"]:checked').value;
+
+                        // Create a new artistic image with Cloudinary transformations
+                        let transformations = '';
+
+                        if (effectType === 'artistic') {
+                            // Get artistic filter
+                            const artFilter = document.getElementById('art-filter').value;
+                            transformations += 'e_art:' + artFilter + '/';
+
+                            // Add gradient fade if checked
+                            if (document.getElementById('gradient-fade').checked) {
+                                transformations += 'e_gradient_fade/';
+                            }
+
+                            // Add pixelate effect if checked
+                            if (document.getElementById('pixelate').checked) {
+                                const pixelateStrength = document.getElementById('pixelate-strength').value;
+                                transformations += 'e_pixelate:' + pixelateStrength + '/';
+                            }
+                        } else if (effectType === 'cartoon') {
+                            // Get cartoonify settings
+                            const cartoonStrength = document.getElementById('cartoon-strength').value;
+                            const lineStrength = document.getElementById('line-strength').value;
+                            const colorReduction = document.getElementById('color-reduction').value;
+
+                            transformations += 'e_cartoonify:' + cartoonStrength + ':' + lineStrength;
+                            if (colorReduction !== 'auto') {
+                                transformations += ':' + colorReduction;
+                            }
+                            transformations += '/';
+                        } else if (effectType === 'painting') {
+                            // Get painting style settings
+                            const paintingStyle = document.getElementById('painting-style').value;
+                            const effectStrength = document.getElementById('effect-strength').value;
+
+                            if (paintingStyle === 'oil_paint') {
+                                transformations += 'e_oil_paint:' + effectStrength + '/';
+                            } else if (paintingStyle === 'vignette') {
+                                transformations += 'e_vignette:' + effectStrength + '/';
+                            } else {
+                                transformations += 'e_art:' + paintingStyle + '/';
+                            }
+
+                            // Add tint if strength > 0
+                            const tintStrength = document.getElementById('tint-strength').value;
+                            if (tintStrength > 0) {
+                                const tintColor = document.getElementById('tint-color').value.substring(1); // Remove #
+                                transformations += 'e_tint:' + tintStrength + ':' + tintColor + '/';
+                            }
+                        }
+
+                        // Apply transformations to the Cloudinary URL
+                        // Extract the Cloudinary URL parts
+                        const urlParts = originalImageUrl.split('/upload/');
+                        if (urlParts.length === 2) {
+                            artisticImageUrl = urlParts[0] + '/upload/' + transformations + urlParts[1];
+
+                            // Create and display the artistic image
+                            const artisticImg = document.createElement('img');
+                            artisticImg.src = artisticImageUrl;
+                            artisticImg.alt = 'Artistic Image';
+                            artisticImg.className = 'preview-img';
+
+                            // Clear previous content and add the new image
+                            enhancedImageDisplay.innerHTML = '';
+                            enhancedImageDisplay.appendChild(artisticImg);
+
+                            // Enable download button
+                            downloadButton.disabled = false;
+
+                            // Reset apply effect button
+                            applyEffectButton.textContent = '🎨 Apply Effect';
+                            applyEffectButton.disabled = false;
+                        } else {
+                            // Handle non-Cloudinary images
+                            showErrorMessage('Cannot apply effect to this image. Please upload an image through the Cloudinary widget.');
+                            applyEffectButton.textContent = '🎨 Apply Effect';
+                            applyEffectButton.disabled = false;
+                        }
+                    }
+                });
+            }
+
+            // Handle download button click
+            if (downloadButton) {
+                downloadButton.addEventListener('click', function() {
+                    if (artisticImageUrl) {
+                        // Create a temporary link element
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = artisticImageUrl;
+                        downloadLink.download = 'artistic-image.jpg';
+
+                        // Trigger download
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    }
+                });
+            }
+
+            // Handle reset button click
+            if (resetButton) {
+                resetButton.addEventListener('click', function() {
+                    // Hide result container
+                    const resultContainer = document.getElementById('result-container');
+                    if (resultContainer) {
+                        resultContainer.style.display = 'none';
+                    }
+
+                    // Show upload area
+                    const uploadArea = document.getElementById('upload-area');
+                    if (uploadArea) {
+                        uploadArea.style.display = 'block';
+                    }
+
+                    // Clear image displays
+                    const originalImageDisplay = document.getElementById('original-image-display');
+                    const enhancedImageDisplay = document.getElementById('enhanced-image-display');
+
+                    if (originalImageDisplay) originalImageDisplay.innerHTML = '';
+                    if (enhancedImageDisplay) enhancedImageDisplay.innerHTML = '';
+
+                    // Reset variables
+                    originalImageUrl = null;
+                    artisticImageUrl = null;
+
+                    // Reset buttons
+                    if (applyEffectButton) applyEffectButton.disabled = true;
+                    if (downloadButton) downloadButton.disabled = true;
+                });
+            }
+
+            // Handle pixelate checkbox
+            const pixelateCheckbox = document.getElementById('pixelate');
+            const pixelateControl = document.getElementById('pixelate-control');
+
+            if (pixelateCheckbox && pixelateControl) {
+                pixelateCheckbox.addEventListener('change', function() {
+                    pixelateControl.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+
+            // Handle effect type radio buttons
+            const effectTypeRadios = document.querySelectorAll('input[name="effect-type"]');
+            const artisticControls = document.getElementById('artistic-controls');
+            const cartoonControls = document.getElementById('cartoon-controls');
+            const paintingControls = document.getElementById('painting-controls');
+
+            if (effectTypeRadios && artisticControls && cartoonControls && paintingControls) {
+                effectTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        // Hide all controls
+                        artisticControls.style.display = 'none';
+                        cartoonControls.style.display = 'none';
+                        paintingControls.style.display = 'none';
+
+                        // Show selected controls
+                        if (this.value === 'artistic') {
+                            artisticControls.style.display = 'block';
+                        } else if (this.value === 'cartoon') {
+                            cartoonControls.style.display = 'block';
+                        } else if (this.value === 'painting') {
+                            paintingControls.style.display = 'block';
+                        }
+                    });
+                });
+            }
+
+            // Handle tint strength slider
+            const tintStrengthSlider = document.getElementById('tint-strength');
+            const tintStrengthValue = document.getElementById('tint-strength-value');
+
+            if (tintStrengthSlider && tintStrengthValue) {
+                tintStrengthSlider.addEventListener('input', function() {
+                    tintStrengthValue.textContent = this.value + '%';
+                });
+            }
+        });
+    </script>
+
     <!-- Add subtle stars to artistic.html -->
     <script>
         window.addEventListener('load', function() {
             console.log("Adding subtle stars to artistic.html");
-            
+
             // Create a custom style with higher z-index for enhanced visibility
             const styleEl = document.createElement('style');
             styleEl.textContent = `
@@ -271,7 +676,7 @@
                 .stars {
                     opacity: 0.6 !important;
                 }
-                
+
                 /* Specific style for extra bright stars with reduced glow */
                 .star-extra-bright {
                     position: absolute !important;
@@ -282,13 +687,13 @@
                     opacity: 0 !important; /* Start invisible for fade-in effect */
                     transition: opacity 1.5s ease-in !important; /* Smooth transition */
                 }
-                
+
                 /* Remove super bright animation and use more subtle one */
                 @keyframes subtle-twinkle {
                     0%, 100% { opacity: 0.3; }
                     50% { opacity: 0.8; }
                 }
-                
+
                 /* Fix clouds to remove hard edge */
                 .clouds {
                     position: fixed !important;
@@ -301,86 +706,86 @@
                     pointer-events: none !important;
                     overflow: hidden !important;
                 }
-                
+
                 /* Add the missing moveBackground animation */
                 @keyframes moveSeamlessBackground {
                     0% {
                         transform: translate3d(0, 0, 0);
                     }
-                    100% { 
+                    100% {
                         transform: translate3d(-100%, 0, 0);
                     }
                 }
             `;
             document.head.appendChild(styleEl);
-            
+
             // Set opacity of stars background to match index
             document.querySelector('.stars').style.opacity = '0.6';
-            
+
             // Make twinkling container explicitly have position and z-index
             const twinklingContainer = document.querySelector('.twinkling');
             if (twinklingContainer) {
                 twinklingContainer.style.zIndex = '1';
                 twinklingContainer.style.position = 'fixed';
-                
+
                 // Create stars array to add them gradually
                 const starsToAdd = [];
-                
+
                 // Add just 25 extra bright stars (down from 50)
                 for (let i = 0; i < 25; i++) {
                     const star = document.createElement('div');
                     star.className = 'star-extra-bright';
-                    
+
                     // Size between 2-4px for more subtle visibility
                     const size = Math.floor(Math.random() * 3) + 2;
                     star.style.width = `${size}px`;
                     star.style.height = `${size}px`;
-                    
+
                     // Random position
                     const x = Math.random() * 100;
                     const y = Math.random() * 100;
                     star.style.left = `${x}%`;
                     star.style.top = `${y}%`;
-                    
+
                     // More subtle glow with reduced box shadow
                     star.style.boxShadow = `0 0 ${size*2}px ${size}px rgba(255, 255, 255, 0.6)`;
-                    
+
                     // Twinkling animation with more subtle parameters
                     const animationDuration = Math.random() * 3 + 3;
                     star.style.animation = `subtle-twinkle ${animationDuration}s infinite ease-in-out`;
                     star.style.animationDelay = `${Math.random() * 5}s`;
-                    
+
                     // Add to array instead of directly to the DOM
                     starsToAdd.push(star);
                 }
-                
+
                 // Function to add stars gradually with random timing
                 const addStarsGradually = () => {
                     if (starsToAdd.length === 0) return;
-                    
+
                     // Take a random star from the array
                     const randomIndex = Math.floor(Math.random() * starsToAdd.length);
                     const star = starsToAdd.splice(randomIndex, 1)[0];
-                    
+
                     // Add star to container
                     twinklingContainer.appendChild(star);
-                    
+
                     // Make star visible with fade-in effect after a small delay
                     setTimeout(() => {
                         star.style.opacity = '1';
                     }, 50);
-                    
+
                     // Schedule next star with random timing between 100-300ms
                     const nextDelay = Math.random() * 200 + 100;
                     setTimeout(addStarsGradually, nextDelay);
                 };
-                
+
                 // Start adding stars after a short delay
                 setTimeout(addStarsGradually, 500);
-                
+
                 console.log("✨ Added gradually appearing stars to artistic.html");
             }
-            
+
             // Fix clouds to create seamless animation
             const cloudContainer = document.querySelector('.clouds');
             cloudContainer.innerHTML = '';
@@ -395,7 +800,7 @@
                 overflow: hidden !important;
                 pointer-events: none !important;
             `;
-            
+
             // Create new CSS-only cloud animation
             if (!document.querySelector('style#new-cloud-animation')) {
                 const cloudStyleEl = document.createElement('style');
@@ -407,44 +812,44 @@
                         height: 100%;
                         opacity: 0.2;
                     }
-                    
+
                     .cloud-layer-1 {
-                        background: 
+                        background:
                             radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
                             radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
                             radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
                             radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
                         animation: cloudMove1 120s linear infinite;
                     }
-                    
+
                     .cloud-layer-2 {
-                        background: 
+                        background:
                             radial-gradient(circle at 65% 40%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 60%),
                             radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
                             radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%),
                             radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
                         animation: cloudMove2 180s linear infinite;
                     }
-                    
+
                     .cloud-layer-3 {
-                        background: 
+                        background:
                             radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%),
                             radial-gradient(circle at 20% 90%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 45%),
                             radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 55%),
                             radial-gradient(circle at 40% 10%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
                         animation: cloudMove3 150s linear infinite;
                     }
-                    
+
                     @keyframes cloudMove1 {
                         0% { transform: translate3d(0%, 0%, 0); }
                         100% { transform: translate3d(100%, 0%, 0); }
                     }
-                    
+
                     @keyframes cloudMove2 {
                         0% { transform: translate3d(-100%, 0%, 0); }
                         100% { transform: translate3d(0%, 0%, 0); }
                     }
-                    
+
                     @keyframes cloudMove3 {
                         0% { transform: translate3d(0%, 0%, 0); }
                         100% { transform: translate3d(-100%, 0%, 0); }
@@ -452,16 +857,16 @@
                 `;
                 document.head.appendChild(cloudStyleEl);
             }
-            
+
             // Create cloud layers
             for (let i = 1; i <= 3; i++) {
                 const cloudLayer = document.createElement('div');
                 cloudLayer.className = `cloud-layer cloud-layer-${i}`;
                 cloudContainer.appendChild(cloudLayer);
             }
-            
+
             console.log("Pure CSS clouds created for artistic.html");
         });
     </script>
 </body>
-</html> 
+</html>

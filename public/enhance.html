@@ -19,6 +19,195 @@
     </script>
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript" onload="onCloudinaryLoaded()"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/url-polyfill/1.1.12/url-polyfill.min.js"></script>
+
+    <!-- Initialize Cloudinary widget -->
+    <script>
+        // Initialize widget when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking for Cloudinary...');
+            initCloudinaryWidget();
+        });
+
+        // Also initialize when Cloudinary is loaded
+        window.addEventListener('cloudinaryLoaded', function() {
+            console.log('Cloudinary loaded event received');
+            initCloudinaryWidget();
+        });
+
+        // Global widget variable
+        let uploadWidget = null;
+
+        // Function to show error messages
+        function showErrorMessage(message) {
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.left = '50%';
+            errorDiv.style.transform = 'translateX(-50%)';
+            errorDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            errorDiv.style.color = '#ff5555';
+            errorDiv.style.padding = '15px 20px';
+            errorDiv.style.borderRadius = '8px';
+            errorDiv.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+            errorDiv.style.zIndex = '1000';
+            errorDiv.style.maxWidth = '80%';
+            errorDiv.style.textAlign = 'center';
+
+            errorDiv.innerHTML = `
+                <div style="margin-bottom:8px;font-weight:bold;">⚠️ Error</div>
+                <div>${message}</div>
+                <div style="margin-top:10px;font-size:12px;opacity:0.7">Tap to dismiss</div>
+            `;
+
+            // Add click listener to dismiss
+            errorDiv.addEventListener('click', () => {
+                if (document.body.contains(errorDiv)) {
+                    document.body.removeChild(errorDiv);
+                }
+            });
+
+            // Auto dismiss after 8 seconds
+            document.body.appendChild(errorDiv);
+            setTimeout(() => {
+                if (document.body.contains(errorDiv)) {
+                    document.body.removeChild(errorDiv);
+                }
+            }, 8000);
+        }
+
+        // Widget initialization function
+        function initCloudinaryWidget() {
+            if (typeof cloudinary !== 'undefined' && !uploadWidget) {
+                console.log('Initializing Cloudinary widget...');
+
+                // Function to generate signature via our server endpoint
+                const generateSignature = function(callback, paramsToSign) {
+                    fetch('/cloudinary-signature', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ params_to_sign: paramsToSign })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.signature) {
+                            callback(data.signature);
+                        } else {
+                            console.error('Signature generation failed:', data.error);
+                            showErrorMessage('Failed to generate upload signature');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error calling signature endpoint:', error);
+                        showErrorMessage('Failed to generate upload signature');
+                    });
+                };
+
+                // Create the widget with minimal configuration
+                uploadWidget = cloudinary.createUploadWidget({
+                    cloudName: 'dwa9nkpyq',
+                    apiKey: '887549877845179',
+                    uploadSignature: generateSignature,
+                    sources: ['local', 'url', 'camera'],
+                    multiple: false,
+                    maxFiles: 1,
+                    cropping: false,
+                    showAdvancedOptions: false,
+                    showUploadMoreButton: false,
+                    singleUploadAutoClose: true,
+                    styles: {
+                        palette: {
+                            window: "#000000",
+                            sourceBg: "#000000",
+                            windowBorder: "#8E9FBF",
+                            tabIcon: "#FFFFFF",
+                            inactiveTabIcon: "#8E9FBF",
+                            menuIcons: "#2AD9FF",
+                            link: "#08C0FF",
+                            action: "#336BFF",
+                            inProgress: "#00BFFF",
+                            complete: "#33ff00",
+                            error: "#EA2727",
+                            textDark: "#000000",
+                            textLight: "#FFFFFF"
+                        }
+                    }
+                }, (error, result) => {
+                    if (error) {
+                        console.error('Cloudinary widget error:', error);
+                        // Display error message to user
+                        showErrorMessage('Upload error: ' + (error.message || 'Failed to upload image'));
+                        return;
+                    }
+
+                    // Handle different widget events
+                    if (!result) return;
+
+                    console.log('Widget event:', result.event);
+
+                    // Handle upload error event
+                    if (result.event === "upload-error") {
+                        console.error('Upload error:', result.error);
+                        showErrorMessage('Upload error: ' + (result.error?.message || 'Failed to upload image'));
+                        return;
+                    }
+
+                    // Handle successful upload
+                    if (result.event === "success") {
+                        console.log('Upload successful:', result.info);
+
+                        // Display the uploaded image
+                        const uploadArea = document.getElementById('upload-area');
+                        const resultContainer = document.getElementById('result-container');
+
+                        if (uploadArea && resultContainer) {
+                            // Hide upload area
+                            uploadArea.style.display = 'none';
+
+                            // Show result container
+                            resultContainer.style.display = 'block';
+
+                            // Set original image
+                            const originalImageDisplay = document.getElementById('original-image-display');
+                            if (originalImageDisplay) {
+                                originalImageDisplay.innerHTML = '';
+                                const img = document.createElement('img');
+                                img.src = result.info.secure_url;
+                                img.alt = 'Original Image';
+                                img.className = 'preview-img';
+                                originalImageDisplay.appendChild(img);
+                            }
+
+                            // Enable enhance button
+                            const enhanceButton = document.getElementById('enhance-button');
+                            if (enhanceButton) {
+                                enhanceButton.disabled = false;
+                            }
+                        }
+                    }
+                });
+
+                console.log('Widget created successfully');
+
+                // Set up click handler for upload area
+                const uploadArea = document.getElementById('upload-area');
+                if (uploadArea) {
+                    uploadArea.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Upload area clicked, opening widget...');
+                        if (uploadWidget) {
+                            uploadWidget.open();
+                        } else {
+                            console.error('Widget not initialized yet');
+                        }
+                    });
+                }
+            } else {
+                console.log('Cloudinary not available yet or widget already initialized');
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="stars"></div>
@@ -26,14 +215,14 @@
     <div class="moon-container">
         <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon" style="filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));">
     </div>
-    
+
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
                 <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
                 <span>Creative Studio✨</span>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">📋 Navigation</p>
                 <a href="../index.html" class="nav-link">🏠 Home</a>
@@ -43,7 +232,7 @@
                 <a href="chat.html" class="nav-link">💬 Text Chat</a>
                 <a href="voice.html" class="nav-link">🎤 Voice Assistant</a>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">✨ Enhancement Type</p>
                 <div class="control-group">
@@ -67,7 +256,7 @@
                     </div>
               </div>
             </div>
-            
+
             <div class="sidebar-section" id="basic-controls">
                 <p class="section-title">🖌️ Basic Adjustments</p>
                 <div class="control-group slider-control">
@@ -95,7 +284,7 @@
                     <input type="range" id="gamma-control" min="-50" max="50" value="0">
               </div>
             </div>
-            
+
             <div class="sidebar-section" id="auto-controls" style="display: none;">
                 <p class="section-title">🪄 Auto Enhancement</p>
                 <div class="control-group">
@@ -123,7 +312,7 @@
                     </label>
               </div>
             </div>
-            
+
             <div class="sidebar-section" id="advanced-controls" style="display: none;">
                 <p class="section-title">💎 Advanced Quality</p>
                 <div class="control-group">
@@ -155,7 +344,7 @@
                     <input type="range" id="unsharp-mask" min="0" max="100" value="0">
         </div>
             </div>
-            
+
             <!-- Add new resize controls section -->
             <div class="sidebar-section" id="resize-controls" style="display: none;">
                 <p class="section-title">📏 Resize Settings</p>
@@ -184,7 +373,7 @@
                     </label>
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🖼️ Output Size</p>
                 <div class="control-group">
@@ -195,7 +384,7 @@
                         <option value="preset">Preset Dimensions</option>
                     </select>
                 </div>
-                
+
                 <!-- Custom width and height sliders -->
                 <div id="custom-size-controls">
                     <div class="control-group slider-control">
@@ -213,7 +402,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <!-- Preset dimensions dropdown, hidden initially if custom is selected -->
                 <div id="preset-size-controls" style="display: none;">
                     <div class="control-group">
@@ -228,7 +417,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🛠️ Settings</p>
                 <div class="control-group">
@@ -248,7 +437,7 @@
                     <input type="number" id="seed-value" min="1" max="999999" value="42">
             </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">ℹ️ About</p>
                 <div class="control-group enhance-description">
@@ -257,7 +446,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="main-content">
             <div class="title-container">
                 <div class="title-wrapper">
@@ -265,16 +454,17 @@
                 </div>
                 <p class="subtitle-text">Transform and resize your images with powerful tools</p>
             </div>
-            
+
             <div class="content-area">
                 <div class="upload-area" id="upload-area">
                     <div id="upload-content">
                         <div class="upload-icon">📁</div>
-                        <h3>Upload Image</h3>                    
+                        <h3>Upload Image</h3>
+                        <p>Click to browse or drag & drop</p>
                         <input type="file" id="file-input" accept="image/*" style="display: none;">
                     </div>
                 </div>
-                
+
                 <div class="result-container" id="result-container" style="display: none;">
                     <div class="image-comparison">
                         <div class="original-image">
@@ -295,27 +485,177 @@
         </div>
       </div>
     </div>
-    
+
     <script src="js/cloudinary-api.js"></script>
     <script src="../styles.js"></script>
     <script src="../script.js"></script>
-    
+
     <script>
+        // Handle button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get button elements
+            const enhanceButton = document.getElementById('enhance-button');
+            const downloadButton = document.getElementById('download-button');
+            const resetButton = document.getElementById('reset-button');
+
+            // Variables to store image data
+            let originalImageUrl = null;
+            let enhancedImageUrl = null;
+
+            // Handle enhance button click
+            if (enhanceButton) {
+                enhanceButton.addEventListener('click', function() {
+                    // Get the original image element
+                    const originalImageDisplay = document.getElementById('original-image-display');
+                    const enhancedImageDisplay = document.getElementById('enhanced-image-display');
+
+                    if (originalImageDisplay && originalImageDisplay.querySelector('img')) {
+                        // Show loading state
+                        enhanceButton.disabled = true;
+                        enhanceButton.textContent = '⏳ Processing...';
+
+                        // Get the original image URL
+                        originalImageUrl = originalImageDisplay.querySelector('img').src;
+
+                        // Get enhancement settings
+                        const enhancementType = document.querySelector('input[name="enhancement-type"]:checked').value;
+
+                        // Create a new enhanced image with Cloudinary transformations
+                        let transformations = '';
+
+                        if (enhancementType === 'basic') {
+                            // Get basic adjustment values
+                            const saturation = document.getElementById('saturation-control').value;
+                            const contrast = document.getElementById('contrast-control').value;
+                            const brightness = document.getElementById('brightness-control').value;
+                            const sharpness = document.getElementById('sharpness-control').value;
+
+                            // Build transformation string
+                            if (saturation !== '0') transformations += 'e_saturation:' + saturation + '/';
+                            if (contrast !== '0') transformations += 'e_contrast:' + contrast + '/';
+                            if (brightness !== '0') transformations += 'e_brightness:' + brightness + '/';
+                            if (sharpness !== '0') transformations += 'e_sharpen:' + sharpness + '/';
+                        } else if (enhancementType === 'auto') {
+                            // Auto enhancements
+                            if (document.getElementById('auto-color').checked) transformations += 'e_auto_color/';
+                            if (document.getElementById('auto-contrast').checked) transformations += 'e_auto_contrast/';
+                            if (document.getElementById('auto-brightness').checked) transformations += 'e_auto_brightness/';
+                            if (document.getElementById('auto-sharpen').checked) transformations += 'e_improve/';
+                        } else if (enhancementType === 'advanced') {
+                            // Advanced quality settings
+                            if (document.getElementById('improve').checked) transformations += 'e_improve/';
+                            if (document.getElementById('enhance').checked) transformations += 'e_enhance/';
+                            if (document.getElementById('quality-auto').checked) transformations += 'q_auto/';
+                            if (document.getElementById('format-auto').checked) transformations += 'f_auto/';
+
+                            const unsharpMask = document.getElementById('unsharp-mask').value;
+                            if (unsharpMask !== '0') transformations += 'e_unsharp_mask:' + unsharpMask + '/';
+                        } else if (enhancementType === 'resize') {
+                            // Resize settings
+                            const resizeMode = document.getElementById('resize-mode').value;
+                            const width = document.getElementById('resize-width').value;
+                            const height = document.getElementById('resize-height').value;
+
+                            transformations += resizeMode + '_' + width + 'x' + height + '/';
+                        }
+
+                        // Apply transformations to the Cloudinary URL
+                        // Extract the Cloudinary URL parts
+                        const urlParts = originalImageUrl.split('/upload/');
+                        if (urlParts.length === 2) {
+                            enhancedImageUrl = urlParts[0] + '/upload/' + transformations + urlParts[1];
+
+                            // Create and display the enhanced image
+                            const enhancedImg = document.createElement('img');
+                            enhancedImg.src = enhancedImageUrl;
+                            enhancedImg.alt = 'Enhanced Image';
+                            enhancedImg.className = 'preview-img';
+
+                            // Clear previous content and add the new image
+                            enhancedImageDisplay.innerHTML = '';
+                            enhancedImageDisplay.appendChild(enhancedImg);
+
+                            // Enable download button
+                            downloadButton.disabled = false;
+
+                            // Reset enhance button
+                            enhanceButton.textContent = '✨ Apply Enhancements';
+                            enhanceButton.disabled = false;
+                        } else {
+                            // Handle non-Cloudinary images
+                            showErrorMessage('Cannot enhance this image. Please upload an image through the Cloudinary widget.');
+                            enhanceButton.textContent = '✨ Apply Enhancements';
+                            enhanceButton.disabled = false;
+                        }
+                    }
+                });
+            }
+
+            // Handle download button click
+            if (downloadButton) {
+                downloadButton.addEventListener('click', function() {
+                    if (enhancedImageUrl) {
+                        // Create a temporary link element
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = enhancedImageUrl;
+                        downloadLink.download = 'enhanced-image.jpg';
+
+                        // Trigger download
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    }
+                });
+            }
+
+            // Handle reset button click
+            if (resetButton) {
+                resetButton.addEventListener('click', function() {
+                    // Hide result container
+                    const resultContainer = document.getElementById('result-container');
+                    if (resultContainer) {
+                        resultContainer.style.display = 'none';
+                    }
+
+                    // Show upload area
+                    const uploadArea = document.getElementById('upload-area');
+                    if (uploadArea) {
+                        uploadArea.style.display = 'block';
+                    }
+
+                    // Clear image displays
+                    const originalImageDisplay = document.getElementById('original-image-display');
+                    const enhancedImageDisplay = document.getElementById('enhanced-image-display');
+
+                    if (originalImageDisplay) originalImageDisplay.innerHTML = '';
+                    if (enhancedImageDisplay) enhancedImageDisplay.innerHTML = '';
+
+                    // Reset variables
+                    originalImageUrl = null;
+                    enhancedImageUrl = null;
+
+                    // Reset buttons
+                    if (enhanceButton) enhanceButton.disabled = true;
+                    if (downloadButton) downloadButton.disabled = true;
+                });
+            }
+        });
+
         // Initialize star animations for enhance.html
         window.addEventListener('load', function() {
             console.log("Enhance.html - initializing star animations");
-            
+
             // Try calling createStarsV4 function first (this should work since we're loading script.js)
             if (typeof createStarsV4 === 'function') {
                 console.log("Enhance.html - Debug: createStarsV4 function found, calling it");
                 createStarsV4();
             } else {
                 console.log("Enhance.html - Debug: createStarsV4 function not found!");
-                
+
                 // Set basic styles for background elements
                 document.querySelector('.stars').style.opacity = '0.6';
                 document.querySelector('.twinkling').style.zIndex = '1';
-                
+
                 // Make sure the app container is above backgrounds
                 document.querySelector('.app-container').style.position = 'relative';
                 document.querySelector('.app-container').style.zIndex = '10';
