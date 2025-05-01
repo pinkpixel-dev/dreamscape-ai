@@ -1,5 +1,22 @@
 # Dreamscape AI - Changelog
 
+## v1.1.5 - May 15, 2025
+
+### 🐛 Bug Fixes
+- Fixed Cloudinary upload widget in both enhance.html and artistic.html
+  - Implemented server-side signature generation for secure uploads
+  - Created a dedicated endpoint (functions/cloudinary-signature.js) for signing upload requests
+  - Added comprehensive error handling with user-friendly messages
+- Fixed non-functional buttons in enhance.html and artistic.html
+  - Implemented "Apply Enhancements" button functionality in enhance.html
+  - Implemented "Apply Effect" button functionality in artistic.html
+  - Added download functionality to save transformed images
+  - Added reset functionality to start over with new images
+- Improved user experience with better feedback
+  - Added loading states for buttons during processing
+  - Added proper error handling with user-friendly messages
+  - Implemented dynamic UI updates based on user selections
+
 ## v1.1.4 - May 1, 2025
 
 ### 🐛 Bug Fixes
