@@ -41,7 +41,7 @@
             box-shadow: 0 10px 20px rgba(157, 78, 221, 0.3);
             border-color: rgba(157, 78, 221, 0.5);
         }
-        
+
         /* Sparkle effects for the cards - these will be positioned by JavaScript */
         .sparkle-effect {
             position: absolute;
@@ -55,19 +55,19 @@
             transform: scale(0);
             transition: opacity 0.3s, transform 0.3s;
         }
-        
+
         .sparkle-effect.purple {
             filter: drop-shadow(0 0 5px rgba(199, 125, 255, 0.8));
         }
-        
+
         .sparkle-effect.pink {
             filter: drop-shadow(0 0 5px rgba(255, 126, 238, 0.8));
         }
-        
+
         .sparkle-effect.blue {
             filter: drop-shadow(0 0 5px rgba(126, 220, 255, 0.8));
         }
-        
+
         .sparkle-effect.gold {
             filter: drop-shadow(0 0 5px rgba(255, 222, 126, 0.8));
         }
@@ -133,7 +133,7 @@
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
             animation: pulse-badge 2s infinite ease-in-out;
         }
-        
+
         .coming-soon-badge::before {
             content: '';
             position: absolute;
@@ -144,7 +144,7 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             animation: shine 3s infinite;
         }
-        
+
         @keyframes shine {
             0% {
                 left: -100%;
@@ -156,7 +156,7 @@
                 left: 100%;
             }
         }
-        
+
         @keyframes pulse-badge {
             0%, 100% {
                 transform: scale(1);
@@ -176,7 +176,7 @@
     <div class="moon-container">
         <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon" style="filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));">
     </div>
-    
+
     <div class="main-container">
         <div class="title-container">
             <div class="title-wrapper">
@@ -184,7 +184,7 @@
             </div>
             <p class="subtitle-main">Your AI-powered creative studio for image generation & enhancement</p>
         </div>
-        
+
         <div class="features-container">
             <!-- Generate Images Card -->
             <a href="public/generate.html" class="feature-card">
@@ -192,33 +192,40 @@
                 <h3 class="feature-title">Generate Images</h3>
                 <p class="feature-description">Transform your text descriptions into beautiful AI-generated images with powerful models and artistic styles.</p>
             </a>
-            
+
             <!-- Enhance Images Card -->
             <a href="public/enhance.html" class="feature-card">
                 <div class="feature-icon">✨</div>
                 <h3 class="feature-title">Enhance & Resize</h3>
                 <p class="feature-description">Upgrade your images with AI enhancement, fix low resolution photos, and resize for different platforms.</p>
             </a>
-            
+
             <!-- Artistic Effects Card -->
             <a href="public/artistic.html" class="feature-card">
                 <div class="feature-icon">🎨</div>
                 <h3 class="feature-title">Artistic Effects</h3>
                 <p class="feature-description">Apply beautiful artistic styles to your photos, transforming them into various art forms and aesthetics.</p>
             </a>
-            
+
             <!-- Text Chat Card -->
             <a href="public/chat.html" class="feature-card">
                 <div class="feature-icon">💬</div>
                 <h3 class="feature-title">Text Chat</h3>
                 <p class="feature-description">Interact with AI using text. Ask questions, get creative ideas, and engage in conversation.</p>
             </a>
-            
+
             <!-- Voice Assistant Card -->
             <a href="public/voice.html" class="feature-card">
                 <div class="feature-icon">🎤</div>
                 <h3 class="feature-title">Voice Assistant</h3>
                 <p class="feature-description">Speak naturally with AI using your voice. Get spoken responses and have voice conversations.</p>
+            </a>
+
+            <!-- Research Card -->
+            <a href="public/research.html" class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3 class="feature-title">Deep Research</h3>
+                <p class="feature-description">Conduct in-depth research with AI assistance. Generate documents and explore complex topics.</p>
             </a>
         </div>
     </div>
@@ -226,13 +233,13 @@
     <!-- Same script references as generate.html, in same order -->
     <script src="styles.js"></script>
     <script src="script.js"></script>
-    
+
     <!-- Add sparkle effect JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get all feature cards
             const cards = document.querySelectorAll('.feature-card');
-            
+
             // Create sparkle container
             const sparkleContainer = document.createElement('div');
             sparkleContainer.style.position = 'fixed';
@@ -243,11 +250,11 @@
             sparkleContainer.style.pointerEvents = 'none';
             sparkleContainer.style.zIndex = '9999';
             document.body.appendChild(sparkleContainer);
-            
+
             // Pre-create sparkle elements for better performance
             const sparklePool = [];
             const colors = ['purple', 'pink', 'blue', 'gold'];
-            
+
             for (let i = 0; i < 30; i++) {
                 const sparkle = document.createElement('div');
                 sparkle.className = 'sparkle-effect ' + colors[i % colors.length];
@@ -259,62 +266,62 @@
                     inUse: false
                 });
             }
-            
+
             // Add mouse tracking for each card
             cards.forEach(card => {
                 let activeSparkles = [];
                 let animationFrame;
-                
+
                 card.addEventListener('mouseenter', startSparkles);
                 card.addEventListener('mousemove', updateSparkles);
                 card.addEventListener('mouseleave', stopSparkles);
-                
+
                 function startSparkles() {
                     if (animationFrame) cancelAnimationFrame(animationFrame);
                     animationFrame = requestAnimationFrame(sparkleAnimation);
                 }
-                
+
                 function updateSparkles(e) {
                     // Update the card bounds for accurate positioning
                     cardBounds = card.getBoundingClientRect();
                 }
-                
+
                 function stopSparkles() {
                     if (animationFrame) {
                         cancelAnimationFrame(animationFrame);
                         animationFrame = null;
                     }
-                    
+
                     // Fade out active sparkles
                     activeSparkles.forEach(sparkleInfo => {
                         sparkleInfo.element.style.opacity = '0';
                         sparkleInfo.element.style.transform = 'scale(0)';
-                        
+
                         // Return to pool after animation
                         setTimeout(() => {
                             sparkleInfo.inUse = false;
                         }, 300);
                     });
-                    
+
                     activeSparkles = [];
                 }
-                
+
                 function sparkleAnimation() {
                     const cardBounds = card.getBoundingClientRect();
-                    
+
                     // Add new sparkle at random position around the card border
                     if (Math.random() < 0.3) { // Control frequency of new sparkles
                         // Find an available sparkle from the pool
                         const availableSparkle = sparklePool.find(s => !s.inUse);
-                        
+
                         if (availableSparkle) {
                             availableSparkle.inUse = true;
                             const sparkle = availableSparkle.element;
-                            
+
                             // Decide which edge to place the sparkle on
                             const edge = Math.floor(Math.random() * 4);
                             let x, y;
-                            
+
                             switch(edge) {
                                 case 0: // Top edge
                                     x = cardBounds.left + Math.random() * cardBounds.width;
@@ -333,32 +340,32 @@
                                     y = cardBounds.top + Math.random() * cardBounds.height;
                                     break;
                             }
-                            
+
                             // Position the sparkle
                             sparkle.style.left = `${x}px`;
                             sparkle.style.top = `${y}px`;
-                            
+
                             // Random size
                             const size = 10 + Math.random() * 10;
                             sparkle.style.width = `${size}px`;
                             sparkle.style.height = `${size}px`;
-                            
+
                             // Random rotation
                             const rotation = Math.random() * 360;
                             sparkle.style.transform = `rotate(${rotation}deg) scale(1)`;
-                            
+
                             // Show the sparkle
                             sparkle.style.opacity = '1';
-                            
+
                             // Add to active sparkles
                             activeSparkles.push(availableSparkle);
-                            
+
                             // Remove after animation completes
                             setTimeout(() => {
                                 if (sparkle.parentNode) {
                                     sparkle.style.opacity = '0';
                                     sparkle.style.transform = 'scale(0)';
-                                    
+
                                     // Return to pool
                                     setTimeout(() => {
                                         availableSparkle.inUse = false;
@@ -372,23 +379,23 @@
                             }, 1000 + Math.random() * 1000); // Random duration
                         }
                     }
-                    
+
                     // Continue animation if still hovering
                     if (animationFrame) {
                         animationFrame = requestAnimationFrame(sparkleAnimation);
                     }
                 }
             });
-            
+
             // Verify links are clickable by adding debugging
             cards.forEach(card => {
                 card.addEventListener('click', function(e) {
                     console.log('Card clicked:', card.getAttribute('href'));
                 });
             });
-            
+
             console.log('Sparkle effect initialized for', cards.length, 'cards');
         });
     </script>
 </body>
-</html> 
+</html>
