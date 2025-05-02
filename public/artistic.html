@@ -313,11 +313,11 @@
             </div>
 
             <div class="sidebar-section" id="painting-controls" style="display: none;">
-                <p class="section-title">🎨 Painting Styles</p>
+                <p class="section-title">🎨 Other Styles</p>
                 <div class="control-group">
                     <label for="painting-style">Select Style</label>
                     <select id="painting-style">
-                        <option value="oil_paint">Oil Painting</option>
+                        <option value="oil_paint">Painting</option>
                         <option value="al_dente">Al Dente</option>
                         <option value="vignette">Vignette</option>
                     </select>
@@ -333,70 +333,6 @@
                         <input type="range" id="tint-strength" min="0" max="100" value="0" style="flex: 1;">
                         <span id="tint-strength-value">0%</span>
                     </div>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <p class="section-title">🖼️ Output Size</p>
-                <div class="control-group">
-                    <label for="output-size-type">Sizing Method</label>
-                    <select id="output-size-type">
-                        <option value="original">Original Size</option>
-                        <option value="custom" selected>Custom Size</option>
-                        <option value="preset">Preset Dimensions</option>
-                    </select>
-                </div>
-
-                <!-- Custom width and height sliders -->
-                <div id="custom-size-controls">
-                    <div class="control-group slider-control">
-                        <label for="width-control">Width <span>768</span>px</label>
-                        <input type="range" id="width-control" min="100" max="2000" value="768">
-                    </div>
-                    <div class="control-group slider-control">
-                        <label for="height-control">Height <span>768</span>px</label>
-                        <input type="range" id="height-control" min="100" max="2000" value="768">
-                    </div>
-                    <div class="control-group">
-                        <label for="maintain-aspect-ratio">
-                            <input type="checkbox" id="maintain-aspect-ratio" checked>
-                            🔒 Maintain Aspect Ratio
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Preset dimensions dropdown, hidden initially if custom is selected -->
-                <div id="preset-size-controls" style="display: none;">
-                    <div class="control-group">
-                        <label for="output-size">Preset Dimensions</label>
-                        <select id="output-size">
-                            <option value="512x512">512 x 512</option>
-                            <option value="768x768" selected>768 x 768</option>
-                            <option value="1024x1024">1024 x 1024</option>
-                            <option value="1280x720">1280 x 720 (HD)</option>
-                            <option value="1920x1080">1920 x 1080 (Full HD)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <p class="section-title">🛠️ Settings</p>
-                <div class="control-group">
-                    <label for="remove-watermark">
-                        <input type="checkbox" id="remove-watermark" checked>
-                        🎯 Remove Watermark
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label for="custom-seed">
-                        <input type="checkbox" id="custom-seed">
-                        🌱 Custom Seed
-                    </label>
-                </div>
-                <div class="control-group" id="seed-value-group" style="display: none;">
-                    <label for="seed-value">Seed Value</label>
-                    <input type="number" id="seed-value" min="1" max="999999" value="42">
                 </div>
             </div>
 
@@ -661,6 +597,26 @@
                     tintStrengthValue.textContent = this.value + '%';
                 });
             }
+
+            // Handle all other sliders
+            const sliders = document.querySelectorAll('input[type="range"]:not(#tint-strength)');
+
+            // Add input event listeners to update the displayed values
+            sliders.forEach(slider => {
+                const label = slider.previousElementSibling;
+                if (label && label.tagName === 'LABEL') {
+                    const valueSpan = label.querySelector('span');
+                    if (valueSpan) {
+                        // Update initial value
+                        valueSpan.textContent = slider.value;
+
+                        // Add event listener for changes
+                        slider.addEventListener('input', function() {
+                            valueSpan.textContent = this.value;
+                        });
+                    }
+                }
+            });
         });
     </script>
 

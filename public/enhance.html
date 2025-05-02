@@ -375,70 +375,6 @@
             </div>
 
             <div class="sidebar-section">
-                <p class="section-title">🖼️ Output Size</p>
-                <div class="control-group">
-                    <label for="output-size-type">Sizing Method</label>
-                    <select id="output-size-type">
-                        <option value="original">Original Size</option>
-                        <option value="custom" selected>Custom Size</option>
-                        <option value="preset">Preset Dimensions</option>
-                    </select>
-                </div>
-
-                <!-- Custom width and height sliders -->
-                <div id="custom-size-controls">
-                    <div class="control-group slider-control">
-                        <label for="width-control">Width <span>768</span>px</label>
-                        <input type="range" id="width-control" min="100" max="2000" value="768">
-                    </div>
-                    <div class="control-group slider-control">
-                        <label for="height-control">Height <span>768</span>px</label>
-                        <input type="range" id="height-control" min="100" max="2000" value="768">
-                    </div>
-                    <div class="control-group">
-                        <label for="maintain-aspect-ratio">
-                            <input type="checkbox" id="maintain-aspect-ratio" checked>
-                            🔒 Maintain Aspect Ratio
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Preset dimensions dropdown, hidden initially if custom is selected -->
-                <div id="preset-size-controls" style="display: none;">
-                    <div class="control-group">
-                        <label for="output-size">Preset Dimensions</label>
-                        <select id="output-size">
-                            <option value="512x512">512 x 512</option>
-                            <option value="768x768" selected>768 x 768</option>
-                            <option value="1024x1024">1024 x 1024</option>
-                            <option value="1280x720">1280 x 720 (HD)</option>
-                            <option value="1920x1080">1920 x 1080 (Full HD)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <p class="section-title">🛠️ Settings</p>
-                <div class="control-group">
-                    <label for="remove-watermark">
-                        <input type="checkbox" id="remove-watermark" checked>
-                        🎯 Remove Watermark
-                    </label>
-                </div>
-                <div class="control-group">
-                    <label for="custom-seed">
-                        <input type="checkbox" id="custom-seed">
-                        🌱 Custom Seed
-                    </label>
-                </div>
-                <div class="control-group" id="seed-value-group" style="display: none;">
-                    <label for="seed-value">Seed Value</label>
-                    <input type="number" id="seed-value" min="1" max="999999" value="42">
-            </div>
-            </div>
-
-            <div class="sidebar-section">
                 <p class="section-title">ℹ️ About</p>
                 <div class="control-group enhance-description">
                     <p>Enhance your images by choosing from basic adjustments, auto-enhance or advanced quality settings.</p>
@@ -637,6 +573,59 @@
                     // Reset buttons
                     if (enhanceButton) enhanceButton.disabled = true;
                     if (downloadButton) downloadButton.disabled = true;
+                });
+            }
+        });
+
+        // Initialize slider value updates
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all slider controls
+            const sliders = document.querySelectorAll('input[type="range"]');
+
+            // Add input event listeners to update the displayed values
+            sliders.forEach(slider => {
+                const label = slider.previousElementSibling;
+                if (label && label.tagName === 'LABEL') {
+                    const valueSpan = label.querySelector('span');
+                    if (valueSpan) {
+                        // Update initial value
+                        valueSpan.textContent = slider.value;
+
+                        // Add event listener for changes
+                        slider.addEventListener('input', function() {
+                            valueSpan.textContent = this.value;
+                        });
+                    }
+                }
+            });
+
+            // Handle enhancement type radio buttons
+            const enhancementTypeRadios = document.querySelectorAll('input[name="enhancement-type"]');
+            const basicControls = document.getElementById('basic-controls');
+            const autoControls = document.getElementById('auto-controls');
+            const advancedControls = document.getElementById('advanced-controls');
+            const resizeControls = document.getElementById('resize-controls');
+
+            if (enhancementTypeRadios && basicControls && autoControls && advancedControls && resizeControls) {
+                enhancementTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        // Hide all controls
+                        basicControls.style.display = 'none';
+                        autoControls.style.display = 'none';
+                        advancedControls.style.display = 'none';
+                        resizeControls.style.display = 'none';
+
+                        // Show selected controls
+                        if (this.value === 'basic') {
+                            basicControls.style.display = 'block';
+                        } else if (this.value === 'auto') {
+                            autoControls.style.display = 'block';
+                        } else if (this.value === 'advanced') {
+                            advancedControls.style.display = 'block';
+                        } else if (this.value === 'resize') {
+                            resizeControls.style.display = 'block';
+                        }
+                    });
                 });
             }
         });

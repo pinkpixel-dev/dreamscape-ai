@@ -1,6 +1,6 @@
 # Dreamscape AI - Changelog
 
-## v1.1.5 - May 15, 2025
+## v1.1.5 - May 2, 2025
 
 ### 🐛 Bug Fixes
 - Fixed Cloudinary upload widget in both enhance.html and artistic.html
