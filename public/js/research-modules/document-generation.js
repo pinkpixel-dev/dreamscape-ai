@@ -82,7 +82,7 @@ async function processSourceContent(source, topic, sectionIndex, totalSections, 
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'openai',
+                model: 'openai-large',
                 prompt: `Generate a detailed section for a research document about "${topic}" based on the provided content.`,
                 system: `You are generating part ${sectionIndex + 1} of ${totalSections} of a comprehensive research document about "${topic}" based on the following content. Create well-structured, detailed content in ${format} format with proper headings and organization. Maintain technical accuracy and include specific details from the source.`,
                 context: source.content,

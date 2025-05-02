@@ -100,7 +100,7 @@ async function searchInformation(query) {
                     const seed = 924; // Use the same seed as the backend
 
                     // Direct call to Pollinations API - using exact URL format that works in browser
-                    const directUrl = `https://text.pollinations.ai/${directEncodedQuery}?model=searchgpt&seed=${seed}&json=true`;
+                    const directUrl = `https://text.pollinations.ai/research${directEncodedQuery}provideurls?model=searchgpt&seed=${seed}&json=true`;
                     console.log(`Attempting direct API call with URL: ${directUrl}`);
 
                     const directResponse = await fetch(directUrl, {

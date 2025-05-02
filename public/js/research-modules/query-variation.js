@@ -37,7 +37,7 @@ async function generateQueryVariations(baseQuery, tier = 'quick') {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'openai',
+                model: 'openai-large',
                 prompt: `Generate ${tier === 'extended' ? '2' : '4'} different search query variations for the topic "${baseQuery}" that will help find diverse, high-quality information. Each variation should focus on different aspects or approaches to the topic. Return each query on a new line without numbering.`,
                 system: "You are an expert search query optimizer. Create variations that will discover different aspects of a topic for research purposes.",
                 max_tokens: 1000
@@ -96,7 +96,7 @@ function determineIfClarificationNeeded(query) {
  * @returns {string} Initial response message
  */
 function generateInitialResponse(query) {
-    return `I'll research "${query}" for you. This should take just a moment...`;
+    return `I'll research "${query}" for you. This might take a few minutes...`;
 }
 
 /**
