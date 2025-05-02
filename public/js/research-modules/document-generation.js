@@ -8,7 +8,7 @@
  */
 function formatMarkdown(markdown) {
     if (!markdown) return '';
-    
+
     // Basic markdown formatting (can be enhanced)
     let html = markdown
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -21,7 +21,7 @@ function formatMarkdown(markdown) {
         .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
         .replace(/\n/gim, '<br>')
         .replace(/^-(.*$)/gim, '<li>$1</li>');
-    
+
     return html;
 }
 
@@ -46,17 +46,41 @@ async function generateIntroduction(topic, format, context = '') {
  */
 async function generateConclusion(topic, sources, format, context = '') {
     let conclusion = `## Conclusion\n\n${topic} is a complex and evolving field with many facets and applications. This document has presented a comprehensive overview based on research from multiple sources.\n\n`;
-    
+
     // Add sources section
     conclusion += `## Sources\n\n`;
     if (sources && sources.length) {
         sources.forEach((source, index) => {
-            conclusion += `${index + 1}. [${source}](${source})\n`;
+            // Handle different source formats (string or object)
+            let sourceUrl = '';
+            let sourceTitle = '';
+
+            if (typeof source === 'string') {
+                sourceUrl = source;
+                sourceTitle = source;
+            } else if (typeof source === 'object' && source !== null) {
+                // Extract URL from object
+                if (source.url) {
+                    sourceUrl = source.url;
+                    sourceTitle = source.title || source.url;
+                } else if (source.href) {
+                    sourceUrl = source.href;
+                    sourceTitle = source.title || source.href;
+                } else if (source.toString) {
+                    sourceUrl = source.toString();
+                    sourceTitle = sourceUrl;
+                }
+            }
+
+            // Only add valid URLs
+            if (sourceUrl) {
+                conclusion += `${index + 1}. [${sourceTitle}](${sourceUrl})\n`;
+            }
         });
     } else {
         conclusion += `No sources were available for this document.`;
     }
-    
+
     return conclusion;
 }
 
@@ -73,7 +97,7 @@ async function processSourceContent(source, topic, sectionIndex, totalSections, 
     if (!source || !source.content) {
         return generateFallbackContent(topic);
     }
-    
+
     try {
         // Use the pollinations-text API endpoint for text generation
         const response = await fetch('/api/pollinations-text', {
@@ -89,20 +113,35 @@ async function processSourceContent(source, topic, sectionIndex, totalSections, 
                 max_tokens: 2000
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success || !result.text || result.text.trim().length < 100) {
             console.log('Failed to generate content from source, using fallback', result);
             return generateFallbackContent(topic);
         }
-        
+
         // Add source attribution
         let content = result.text;
-        if (!content.includes(`Source: ${source.url}`)) {
-            content += `\n\n*Source: [${source.url}](${source.url})*\n\n`;
+
+        // Get the source URL in a safe way
+        let sourceUrl = '';
+        if (typeof source.url === 'string') {
+            sourceUrl = source.url;
+        } else if (source.url && typeof source.url === 'object' && source.url.href) {
+            sourceUrl = source.url.href;
+        } else if (source.url && source.url.toString && source.url.toString() !== '[object Object]') {
+            sourceUrl = source.url.toString();
         }
-        
+
+        // Get the source title
+        let sourceTitle = source.title || sourceUrl;
+
+        // Add attribution if not already included and we have a valid URL
+        if (sourceUrl && !content.includes(`Source: ${sourceUrl}`)) {
+            content += `\n\n*Source: [${sourceTitle}](${sourceUrl})*\n\n`;
+        }
+
         return content;
     } catch (error) {
         console.error('Error generating document section:', error);
@@ -186,9 +225,9 @@ function displayDocument(documentContent, format = 'markdown') {
     const documentContainer = document.getElementById('document-container');
     const toggleDocumentBtn = document.getElementById('toggle-document-btn');
     const documentSidebar = document.getElementById('document-sidebar');
-    
+
     if (!documentContainer) return;
-    
+
     // Set document content
     if (format === 'markdown') {
         // For markdown, we need to handle some basic formatting
@@ -198,12 +237,12 @@ function displayDocument(documentContent, format = 'markdown') {
         // For HTML, we can set it directly
         documentContainer.innerHTML = documentContent;
     }
-    
+
     // Show the document sidebar toggle button
     if (toggleDocumentBtn) {
         toggleDocumentBtn.style.display = 'block';
     }
-    
+
     // Automatically open the document sidebar
     if (documentSidebar) {
         documentSidebar.classList.add('visible');
@@ -220,7 +259,7 @@ function downloadDocument(content, filename, format) {
     let downloadContent = content;
     let mimeType = 'text/plain';
     let extension = 'txt';
-    
+
     if (format === 'html') {
         downloadContent = `<!DOCTYPE html>
 <html>
@@ -250,7 +289,7 @@ function downloadDocument(content, filename, format) {
         mimeType = 'text/markdown';
         extension = 'md';
     }
-    
+
     const blob = new Blob([downloadContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -288,4 +327,4 @@ export {
     displayDocument,
     downloadDocument,
     copyToClipboard
-}; 
+};

@@ -283,17 +283,42 @@ function showSourcesList(sources) {
     if (!sourcesListContainer || !sourcesContainer) return;
 
     // Create source list HTML
-    const sourcesList = sources.map(source =>
-        `<div class="source-item" style="margin-bottom: 10px;">
-            <a href="${source.url}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
-                ${source.title || source.url}
-            </a>
-            ${source.type ? `<span class="source-type" style="margin-left: 8px; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: var(--secondary-color-light); color: var(--text-color);">${source.type}</span>` : ''}
-        </div>`
-    ).join('');
+    const sourcesList = sources.map(source => {
+        // Handle different source formats
+        let sourceUrl = '';
+        let sourceTitle = '';
+        let sourceType = '';
+
+        if (typeof source === 'string') {
+            sourceUrl = source;
+            sourceTitle = source;
+        } else if (typeof source === 'object' && source !== null) {
+            // Extract URL from object
+            if (source.url) {
+                sourceUrl = source.url;
+                sourceTitle = source.title || source.url;
+                sourceType = source.type || '';
+            } else if (source.href) {
+                sourceUrl = source.href;
+                sourceTitle = source.title || source.href;
+                sourceType = source.type || '';
+            }
+        }
+
+        // Only create HTML for valid URLs
+        if (sourceUrl) {
+            return `<div class="source-item" style="margin-bottom: 10px;">
+                <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                    ${sourceTitle}
+                </a>
+                ${sourceType ? `<span class="source-type" style="margin-left: 8px; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: var(--secondary-color-light); color: var(--text-color);">${sourceType}</span>` : ''}
+            </div>`;
+        }
+        return '';
+    }).filter(item => item !== '').join('');
 
     // Update the sources list
-    sourcesListContainer.innerHTML = sourcesList;
+    sourcesListContainer.innerHTML = sourcesList || 'No sources available';
 
     // Show the sources container
     sourcesContainer.style.display = 'block';
@@ -414,7 +439,15 @@ async function performResearch(query, tier = 'quick', includeImages = false, sta
     // Generate conclusion with source references
     const conclusion = await generateConclusion(
         query,
-        categorizedSources.map(source => source.url),
+        categorizedSources.map(source => {
+            // Ensure we're passing a valid URL string
+            if (typeof source === 'string') {
+                return source;
+            } else if (source && typeof source === 'object') {
+                return source.url || (source.toString && source.toString() !== '[object Object]' ? source.toString() : '');
+            }
+            return '';
+        }).filter(url => url), // Filter out empty strings
         'markdown'
     );
 
