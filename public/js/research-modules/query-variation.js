@@ -9,12 +9,12 @@
  */
 async function generateQueryVariations(baseQuery, tier = 'quick') {
     console.log(`Generating query variations for tier: ${tier}`);
-    
+
     // For quick tier, just return the original query
     if (tier === 'quick') {
         return [baseQuery];
     }
-    
+
     // Default variations to use if API call fails
     const defaultVariations = {
         extended: [
@@ -43,20 +43,20 @@ async function generateQueryVariations(baseQuery, tier = 'quick') {
                 max_tokens: 1000
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success || !result.text) {
             console.log('Failed to generate query variations, using defaults');
             return [baseQuery, ...defaultVariations[tier]];
         }
-        
+
         // Parse the response to get individual queries
         const variations = result.text
             .split('\n')
             .map(line => line.trim())
             .filter(line => line && !line.match(/^\d+\./)); // Remove any numbered items
-        
+
         if (variations && variations.length > 0) {
             // Add the original query and deduplicate
             return [...new Set([baseQuery, ...variations])];
@@ -76,17 +76,17 @@ async function generateQueryVariations(baseQuery, tier = 'quick') {
  */
 function determineIfClarificationNeeded(query) {
     if (!query) return true;
-    
+
     // Check for very short queries
     if (query.length < 10) return true;
-    
+
     // Check for queries without spaces (likely a single term)
     if (!query.includes(' ')) return true;
-    
+
     // Check for very generic queries
     const genericTerms = ['how', 'what', 'who', 'why', 'when', 'where', 'is', 'are', 'can', 'do'];
     if (genericTerms.some(term => query.toLowerCase() === term)) return true;
-    
+
     return false;
 }
 
@@ -96,7 +96,16 @@ function determineIfClarificationNeeded(query) {
  * @returns {string} Initial response message
  */
 function generateInitialResponse(query) {
-    return `I'll research "${query}" for you. This might take a few minutes...`;
+    const responses = [
+        `I'm starting my research on "${query}" now. This might take a few minutes...`,
+        `I'll gather comprehensive information about "${query}" for you. Please give me a moment...`,
+        `Beginning research on "${query}". I'll compile the best sources and information for you...`,
+        `I'm searching for high-quality information about "${query}". This will take a few minutes...`,
+        `Starting to research "${query}" now. I'll create a detailed document for you shortly...`
+    ];
+
+    // Return a random response for variety
+    return responses[Math.floor(Math.random() * responses.length)];
 }
 
 /**
@@ -106,7 +115,7 @@ function generateInitialResponse(query) {
  */
 function categorizeSources(sources) {
     if (!sources || !Array.isArray(sources)) return [];
-    
+
     const sourceTypes = {
         documentation: {
             priority: 5,
@@ -162,4 +171,4 @@ export {
     determineIfClarificationNeeded,
     generateInitialResponse,
     categorizeSources
-}; 
+};

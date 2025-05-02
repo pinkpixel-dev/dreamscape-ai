@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/enhance.css">
     <link rel="icon" type="image/png" href="../favicon.png">
-    
+
     <!-- External scripts - using CDN versions only -->
     <script src="https://cdn.jsdelivr.net/npm/ibm-watson@7.1.2/dist/speech-to-text.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.1/dist/socket.io.js"></script>
-    
+
     <!-- Local scripts - Using ES modules -->
     <script src="js/research.js" type="module"></script>
     <style>
@@ -27,14 +27,14 @@
             overflow-y: auto;
             width: 100%;
         }
-        
+
         .page-header {
             width: 100%;
             max-width: 1200px;
             margin-bottom: 30px;
             text-align: center; /* Center the title */
         }
-        
+
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -290,7 +290,7 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
         }
-        
+
         .microphone-test-btn .mic-icon {
             margin-right: 8px;
             position: relative;
@@ -300,13 +300,13 @@
             background-color: #ccc;
             transition: background-color 0.3s ease;
         }
-        
+
         .microphone-test-btn.active .mic-icon {
             background-color: #10b981;
             box-shadow: 0 0 5px #10b981;
             animation: pulse-green 1.5s infinite;
         }
-        
+
         .volume-bars-container {
             display: none;
             height: 20px;
@@ -316,7 +316,7 @@
             justify-content: center;
             gap: 3px;
         }
-        
+
         .volume-bar {
             width: 4px;
             height: 3px;
@@ -324,7 +324,7 @@
             border-radius: 2px;
             transition: height 0.1s ease;
         }
-        
+
         @keyframes pulse-volume {
             0%, 100% {
                 height: var(--min-height, 3px);
@@ -364,7 +364,7 @@
             border-left: 3px solid var(--primary-color);
             line-height: 1.6;
         }
-        
+
         /* Document sidebar styles */
         .document-container-wrapper {
             position: fixed;
@@ -381,11 +381,11 @@
             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
         }
-        
+
         .document-container-wrapper.visible {
             right: 0;
         }
-        
+
         .document-header {
             display: flex;
             justify-content: space-between;
@@ -393,12 +393,12 @@
             padding: 15px 20px;
             border-bottom: 1px solid rgba(157, 78, 221, 0.3);
         }
-        
+
         .document-header h3 {
             margin: 0;
             color: var(--primary-color);
         }
-        
+
         .document-close {
             background: none;
             border: none;
@@ -407,18 +407,18 @@
             cursor: pointer;
             transition: color 0.2s ease;
         }
-        
+
         .document-close:hover {
             color: var(--primary-color);
         }
-        
+
         .document-controls {
             display: flex;
             padding: 10px 20px;
             gap: 10px;
             border-bottom: 1px solid rgba(157, 78, 221, 0.3);
         }
-        
+
         .document-button {
             flex: 1;
             padding: 8px 12px;
@@ -429,12 +429,12 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
+
         .document-button:hover {
             background: rgba(157, 78, 221, 0.3);
             transform: translateY(-2px);
         }
-        
+
         .document-container {
             flex: 1;
             padding: 20px;
@@ -442,45 +442,45 @@
             color: var(--text-light);
             line-height: 1.6;
         }
-        
-        .document-container h1, 
-        .document-container h2, 
+
+        .document-container h1,
+        .document-container h2,
         .document-container h3 {
             color: var(--primary-color);
             margin-top: 1.5em;
             margin-bottom: 0.5em;
         }
-        
+
         .document-container h1 {
             font-size: 1.8em;
             border-bottom: 1px solid rgba(157, 78, 221, 0.3);
             padding-bottom: 0.3em;
         }
-        
+
         .document-container h2 {
             font-size: 1.5em;
         }
-        
+
         .document-container h3 {
             font-size: 1.2em;
         }
-        
+
         .document-container a {
             color: var(--primary-color);
             text-decoration: none;
         }
-        
+
         .document-container a:hover {
             text-decoration: underline;
         }
-        
+
         .document-container code {
             background: rgba(15, 5, 25, 0.3);
             padding: 0.2em 0.4em;
             border-radius: 3px;
             font-family: monospace;
         }
-        
+
         .document-container pre {
             background: rgba(15, 5, 25, 0.3);
             padding: 1em;
@@ -488,7 +488,7 @@
             overflow-x: auto;
             border: 1px solid rgba(157, 78, 221, 0.2);
         }
-        
+
         .document-container blockquote {
             border-left: 3px solid var(--primary-color);
             margin: 1em 0;
@@ -496,7 +496,7 @@
             background: rgba(157, 78, 221, 0.1);
             font-style: italic;
         }
-        
+
         .research-toggle-button {
             position: fixed;
             right: 20px;
@@ -516,7 +516,7 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
         }
-        
+
         .research-toggle-button:hover {
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
@@ -655,7 +655,7 @@
             position: relative;
             display: none;
         }
-        
+
         #research-progress {
             height: 100%;
             width: 0%;
@@ -664,7 +664,7 @@
             transition: width 0.5s ease-in-out;
             box-shadow: 0 0 8px rgba(157, 78, 221, 0.6);
         }
-        
+
         #research-status {
             font-size: 1.1em;
             color: var(--primary-color);
@@ -680,7 +680,7 @@
             border: 1px solid rgba(157, 78, 221, 0.3);
             max-width: 100%;
         }
-        
+
         .comprehensive-summary h2 {
             color: #a991ff;
             border-bottom: 1px solid rgba(157, 78, 221, 0.4);
@@ -688,13 +688,13 @@
             margin-top: 0;
             margin-bottom: 15px;
         }
-        
+
         .comprehensive-summary h3 {
             color: #c5b3ff;
             margin-top: 15px;
             margin-bottom: 8px;
         }
-        
+
         .summary-content {
             max-height: 500px;
             overflow-y: auto;
@@ -702,37 +702,37 @@
             margin-bottom: 15px;
             line-height: 1.6;
         }
-        
+
         .summary-content p {
             margin-bottom: 10px;
         }
-        
+
         .summary-content strong {
             color: #d19fff;
         }
-        
+
         .summary-footer {
             border-top: 1px solid rgba(157, 78, 221, 0.3);
             padding-top: 10px;
             font-size: 0.9em;
             color: #aaa;
         }
-        
+
         /* Scrollbar styling for summary content */
         .summary-content::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         .summary-content::-webkit-scrollbar-track {
             background: rgba(30, 15, 50, 0.1);
             border-radius: 4px;
         }
-        
+
         .summary-content::-webkit-scrollbar-thumb {
             background: rgba(157, 78, 221, 0.4);
             border-radius: 4px;
         }
-        
+
         .summary-content::-webkit-scrollbar-thumb:hover {
             background: rgba(157, 78, 221, 0.6);
         }
@@ -745,14 +745,14 @@
     <div class="moon-container">
         <img class="moon-img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/moon2.png" alt="moon" style="filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));">
     </div>
-    
+
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
                 <img src="../favicon.png" alt="Dreamscape AI" class="sidebar-logo">
                 <span>Creative Studio✨</span>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">📋 Navigation</p>
                 <a href="../index.html" class="nav-link">🏠 Home</a>
@@ -763,7 +763,7 @@
                 <a href="voice.html" class="nav-link">🎤 Voice Assistant</a>
                 <a href="research.html" class="nav-link active">🔍 Deep Research</a>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🔍 Research Options</p>
                 <div class="control-group">
@@ -789,7 +789,7 @@
                     <label for="include-images">Include AI Generated Images</label>
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <p class="section-title">🎤 Voice Settings</p>
                 <div class="control-group">
@@ -821,13 +821,13 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="content">
             <div class="page-header">
                 <h1>Dreamscape Deep Research 🔍</h1>
                 <p>Research any topic and generate comprehensive documents with AI-powered insights</p>
             </div>
-            
+
             <div class="chat-container">
                 <!-- Research Options -->
                 <div class="research-options" style="visibility: hidden; height: 0; margin: 0; padding: 0; overflow: hidden;">
@@ -840,25 +840,25 @@
                         <button id="start-research-button" class="send-button" style="width: 100%;">Start Research</button>
                     </div>
                 </div>
-                
+
                 <!-- Research Status -->
                 <div id="research-status-container" class="research-status-container">
                     <div id="research-status">Starting research...</div>
                     </div>
-                
+
                 <!-- Add the progress bar container right after the research status -->
                 <div id="progress-container">
                     <div id="research-progress"></div>
                 </div>
-                
+
                 <div class="chat-messages" id="messages-container">
                     <div class="message ai-message">
                         <div class="message-content">
-                        Hello! I'm your research assistant. What topic would you like to explore today? Feel free to ask me about anything you're curious about, and I'll help you research it thoroughly.
+                        Hello! I'm your research assistant. What topic would you like to explore today? I'll help you research it thoroughly and can have a conversation with you to better understand what you're looking for. Just type your research topic or question to get started.
                         </div>
                     </div>
                 </div>
-                
+
                 <form id="research-form">
                 <div class="chat-input-container">
                         <button id="voice-button" class="voice-button" type="button">🎤</button>
@@ -870,12 +870,12 @@
                     <button id="export-chat-button" class="control-button" title="Save the chat as a markdown file">📤 Export Chat</button>
                 </div>
             </div>
-            
+
             <!-- Research Results - Initially hidden -->
             <div id="research-results-container" class="research-results-container">
                 <!-- Will be populated dynamically -->
             </div>
-            
+
             <!-- Sources List Container -->
             <div class="sources-container" id="sources-container" style="display: none;">
                 <div class="sources-title">Sources</div>
@@ -885,7 +885,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Document Viewer Sidebar -->
     <div class="document-container-wrapper" id="document-sidebar">
         <div class="document-header">
@@ -900,10 +900,10 @@
             <!-- Will be populated with the generated document -->
         </div>
     </div>
-    
+
     <!-- Toggle Button for Document Sidebar -->
     <button id="toggle-document-btn" class="research-toggle-button" style="display: none;">📄</button>
-    
+
     <!-- Simple initialization script -->
     <script type="module">
         // Document interactions for sidebar
@@ -912,76 +912,76 @@
             const documentSidebar = document.getElementById('document-sidebar');
             const toggleDocumentBtn = document.getElementById('toggle-document-btn');
             const closeDocumentBtn = document.getElementById('close-document-btn');
-            
+
             if (toggleDocumentBtn) {
             toggleDocumentBtn.addEventListener('click', () => {
                 documentSidebar.classList.toggle('visible');
             });
             }
-            
+
             if (closeDocumentBtn) {
             closeDocumentBtn.addEventListener('click', () => {
                 documentSidebar.classList.remove('visible');
             });
             }
-            
+
             // Research tier info display
             const tierSelect = document.getElementById('research-tier');
             const tierInfo = document.getElementById('tier-info');
-            
+
             const tierDescriptions = {
                 'quick': 'Quick research provides a basic overview using 5 top sources.',
                 'extended': 'Extended research explores the topic with 10 diverse sources across two search queries.',
                 'deep': 'Deep research provides comprehensive coverage using 20 sources from multiple perspectives.'
             };
-            
+
             if (tierSelect && tierInfo) {
                 tierSelect.addEventListener('change', () => {
                     tierInfo.textContent = tierDescriptions[tierSelect.value];
                 });
             }
-            
+
             // Chat export functionality
             const exportChatButton = document.getElementById('export-chat-button');
             const messagesContainer = document.getElementById('messages-container');
-            
+
             if (exportChatButton && messagesContainer) {
             exportChatButton.addEventListener('click', () => {
                 // Get all messages
                     const messages = Array.from(messagesContainer.querySelectorAll('.message'));
-                
+
                 if (messages.length === 0) {
                     alert('No messages to export.');
                     return;
                 }
-                
+
                 // Format them into text
                 let chatText = '# Dreamscape AI Research Conversation\n\n';
-                
+
                 messages.forEach(message => {
                     const isUser = message.classList.contains('user-message');
                     const prefix = isUser ? '👤 User: ' : '🤖 AI: ';
                     let content = message.innerHTML;
-                    
+
                     // Process HTML content to make it more readable in plain text
                     content = content.replace(/<br>/g, '\n')
                                     .replace(/<div.*?>(.*?)<\/div>/g, '\n$1')
                                     .replace(/<a.*?href="(.*?)".*?>(.*?)<\/a>/g, '$2 ($1)')
                                     .replace(/<[^>]*>/g, '');
-                    
+
                     // Decode HTML entities
                     content = content.replace(/&lt;/g, '<')
                                     .replace(/&gt;/g, '>')
                                     .replace(/&amp;/g, '&')
                                     .replace(/&quot;/g, '"')
                                     .replace(/&#039;/g, "'");
-                    
+
                     chatText += prefix + content + '\n\n';
                 });
-                
+
                 // Add export date
                 chatText += `\nExported on ${new Date().toLocaleString()}`;
-                
+
                 // Create download file
                 const blob = new Blob([chatText], { type: 'text/markdown' });
                 const url = URL.createObjectURL(blob);
@@ -995,4 +995,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
