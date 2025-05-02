@@ -6,11 +6,12 @@ A versatile AI-powered creative studio for generating, enhancing, and transformi
 
 ### 🧠 AI Research & Knowledge
 - **Research Tool**: Generate comprehensive research documents on any topic
+  - Conversational research interface with AI chat interaction
+  - Query optimization based on user follow-up responses
   - Multi-service web scraping with advanced content extraction
-  - Tiered research depth options (Quick, Extended, Deep) 
+  - Tiered research depth options (Quick, Extended, Deep)
   - Specialized content extraction for documentation sites and GitHub repositories
   - Document generation with proper markdown formatting and source citations
-  - Automated document generation with minimal user input
   - Sources list with categorization and prioritization
   - Copy to clipboard or download functionality for research documents
   - Fallback content generation for failed scraping attempts
@@ -85,10 +86,11 @@ npx wrangler pages dev . --compatibility-date=2023-03-21 --port=8123 \
   - Speak naturally with the AI assistant
   - Try different voice models for varied responses
 - **Research Tool**: Access the research tool at `/public/research.html`
-  - Enter a research topic to generate a comprehensive document
+  - Enter a research topic to start a conversation with the AI assistant
+  - Provide additional context when prompted to optimize your research
   - Select research tier (quick, extended, deep) for varying levels of detail
-  - View sources used in the research
-  - Download or copy generated documents
+  - View sources used in the research with categorization
+  - Download or copy generated documents with proper formatting and citations
 
 ## 📦 Deployment
 
@@ -126,12 +128,18 @@ Refer to [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions usi
 ## 📝 Recent Updates
 
 We've made several improvements in the latest version:
-- Added fullscreen lightbox view for generated images
-- Enhanced image download capabilities with direct download buttons
-- Simplified the UI by removing redundant settings
-- Added automatic title generation for all images
-- Improved button alignment and styling for better user experience
-- Fixed various UI inconsistencies
+- **Research Tool Enhancements**:
+  - Fixed conversation flow with a more reliable state-based approach
+  - Added natural chat interaction before starting research
+  - Implemented query optimization based on user follow-up responses
+  - Fixed source display issues in both sidebar and generated documents
+  - Improved error handling and recovery throughout the research process
+- **Image Features**:
+  - Added fullscreen lightbox view for generated images
+  - Enhanced image download capabilities with direct download buttons
+  - Simplified the UI by removing redundant settings
+  - Added automatic title generation for all images
+  - Improved button alignment and styling for better user experience
 
 See [CHANGELOG.md](CHANGELOG.md) for a complete history of changes.
 
@@ -148,4 +156,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-✨ Made with ❤️ by Pink Pixel 
+✨ Made with ❤️ by Pink Pixel

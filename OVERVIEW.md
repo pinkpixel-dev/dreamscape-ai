@@ -51,11 +51,14 @@ Dreamscape AI is an AI-powered creative studio that combines multiple cutting-ed
 #### Research System
 - **Core**: `research-modules/research-core.js`
 - **Components**:
-  - Query variation generation
-  - Multi-service web scraping
-  - Content extraction and processing
-  - Document generation with markdown formatting
-  - Source categorization and prioritization
+  - Conversational research interface with AI chat interaction
+  - Query optimization based on user follow-up responses
+  - Query variation generation for comprehensive research
+  - Multi-service web scraping with fallback mechanisms
+  - Content extraction and processing with specialized handlers
+  - Document generation with markdown formatting and source attribution
+  - Source categorization and prioritization by content type
+  - State-based conversation handling for reliable user interaction
 
 #### AI Chat Interface
 - Multiple model support (GPT-4o, Llama, Mistral, etc.)
@@ -133,4 +136,4 @@ dreamscape-ai/
 ---
 
 ✨ Made with ❤️ by Pink Pixel
-Last Updated: May 2, 2025
+Last Updated: May 3, 2025

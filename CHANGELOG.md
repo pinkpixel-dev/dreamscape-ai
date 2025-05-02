@@ -1,5 +1,26 @@
 # Dreamscape AI - Changelog
 
+## v1.1.6 - May 2, 2025
+
+### 🐛 Bug Fixes
+- Fixed research tool chat interaction issues
+  - Completely rewrote conversation handling with a simpler state-based approach
+  - Fixed issue where the page would reset when answering the first question
+  - Fixed duplicate message display when responding to AI prompts
+  - Fixed "[object Object]" display in sources section with proper type checking
+  - Improved source URL handling in document generation
+  - Added better error handling and recovery throughout the conversation flow
+  - Enhanced console logging for easier debugging
+  - Simplified event handling to be more reliable
+
+### 🔄 Improvements
+- Enhanced research tool conversation experience
+  - Added more natural conversational flow with the AI assistant
+  - Implemented query optimization based on user follow-up responses
+  - Added variety to AI responses with randomized message templates
+  - Improved source attribution in generated documents
+  - Better handling of different source formats in the sidebar and document
+
 ## v1.1.5 - May 2, 2025
 
 ### 🐛 Bug Fixes
