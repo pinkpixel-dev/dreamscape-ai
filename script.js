@@ -258,7 +258,7 @@ async function enhancePromptWithAPI(prompt, style, seed) {
         
         // The models below are sorted by preference for creative prompt enhancement
         const preferredModels = ['openai-large', 'openai', 'pixtral', 'llama', 'mistral'];
-        let modelToUse = 'mistral'; // Default fallback
+        let modelToUse = 'openai'; // Default fallback
         
         // Try to fetch available models
         try {
@@ -302,11 +302,10 @@ async function enhancePromptWithAPI(prompt, style, seed) {
                     signal: controller.signal
                 });
                 
-                // If we got a bad response and it's not mistral, try with mistral as fallback
-                if (!response.ok && modelToUse !== 'mistral') {
-                    console.log(`Model ${modelToUse} failed with status ${response.status}, falling back to mistral`);
+                if (!response.ok && modelToUse !== 'openai') {
+                    console.log(`Model ${modelToUse} failed with status ${response.status}, falling back to openai`);
                     modelError = `Failed with status ${response.status}`;
-                    modelToUse = 'mistral'; // Update the model used
+                    modelToUse = 'openai'; // Update the model used
                     
                     // Try again with mistral model
                     response = await fetch('https://text.pollinations.ai', {
@@ -318,7 +317,7 @@ async function enhancePromptWithAPI(prompt, style, seed) {
                             messages: [
                                 { role: 'user', content: enhanceInstruction }
                             ],
-                            model: 'mistral', // Fallback to mistral
+                            model: 'openai', // Fallback to openai
                         }),
                         signal: controller.signal
                     });
@@ -326,8 +325,8 @@ async function enhancePromptWithAPI(prompt, style, seed) {
             } catch (modelFetchError) {
                 console.error(`Error with model ${modelToUse}:`, modelFetchError);
                 
-                // If the error is not a timeout and we're not already using mistral, try mistral
-                if (modelFetchError.name !== 'AbortError' && modelToUse !== 'mistral') {
+                // If the error is not a timeout and we're not already using openai, try openai
+                if (modelFetchError.name !== 'AbortError' && modelToUse !== 'openai') {
                     console.log('Falling back to mistral model');
                     modelToUse = 'mistral'; // Update the model used
                     
@@ -763,10 +762,9 @@ function displayGeneratedImage(imageUrl, prompt, seed, promptInfo) {
         
         // Model name mapping for friendly display
         const modelDisplayNames = {
-            'openai-large': 'GPT-4o',
-            'openai': 'GPT-4o mini',
-            'pixtral': 'Pixtral',
-            'llama': 'Llama 3.3',
+            'openai-large': 'GPT-4.1',
+            'openai': 'GPT-4.1 mini',
+            'phi': 'Phi-4 Instruct',
             'mistral': 'Mistral',
 
         };

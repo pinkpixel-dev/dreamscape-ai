@@ -514,7 +514,7 @@
         let chatSummary = ""; // Variable to store the current summary
         let summarizationInProgress = false; // Flag to prevent multiple summarization requests
         const MAX_MESSAGES_BEFORE_SUMMARY = 2; // Generate summary after every interaction (user + AI)
-        const SUMMARY_MODEL = "openai"; // Use GPT-4o-mini for summarization
+        const SUMMARY_MODEL = "openai"; // Use GPT-4.1-mini for summarization
 
         // Wait for the DOM to load
         document.addEventListener('DOMContentLoaded', function() {
@@ -816,23 +816,19 @@
                     
                     // Map for changing display names
                     const displayNameMap = {
-                        'openai': 'GPT-4o-mini (vision)',
-                        'openai-large': 'GPT-4o (vision)',
-                        'openai-reasoning': 'o3-mini - Advanced Reasoning',
+                        'openai': 'GPT-4.1-mini (vision)',
+                        'openai-large': 'GPT-4.1 (vision)',
+                        'deepseek': 'DeepSeek-V3',
                         'qwen-coder': 'Qwen 2.5 Coder 32B',
                         'llama': 'Llama 3.3 70B',
-                        'mistral': 'Mistral Small 3.1 (vision)',
-                        'evil': 'Evil Mode - Experimental',
-                        'deepseek': 'DeepSeek-V3',
-                        'deepseek-r1': 'DeepSeek Distill Qwen 32B',
-                        'deepseek-reasoning': 'DeepSeek R1 - Reasoning',
-                        'deepseek-r1-llama': 'DeepSeek R1 - Llama 70B',
-                        'qwen-reasoning': 'Qwen QWQ 32B - Reasoning',
+                        'llamascout': 'Llama 4 Scout 17B',
+                        'mistral': 'Mistral Small 3.1 24B (vision)',
+                        'unity': 'Unity Unrestricted Agent (vision)',
+                        'evil': 'Evil (vision)',
+                        'deepseek-reasoning': 'DeepSeek-R1 Distill Qwen 32B',
+                        'deepseek-reasoning-large': 'DeepSeek R1 - Llama 70B',
                         'phi': 'Phi-4 Instruct',
-                        'llama-vision': 'Llama 3.2 11B (vision)',
-                        'pixtral': 'Pixtral 12B (vision)',
-                        'gemini': 'Gemini 2.0 Flash',
-                        'gemini-thinking': 'Gemini 2.0 Flash Thinking',
+                        'llama-vision': 'Llama 3.2 11B Vision',
                         'hormoz': 'Hormoz 8b',
                         'hypnosis-tracy': 'Hypnosis Tracy - Self-Help'
                     };
@@ -844,11 +840,10 @@
                     
                     // Sort models to match the expected order in SITE_IMPROVEMENTS.md
                     const modelOrder = [
-                        'openai', 'openai-large', 'openai-reasoning', 'qwen-coder', 
-                        'llama', 'mistral', 'evil', 'deepseek', 'deepseek-r1', 
-                        'deepseek-reasoning', 'deepseek-r1-llama', 'qwen-reasoning',
-                        'phi', 'llama-vision', 'pixtral', 'gemini', 'gemini-thinking',
-                        'hormoz', 'hypnosis-tracy'
+                        'openai', 'openai-large', 'deepseek', 'qwen-coder', 
+                        'llama', 'llamascout', 'mistral', 'unity', 'evil', 
+                        'deepseek-reasoning', 'deepseek-reasoning-large', 'phi',
+                        'llama-vision', 'hormoz', 'hypnosis-tracy'
                     ];
                     
                     // Sort the models based on the order in modelOrder
@@ -920,14 +915,15 @@
                     console.error('Error fetching models:', error);
                     // Provide some default models as fallback with updated display names
                     textModelSelect.innerHTML = `
-                        <option value="openai-large">GPT-4o (vision)</option>
-                        <option value="openai">GPT-4o-mini (vision)</option>
+                        <option value="openai-large">GPT-4.1 (vision)</option>
+                        <option value="openai">GPT-4.1-mini (vision)</option>
+                        <option value="deepseek">DeepSeek-V3</option>
                         <option value="qwen-coder">Qwen 2.5 Coder 32B</option>
                         <option value="llama">Llama 3.3 70B</option>
-                        <option value="mistral">Mistral Small 3.1 (vision)</option>
+                        <option value="mistral">Mistral Small 3.1 24B (vision)</option>
                     `;
                     
-                    // Set default model to GPT-4o
+                    // Set default model to GPT-4.1
                     textModelSelect.value = 'openai-large';
                 });
             
