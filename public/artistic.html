@@ -336,6 +336,23 @@
                 </div>
             </div>
 
+            <div class="sidebar-section" id="download-options">
+                <p class="section-title">💾 Download Options</p>
+                <div class="control-group">
+                    <label for="download-format">Image Format</label>
+                    <select id="download-format">
+                        <option value="jpg">JPEG (jpg)</option>
+                        <option value="png">PNG (png)</option>
+                        <option value="webp">WebP (webp)</option>
+                        <option value="auto">Auto (Best format)</option>
+                    </select>
+                </div>
+                <div class="control-group slider-control">
+                    <label for="download-quality">Quality <span>90</span>%</label>
+                    <input type="range" id="download-quality" min="10" max="100" value="90">
+                </div>
+            </div>
+
             <div class="sidebar-section">
                 <p class="section-title">ℹ️ About</p>
                 <div class="control-group enhance-description">
@@ -507,15 +524,114 @@
             if (downloadButton) {
                 downloadButton.addEventListener('click', function() {
                     if (artisticImageUrl) {
-                        // Create a temporary link element
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = artisticImageUrl;
-                        downloadLink.download = 'artistic-image.jpg';
+                        // Show loading state
+                        downloadButton.disabled = true;
+                        downloadButton.textContent = '⏳ Downloading...';
 
-                        // Trigger download
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
+                        // Get selected format and quality
+                        const format = document.getElementById('download-format').value;
+                        const quality = document.getElementById('download-quality').value;
+
+                        // Create a modified URL with format and quality parameters
+                        let downloadUrl = artisticImageUrl;
+
+                        try {
+                            // Parse the Cloudinary URL
+                            const urlParts = artisticImageUrl.split('/upload/');
+
+                            if (urlParts.length === 2) {
+                                // Prepare format transformation
+                                let formatTransformation = '';
+
+                                if (format === 'auto') {
+                                    formatTransformation = 'f_auto';
+                                } else {
+                                    formatTransformation = 'f_' + format;
+                                }
+
+                                // Add quality parameter
+                                formatTransformation += ',q_' + quality;
+
+                                // Simpler approach: just add our format transformation to existing ones
+                                // This avoids complex parsing that might break
+                                downloadUrl = urlParts[0] + '/upload/' + formatTransformation + '/' + urlParts[1];
+
+                                console.log('Download URL:', downloadUrl);
+                            }
+
+                            // Set filename with correct extension
+                            let filename = 'artistic-image';
+                            if (format !== 'auto') {
+                                filename += '.' + format;
+                            } else {
+                                filename += '.jpg'; // Default extension for auto format
+                            }
+
+                            // Method 1: Direct download with a tag
+                            const downloadLink = document.createElement('a');
+
+                            // Create an image element to preload the image
+                            const img = new Image();
+                            img.crossOrigin = 'Anonymous'; // Enable CORS
+
+                            img.onload = function() {
+                                // Create a canvas to draw the image
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+
+                                // Draw the image on the canvas
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0);
+
+                                // Convert canvas to blob
+                                canvas.toBlob(function(blob) {
+                                    // Create download link
+                                    const url = URL.createObjectURL(blob);
+                                    downloadLink.href = url;
+                                    downloadLink.download = filename;
+
+                                    // Trigger download
+                                    document.body.appendChild(downloadLink);
+                                    downloadLink.click();
+
+                                    // Clean up
+                                    setTimeout(function() {
+                                        document.body.removeChild(downloadLink);
+                                        URL.revokeObjectURL(url);
+
+                                        // Reset button state
+                                        downloadButton.disabled = false;
+                                        downloadButton.textContent = '💾 Download Result';
+                                    }, 100);
+                                }, format === 'jpg' ? 'image/jpeg' : format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg', quality / 100);
+                            };
+
+                            img.onerror = function() {
+                                console.error('Failed to load image for download');
+                                showErrorMessage('Failed to download image. Please try again.');
+
+                                // Reset button state
+                                downloadButton.disabled = false;
+                                downloadButton.textContent = '💾 Download Result';
+
+                                // Fallback to direct URL
+                                window.open(downloadUrl, '_blank');
+                            };
+
+                            // Start loading the image
+                            img.src = downloadUrl;
+                        } catch (error) {
+                            console.error('Error preparing download:', error);
+                            showErrorMessage('Failed to prepare download. Please try again.');
+
+                            // Reset button state
+                            downloadButton.disabled = false;
+                            downloadButton.textContent = '💾 Download Result';
+
+                            // Fallback to opening in new tab
+                            window.open(artisticImageUrl, '_blank');
+                        }
                     }
                 });
             }
