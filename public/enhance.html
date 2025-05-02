@@ -176,6 +176,43 @@
                                 img.src = result.info.secure_url;
                                 img.alt = 'Original Image';
                                 img.className = 'preview-img';
+
+                                // Add onload event to dispatch imageLoaded event with dimensions
+                                img.onload = function() {
+                                    // Dispatch custom event with image dimensions
+                                    const imageLoadedEvent = new CustomEvent('imageLoaded', {
+                                        detail: {
+                                            width: this.naturalWidth,
+                                            height: this.naturalHeight
+                                        }
+                                    });
+                                    document.dispatchEvent(imageLoadedEvent);
+
+                                    // Update aspect ratio for resize controls
+                                    const widthSlider = document.getElementById('resize-width');
+                                    const heightSlider = document.getElementById('resize-height');
+                                    if (widthSlider && heightSlider) {
+                                        widthSlider.value = this.naturalWidth > 2000 ? 2000 : this.naturalWidth;
+                                        heightSlider.value = this.naturalHeight > 2000 ? 2000 : this.naturalHeight;
+
+                                        // Update displayed values
+                                        const widthLabel = widthSlider.previousElementSibling;
+                                        const heightLabel = heightSlider.previousElementSibling;
+                                        if (widthLabel && widthLabel.tagName === 'LABEL') {
+                                            const valueSpan = widthLabel.querySelector('span');
+                                            if (valueSpan) {
+                                                valueSpan.textContent = widthSlider.value;
+                                            }
+                                        }
+                                        if (heightLabel && heightLabel.tagName === 'LABEL') {
+                                            const valueSpan = heightLabel.querySelector('span');
+                                            if (valueSpan) {
+                                                valueSpan.textContent = heightSlider.value;
+                                            }
+                                        }
+                                    }
+                                };
+
                                 originalImageDisplay.appendChild(img);
                             }
 
@@ -492,7 +529,20 @@
                             const width = document.getElementById('resize-width').value;
                             const height = document.getElementById('resize-height').value;
 
-                            transformations += resizeMode + '_' + width + 'x' + height + '/';
+                            // Use the correct Cloudinary transformation format
+                            // c_fill, c_fit, c_limit, c_pad, c_scale are the valid crop modes
+                            const cropMode = resizeMode === 'scale' ? 'c_scale' :
+                                            resizeMode === 'fit' ? 'c_fit' :
+                                            resizeMode === 'fill' ? 'c_fill' :
+                                            resizeMode === 'pad' ? 'c_pad' :
+                                            resizeMode === 'limit' ? 'c_limit' : 'c_scale';
+
+                            // Ensure width and height are valid numbers
+                            const validWidth = parseInt(width, 10) || 800;
+                            const validHeight = parseInt(height, 10) || 600;
+
+                            // Format the transformation string correctly
+                            transformations += cropMode + ',w_' + validWidth + ',h_' + validHeight + '/';
                         }
 
                         // Apply transformations to the Cloudinary URL
@@ -501,22 +551,46 @@
                         if (urlParts.length === 2) {
                             enhancedImageUrl = urlParts[0] + '/upload/' + transformations + urlParts[1];
 
+                            // Debug log the transformation URL
+                            console.log('Applying transformation:', transformations);
+                            console.log('Enhanced image URL:', enhancedImageUrl);
+
                             // Create and display the enhanced image
                             const enhancedImg = document.createElement('img');
-                            enhancedImg.src = enhancedImageUrl;
                             enhancedImg.alt = 'Enhanced Image';
                             enhancedImg.className = 'preview-img';
+
+                            // Add error handling
+                            enhancedImg.onerror = function() {
+                                console.error('Failed to load enhanced image:', enhancedImageUrl);
+                                showErrorMessage('Failed to apply transformation. Please try different settings.');
+
+                                // Reset enhance button
+                                enhanceButton.textContent = '✨ Apply Enhancements';
+                                enhanceButton.disabled = false;
+
+                                // Remove the broken image
+                                if (this.parentNode) {
+                                    this.parentNode.removeChild(this);
+                                }
+                            };
+
+                            // Set source after adding error handler
+                            enhancedImg.src = enhancedImageUrl;
 
                             // Clear previous content and add the new image
                             enhancedImageDisplay.innerHTML = '';
                             enhancedImageDisplay.appendChild(enhancedImg);
 
-                            // Enable download button
-                            downloadButton.disabled = false;
+                            // Add load event handler
+                            enhancedImg.onload = function() {
+                                // Enable download button
+                                downloadButton.disabled = false;
 
-                            // Reset enhance button
-                            enhanceButton.textContent = '✨ Apply Enhancements';
-                            enhanceButton.disabled = false;
+                                // Reset enhance button
+                                enhanceButton.textContent = '✨ Apply Enhancements';
+                                enhanceButton.disabled = false;
+                            };
                         } else {
                             // Handle non-Cloudinary images
                             showErrorMessage('Cannot enhance this image. Please upload an image through the Cloudinary widget.');
@@ -626,6 +700,59 @@
                             resizeControls.style.display = 'block';
                         }
                     });
+                });
+            }
+
+            // Handle maintain aspect ratio checkbox for resize
+            const maintainAspectCheckbox = document.getElementById('resize-maintain-aspect');
+            const widthSlider = document.getElementById('resize-width');
+            const heightSlider = document.getElementById('resize-height');
+
+            if (maintainAspectCheckbox && widthSlider && heightSlider) {
+                // Store original aspect ratio
+                let aspectRatio = widthSlider.value / heightSlider.value;
+
+                // Update aspect ratio when image is loaded
+                document.addEventListener('imageLoaded', function(e) {
+                    if (e.detail && e.detail.width && e.detail.height) {
+                        aspectRatio = e.detail.width / e.detail.height;
+                    }
+                });
+
+                // Handle width changes
+                widthSlider.addEventListener('input', function() {
+                    if (maintainAspectCheckbox.checked) {
+                        // Calculate new height based on aspect ratio
+                        const newHeight = Math.round(this.value / aspectRatio);
+                        // Update height slider
+                        heightSlider.value = newHeight;
+                        // Update displayed value
+                        const heightLabel = heightSlider.previousElementSibling;
+                        if (heightLabel && heightLabel.tagName === 'LABEL') {
+                            const valueSpan = heightLabel.querySelector('span');
+                            if (valueSpan) {
+                                valueSpan.textContent = newHeight;
+                            }
+                        }
+                    }
+                });
+
+                // Handle height changes
+                heightSlider.addEventListener('input', function() {
+                    if (maintainAspectCheckbox.checked) {
+                        // Calculate new width based on aspect ratio
+                        const newWidth = Math.round(this.value * aspectRatio);
+                        // Update width slider
+                        widthSlider.value = newWidth;
+                        // Update displayed value
+                        const widthLabel = widthSlider.previousElementSibling;
+                        if (widthLabel && widthLabel.tagName === 'LABEL') {
+                            const valueSpan = widthLabel.querySelector('span');
+                            if (valueSpan) {
+                                valueSpan.textContent = newWidth;
+                            }
+                        }
+                    }
                 });
             }
         });
